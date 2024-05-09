@@ -11,4 +11,5 @@ def jwt_login(request):
     token = request.GET.get("jwt", "")
     decoded = jwt.decode(token, pubkey, algorithms=["ES256"])
     request.session["jwt_userdata"] = decoded.get("userdata")
-    return redirect('abfrage.start')
+    print("decoded", decoded, flush=True)
+    return redirect('abfrage:start')
