@@ -1,0 +1,18 @@
+{% extends "abfrage/base.html" %}
+
+{% block content %}
+Hallo {{ request.session.jwt_userdata.displayName }}.
+
+<ul>
+ {% for object in object_list %}
+ <li>
+  <a href="{{ object.get_absolute_url }}">{{ object.label }}</a>
+  {% if object.closed_at %}
+   (Verfügbar bis {{ object.closed_at|date:"d.m.Y H:i" }})
+  {% endif %}
+ </li>
+ {% endfor %}
+</ul>
+
+<a class="btn btn-success" href="{% url 'abfrage:menu_create' %}">Neues Menü anlegen</a>
+{% endblock %}

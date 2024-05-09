@@ -1,0 +1,44 @@
+{% extends "abfrage/base.html" %}
+
+{% block title %}{{ object.label }}{% endblock %}
+
+{% block content %}
+
+<form action="" method="post">{% csrf_token %}
+<table class="table table-striped">
+<thead>
+ <tr>
+  <td>&nbsp;</td>
+  {% for serving in servings %}
+   <th scope="col">{{ serving.obj.label }}</th>
+  {% endfor %}
+ </tr>
+ <tr>
+  <td><input type="submit" class="btn btn-sm btn-success" value="Speichern" /></td>
+  {% for serving in servings %}
+   <td><input type="number" class="form-control" min="0" name="{{ serving.obj.pk }}" value="{{ serving.own }}" /></td>
+  {% endfor %}
+ </tr>
+</thead>
+<tbody>
+ {% for customer in others %}
+ <tr>
+  <th scope="row">{{ customer.displayName }}</th>
+  {% for count in customer.servings %}
+   <td class="text-end">{{ count }}</td>
+  {% endfor %}
+ </tr>
+ {% endfor %}
+</tbody>
+<tfoot>
+ <tr>
+  <th scope="row">Gesamt</th>
+  {% for serving in servings %}
+   <td class="text-end">{{ serving.total }}</td>
+  {% endfor %}
+ </tr>
+</tfoot>
+</table>
+</form>
+
+{% endblock %}

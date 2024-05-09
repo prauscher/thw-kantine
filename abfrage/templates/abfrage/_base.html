@@ -1,0 +1,22 @@
+{% load django_bootstrap5 %}
+{% load bootstrap_icons %}
+{% load static %}
+
+<!doctype html>
+<html>
+ <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  {% bootstrap_css %}
+  <title>{% block title_head %}{% endblock %}</title>
+ </head>
+ <body>
+  <main role="main" class="mt-2 container">
+   <h1>{% block title_h1 %}{% endblock %}</h1>
+   {% block content %}{% endblock %}
+  </main>
+
+  {% bootstrap_javascript %}
+  <script crossorigin="anonymous" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  {% block script %}{% endblock %}
+ </body>
+</html>

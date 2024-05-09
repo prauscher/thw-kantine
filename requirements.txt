@@ -2,3 +2,6 @@ django==5.0.4
 psycopg2==2.9.9
 requests==2.31.0
 pyjwt[crypto]==2.8.0
+django-bootstrap5==24.2
+crispy-bootstrap5==2024.2
+django_bootstrap_icons==0.8.7
