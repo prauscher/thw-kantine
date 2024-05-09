@@ -103,8 +103,8 @@ class MenuDetailView(DetailView):
         if not userdata:
             raise PermissionDenied
 
-        object = self.get_object()
-        servings = {str(serving.pk): serving for serving in object.servings.all()}
+        _object = self.get_object()
+        servings = {str(serving.pk): serving for serving in _object.servings.all()}
 
         for field, value in request.POST.items():
             if field not in servings:
@@ -116,7 +116,7 @@ class MenuDetailView(DetailView):
                 defaults={"count": int(value),
                           "customer": userdata["displayName"]})
 
-        return redirect(object.get_absolute_url())
+        return redirect(_object.get_absolute_url())
 
 
 def _get_userdata(request):
