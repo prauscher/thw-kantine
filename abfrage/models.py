@@ -7,12 +7,18 @@ class Menu(models.Model):
     label = models.CharField(
         max_length=100,
         verbose_name="Bezeichnung",
-        help_text="Eindeutiger Name des Essensmenüs, z.B. \"Dienst 7. Mai 2024\"")
+        help_text='Eindeutiger Name des Essensmenüs, z.B. "Dienst 7. Mai 2024"',
+    )
     owner = models.CharField(max_length=50)
     closed_at = models.DateTimeField(
-        null=True, blank=True,
+        null=True,
+        blank=True,
         verbose_name="Anmeldeschluss",
-        help_text="Zeitpunkt bis zu dem Anmeldungen entgegen genommen werden. Kann leer gelassen werden, wenn die Anmeldung später von Hand geschlossen werden soll.")
+        help_text=(
+            "Zeitpunkt bis zu dem Anmeldungen entgegen genommen werden. "
+            "Kann leer gelassen werden, wenn die Anmeldung später von Hand geschlossen werden soll."
+        ),
+    )
 
     def __str__(self):
         return f"{self.label} von {self.owner}"
