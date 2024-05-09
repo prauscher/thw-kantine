@@ -1,6 +1,6 @@
 from collections import defaultdict
 from django import forms
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views.generic import ListView
@@ -15,8 +15,7 @@ class MenuListView(ListView):
     model = models.Menu
 
     def get_queryset(self):
-        return super().get_queryset().filter(Q(closed_at__isnull=True) |
-                                             Q(closed_at__gte=timezone.now()))
+        return super().get_queryset().filter(Q(closed_at__isnull=True) | Q(closed_at__gte=timezone.now()))
 
 
 class MenuModelForm(forms.ModelForm):
@@ -34,8 +33,7 @@ class MenuCreateView(CreateView):
     template_name = "abfrage/menu_form.html"
 
     def get_context_data(self, **kwargs):
-        return {**super().get_context_data(**kwargs),
-                "icons": models.Serving.ICONS}
+        return {**super().get_context_data(**kwargs), "icons": models.Serving.ICONS}
 
     def form_valid(self, form):
         form.save(commit=False)
@@ -53,9 +51,8 @@ class MenuCreateView(CreateView):
                 continue
 
             models.Serving.objects.create(
-                menu=form.instance,
-                icon=serving_data.get("icon"),
-                label=serving_data.get("label"))
+                menu=form.instance, icon=serving_data.get("icon"), label=serving_data.get("label")
+            )
 
         return super().form_valid(form)
 
@@ -90,8 +87,7 @@ class MenuDetailView(DetailView):
         print(others)
         context["servings"] = servings.values()
         context["others"] = [
-            {"displayName": other["displayName"],
-             "servings": [other["servings"][pk] for pk in servings.keys()]}
+            {"displayName": other["displayName"], "servings": [other["servings"][pk] for pk in servings.keys()]}
             for other in others.values()
         ]
 
@@ -106,15 +102,18 @@ class MenuDetailView(DetailView):
         _object = self.get_object()
         servings = {str(serving.pk): serving for serving in _object.servings.all()}
 
-        for field, value in request.POST.items():
+        for field, value in request.POST.items():  # type: (str, str)
             if field not in servings:
                 continue
+
+            if not value.isnumeric():
+                raise ValidationError(f"Value must be an integer: {value!r}")
 
             models.Reservation.objects.update_or_create(
                 customer_uid=userdata["uid"],
                 serving=servings[field],
-                defaults={"count": int(value),
-                          "customer": userdata["displayName"]})
+                defaults={"count": int(value), "customer": userdata["displayName"]},
+            )
 
         return redirect(_object.get_absolute_url())
 
@@ -122,4 +121,3 @@ class MenuDetailView(DetailView):
 def _get_userdata(request):
     userdata = request.session.get("jwt_userdata", {})
     return userdata
-
