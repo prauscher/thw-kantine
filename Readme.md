@@ -7,4 +7,9 @@
 # Offene Aufgaben / TODOs
 - Rückmeldung bei Formularen beim Absenden
 - Stornierungsmöglichkeit
-- Hermine Anbindung
+
+## Hermine Anbindung
+- Nachricht an Bestellenden
+  - Bestellung aufgegeben/aktualisiert/storniert
+- Nachricht an Kochenden 
+  - Stärkeänderung
