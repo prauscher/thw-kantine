@@ -6,10 +6,12 @@
 
 # Offene Aufgaben / TODOs
 - Rückmeldung bei Formularen beim Absenden
-- Stornierungsmöglichkeit
+- Stornierungsmöglichkeit -> Auf null setzen geht doch?
+- Bearbeitung von Menüs und Gerichten durch owner
 
 ## Hermine Anbindung
+- Ankündigung in Kantine
 - Nachricht an Bestellenden
   - Bestellung aufgegeben/aktualisiert/storniert
-- Nachricht an Kochenden 
+- Nachricht an Kochenden
   - Stärkeänderung
