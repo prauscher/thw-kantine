@@ -41,11 +41,11 @@ function addServing() {
 }
 
 function checkServings() {
-	if ($("#servings").length == 0) {
+	if ($("#servings").length === 0) {
 		return;
 	}
 
-	if ($("#servings").find(".row input").filter((i, item) => $(item).val() == "").length <= 0) {
+	if ($("#servings").find(".row input").filter((i, item) => $(item).val() === "").length <= 0) {
 		addServing();
 	}
 }
