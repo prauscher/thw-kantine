@@ -106,6 +106,9 @@ class MenuDetailView(DetailView):
             if field not in servings:
                 continue
 
+            if not value:
+                value = "0"
+
             if not value.isnumeric():
                 raise ValidationError(f"Value must be an integer: {value!r}")
 
