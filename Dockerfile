@@ -38,7 +38,7 @@ RUN python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
 WORKDIR /opt/app
 COPY ./manage.py /opt/app/manage.py
 COPY ./kantine /opt/app/kantine
-#COPY ./abfrage /opt/app/abfrage
+COPY ./abfrage /opt/app/abfrage
 #COPY ./strichliste /opt/app/strichliste
 
 RUN find "." -exec chown root:root '{}' +  && \
