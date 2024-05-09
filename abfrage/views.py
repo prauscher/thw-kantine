@@ -110,7 +110,7 @@ class MenuDetailView(DetailView):
                 value = "0"
 
             if not value.isnumeric():
-                raise ValidationError(f"Value must be an integer: {value!r}")
+                raise ValidationError(f"Wert muss eine Ganzzahl sein nicht: {value!r}")
 
             models.Reservation.objects.update_or_create(
                 customer_uid=userdata["uid"],
