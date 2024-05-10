@@ -5,16 +5,16 @@
 {% block content %}
 
 <div class="row">
-{% if changed %}
 <div class="col-8 col-md-10">
+{% if changed %}
  <div class="alert alert-success">Deine Anmeldung wurde gespeichert!</div>
-</div>
 {% endif %}
-{% if is_admin %}
+</div>
 <div class="col-4 col-md-2 text-end">
+{% if is_admin %}
  <a class="btn btn-danger" href="{% url 'abfrage:menu_delete' object.pk %}">Löschen</a>
-</div>
 {% endif %}
+</div>
 </div>
 
 <form action="" method="post">{% csrf_token %}
