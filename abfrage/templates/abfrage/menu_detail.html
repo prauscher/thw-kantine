@@ -4,12 +4,14 @@
 
 {% block content %}
 
-<div class="clearfix">
+<div class="row">
 {% if changed %}
-<div class="alert alert-success">Deine Anmeldung wurde gespeichert!</div>
+<div class="col-8 col-md-10">
+ <div class="alert alert-success">Deine Anmeldung wurde gespeichert!</div>
+</div>
 {% endif %}
 {% if is_admin %}
-<div class="float-end">
+<div class="col-4 col-md-2 text-end">
  <a class="btn btn-danger" href="{% url 'abfrage:menu_delete' object.pk %}">Löschen</a>
 </div>
 {% endif %}
