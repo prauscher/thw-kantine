@@ -5,8 +5,8 @@
 4. Auf http://localhost:8000 gehen und ausprobieren
 
 # Offene Aufgaben / TODOs
-- Rückmeldung bei Formularen beim Absenden
 - Stornierungsmöglichkeit -> Auf null setzen geht doch?
+- Ausgabe markieren (später ggf. inkl Bezahlung)
 - Bearbeitung von Menüs und Gerichten durch owner
 
 ## Hermine Anbindung
