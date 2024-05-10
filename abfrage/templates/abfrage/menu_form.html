@@ -4,6 +4,13 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
+{% if object %}
+<div class="alert alert-warning">
+ Du bist dabei ein bestehendes Menü zu bearbeiten. Um eine vorhandene Option zu löschen musst du nur ihren Namen löschen. Bedenke dabei, dass damit auch alle Anmeldungen für diese Option verloren gehen.
+ Anderenfalls bleiben auch bei veränderten Optionen die Anmeldungen gespeichert.
+</div>
+{% endif %}
+
 <form method="post">{% csrf_token %}
  <h4>Einstellungen</h4>
  {{ form | crispy }}
@@ -32,16 +39,19 @@ const icons = JSON.parse(document.getElementById('py_icons').textContent);
 const start_servings = _getStartServings();
 
 function addServing(serving) {
+	var background_label = "";
 	if (! serving) {
-		serving = {"pk": "new" + $("#servings").find(".row").length, "label": "", "icon": ""};
+		serving = {"pk": "new" + $("#servings").find(".row").length, "label": "", "icon": icons[0][0]};
+		{% if object %}background_label = "bg-secondary";{% endif %}
 	}
 
 	$("#servings").append(
-		$("<div>").addClass(["row", "mb-3"]).append([
+		$("<div>").addClass(["row", "my-2", "py-2", background_label]).data("serving", serving).append([
 			$("<div>").addClass(["col-4", "col-md-2"]).append(
 				$("<select>")
 					.addClass("form-select").attr("name", "serving-" + serving.pk + "-icon")
 					.append(icons.map((icon) => $("<option>").attr("value", icon[0]).text(icon[1])))
+					.on("change", checkServings)
 					.val(serving.icon)
 			),
 			$("<div>").addClass(["col-8", "col-md-10"]).append(
@@ -55,11 +65,35 @@ function addServing(serving) {
 }
 
 function checkServings() {
-	if ($("#servings").length === 0) {
-		return;
-	}
+	var emptyNewRows = 0;
+	$("#servings").find(".row").each(function (i, item) {
+		var rowColor = "";
+		var isNew = ("" + $(item).data("serving").pk).substring(0,3) == "new";
+		if ($(item).find("input").val() == "") {
+			// This line will be ignored or deleted
+			if (isNew) {
+				rowColor = "secondary";
+				emptyNewRows += 1;
+			} else {
+				rowColor = "danger";
+			}
+		} else if (isNew) {
+			// This line will be added
+			rowColor = "success";
+		} else if ($(item).data("serving").icon != $(item).find("select").val() || $(item).data("serving").label != $(item).find("input").val()) {
+			// This line is about to be changed
+			rowColor = "warning";
+		}
 
-	if ($("#servings").find(".row input").filter((i, item) => $(item).val() === "").length <= 0) {
+		{% if not object %}return;{% endif %}
+
+		$(item).toggleClass("bg-success", rowColor == "success");
+		$(item).toggleClass("bg-secondary", rowColor == "secondary");
+		$(item).toggleClass("bg-danger", rowColor == "danger");
+		$(item).toggleClass("bg-warning", rowColor == "warning");
+	});
+
+	if (emptyNewRows <= 0) {
 		addServing();
 	}
 }
