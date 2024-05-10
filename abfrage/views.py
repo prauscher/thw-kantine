@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, DeleteView
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from django.utils import timezone
 from . import models
@@ -23,6 +23,31 @@ class MenuModelForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["closed_at"].widget.input_type = "datetime-local"
 
+    def process_servings(self, post_data):
+        servings = defaultdict(dict)
+        for field, value in post_data.items():
+            if field.startswith("serving-") and "-" in field[8:]:
+                serving_no, _, option = field[8:].partition("-")
+                servings[serving_no][option] = value
+
+        for serving_id, serving_data in servings.items():
+            if serving_id.startswith("new"):
+                if not serving_data.get("label"):
+                    continue
+
+                models.Serving.objects.create(
+                    menu=self.instance, icon=serving_data.get("icon"), label=serving_data.get("label")
+                )
+            else:
+                serving = self.instance.servings.get(pk=int(serving_id))
+                if not serving_data.get("label"):
+                    serving.delete()
+                    continue
+
+                serving.icon = serving_data.get("icon")
+                serving.label = serving_data.get("label")
+                serving.save()
+
     class Meta:
         model = models.Menu
         fields = ["label", "closed_at"]
@@ -39,21 +64,23 @@ class MenuCreateView(CreateView):
         form.save(commit=False)
         form.instance.owner = _get_userdata(self.request)["uid"]
         form.save(commit=True)
+        form.process_servings(self.request.POST)
+        return super().form_valid(form)
 
-        servings = defaultdict(dict)
-        for field, value in self.request.POST.items():
-            if field.startswith("serving-") and "-" in field[8:]:
-                serving_no, _, option = field[8:].partition("-")
-                servings[serving_no][option] = value
 
-        for serving_data in servings.values():
-            if not serving_data.get("label"):
-                continue
+class MenuUpdateView(UpdateView):
+    model = models.Menu
+    form_class = MenuModelForm
+    template_name = "abfrage/menu_form.html"
 
-            models.Serving.objects.create(
-                menu=form.instance, icon=serving_data.get("icon"), label=serving_data.get("label")
-            )
+    def get_context_data(self, **kwargs):
+        return {**super().get_context_data(**kwargs),
+                "servings": [{"pk": serving.pk, "icon": serving.icon, "label": serving.label}
+                             for serving in self.object.servings.all()],
+                "icons": models.Serving.ICONS}
 
+    def form_valid(self, form):
+        form.process_servings(self.request.POST)
         return super().form_valid(form)
 
 

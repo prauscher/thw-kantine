@@ -7,7 +7,6 @@
 # Offene Aufgaben / TODOs
 - Stornierungsmöglichkeit -> Auf null setzen geht doch?
 - Ausgabe markieren (später ggf. inkl Bezahlung)
-- Bearbeitung von Menüs und Gerichten durch owner
 
 ## Hermine Anbindung
 - Ankündigung in Kantine

@@ -12,6 +12,7 @@
 </div>
 <div class="col-4 col-md-2 text-end">
 {% if is_admin %}
+ <a class="btn btn-warning" href="{% url 'abfrage:menu_update' object.pk %}">Bearbeiten</a>
  <a class="btn btn-danger" href="{% url 'abfrage:menu_delete' object.pk %}">Löschen</a>
 {% endif %}
 </div>

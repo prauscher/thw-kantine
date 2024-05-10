@@ -7,34 +7,48 @@
 <form method="post">{% csrf_token %}
  <h4>Einstellungen</h4>
  {{ form | crispy }}
- {% if not object %}
  <h4>Gerichte</h4>
  <div id="servings" class="container">
  </div>
- {% endif %}
  <button type="submit" class="btn-success btn">{% if object %}Bearbeiten{% else %}Anlegen{% endif %}</button>
 </form>
 {% endblock %}
 
 {% block script %}
 {{ icons | json_script:"py_icons" }}
+{% if object %}
+{{ servings | json_script:"py_servings" }}
+{% endif %}
 <script type="text/javascript">
 
-const icons = JSON.parse(document.getElementById('py_icons').textContent);
+function _getStartServings() {
+	if (document.getElementById('py_servings')) {
+		return JSON.parse(document.getElementById('py_servings').textContent);
+	}
+	return [];
+}
 
-function addServing() {
-	var i = $("#servings").find(".row").length;
+const icons = JSON.parse(document.getElementById('py_icons').textContent);
+const start_servings = _getStartServings();
+
+function addServing(serving) {
+	if (! serving) {
+		serving = {"pk": "new" + $("#servings").find(".row").length, "label": "", "icon": ""};
+	}
+
 	$("#servings").append(
 		$("<div>").addClass(["row", "mb-3"]).append([
 			$("<div>").addClass(["col-4", "col-md-2"]).append(
 				$("<select>")
-					.addClass("form-select").attr("name", "serving-" + i + "-icon")
+					.addClass("form-select").attr("name", "serving-" + serving.pk + "-icon")
 					.append(icons.map((icon) => $("<option>").attr("value", icon[0]).text(icon[1])))
+					.val(serving.icon)
 			),
 			$("<div>").addClass(["col-8", "col-md-10"]).append(
 				$("<input>")
-					.addClass("form-control").attr("name", "serving-" + i + "-label")
+					.addClass("form-control").attr("name", "serving-" + serving.pk + "-label")
 					.on("keyup", checkServings)
+					.val(serving.label)
 			)
 		])
 	);
@@ -51,6 +65,9 @@ function checkServings() {
 }
 
 $(function () {
+	for (const serving of start_servings) {
+		addServing(serving);
+	}
 	checkServings();
 });
 
