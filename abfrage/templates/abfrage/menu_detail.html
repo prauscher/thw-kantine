@@ -4,6 +4,17 @@
 
 {% block content %}
 
+<div class="clearfix">
+{% if changed %}
+<div class="alert alert-success">Deine Anmeldung wurde gespeichert!</div>
+{% endif %}
+{% if is_admin %}
+<div class="float-end">
+ <a class="btn btn-danger" href="{% url 'abfrage:menu_delete' object.pk %}">Löschen</a>
+</div>
+{% endif %}
+</div>
+
 <form action="" method="post">{% csrf_token %}
 <table class="table table-striped">
 <thead>

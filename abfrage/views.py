@@ -65,6 +65,10 @@ class MenuDeleteView(DeleteView):
 class MenuDetailView(DetailView):
     model = models.Menu
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.changed = False
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -84,12 +88,14 @@ class MenuDetailView(DetailView):
                 others[reservation.customer_uid]["displayName"] = reservation.customer
                 others[reservation.customer_uid]["servings"][reservation.serving.pk] += reservation.count
 
-        print(others)
         context["servings"] = servings.values()
         context["others"] = [
             {"displayName": other["displayName"], "servings": [other["servings"][pk] for pk in servings.keys()]}
             for other in others.values()
         ]
+
+        context["changed"] = self.changed
+        context["is_admin"] = (userdata["uid"] == self.object.owner)
 
         return context
 
@@ -118,7 +124,9 @@ class MenuDetailView(DetailView):
                 defaults={"count": int(value), "customer": userdata["displayName"]},
             )
 
-        return redirect(_object.get_absolute_url())
+        self.changed = True
+
+        return self.get(request, *args, **kwargs)
 
 
 def _get_userdata(request):

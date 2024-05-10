@@ -7,4 +7,5 @@ urlpatterns = [
     path("", views.MenuListView.as_view(), name="start"),
     path("menu/create", views.MenuCreateView.as_view(), name="menu_create"),
     path("menu/<int:pk>", views.MenuDetailView.as_view(), name="menu_detail"),
+    path("menu/<int:pk>/delete", views.MenuDeleteView.as_view(), name="menu_delete"),
 ]
