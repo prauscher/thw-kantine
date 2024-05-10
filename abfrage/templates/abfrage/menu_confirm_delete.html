@@ -1,0 +1,14 @@
+{% extends "abfrage/base.html" %}
+
+{% block title %}{{ object.label }} löschen{% endblock %}
+
+{% block content %}
+<p>Du bist dabei, das Menü <em>{{ object.label }}</em> mit allen Optionen und Abstimmungsergebnissen unumkehrbar zu löschen. Bist du sicher?</p>
+
+<form action="" method="post">{% csrf_token %}
+<div class="text-center">
+ <input type="submit" value="Ja" class="btn btn-danger me-2" />
+ <a href="{{ object.get_absolute_url }}" class="btn btn-secondary ms-2">Nein</a>
+</div>
+</form>
+{% endblock %}
