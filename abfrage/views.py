@@ -14,14 +14,19 @@ from . import models
 class MenuListView(ListView):
     model = models.Menu
 
+    def get_context_data(self, *args, **kwargs):
+        return {**super().get_context_data(*args, **kwargs),
+                "userdata": _get_userdata(self.request)}
+
     def get_queryset(self):
-        return super().get_queryset().filter(Q(closed_at__isnull=True) | Q(closed_at__gte=timezone.now()))
+        return super().get_queryset().filter(Q(closed_at__isnull=True) | Q(closed_at__gte=timezone.now() - timezone.timedelta(days=2)))
 
 
 class MenuModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["closed_at"].widget.input_type = "datetime-local"
+        self.fields["closed_at"].widget.format = "%Y-%m-%dT%H:%M"
 
     def process_servings(self, post_data):
         servings = defaultdict(dict)
@@ -134,6 +139,9 @@ class MenuDetailView(DetailView):
 
         _object = self.get_object()
         servings = {str(serving.pk): serving for serving in _object.servings.all()}
+
+        if not _object.is_open:
+            raise PermissionDenied
 
         for field, value in request.POST.items():  # type: (str, str)
             if field not in servings:

@@ -27,12 +27,21 @@
    <th scope="col">{{ serving.obj.label }}</th>
   {% endfor %}
  </tr>
+{% if object.is_open %}
  <tr>
   <td><input type="submit" class="btn btn-sm btn-success" value="Speichern" /></td>
   {% for serving in servings %}
    <td><input type="number" class="form-control text-end" min="0" name="{{ serving.obj.pk }}" value="{{ serving.own }}" /></td>
   {% endfor %}
  </tr>
+{% else %}
+ <tr>
+  <td>{{ userdata.displayName }}</td>
+  {% for serving in servings %}
+   <td class="text-end">{{ serving.obj.pk }}</td>
+  {% endfor %}
+ </tr>
+{% endif %}
 </thead>
 <tbody>
  {% for customer in others %}

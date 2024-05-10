@@ -1,6 +1,7 @@
 from django import forms
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
 
 class Menu(models.Model):
@@ -19,6 +20,10 @@ class Menu(models.Model):
             "Kann leer gelassen werden, wenn die Anmeldung später von Hand geschlossen werden soll."
         ),
     )
+
+    @property
+    def is_open(self):
+        return self.closed_at is None or self.closed_at > timezone.now()
 
     def __str__(self):
         return f"{self.label} von {self.owner}"

@@ -1,13 +1,15 @@
 {% extends "abfrage/base.html" %}
 
 {% block content %}
-Hallo {{ request.session.jwt_userdata.displayName }}.
+Hallo {{ userdata.displayName }}.
 
 <ul>
  {% for object in object_list %}
  <li>
   <a href="{{ object.get_absolute_url }}">{{ object.label }}</a>
-  {% if object.closed_at %}
+  {% if not object.is_open %}
+   (Anmeldefrist abgelaufen)
+  {% elif object.closed_at %}
    (Verfügbar bis {{ object.closed_at|date:"d.m.Y H:i" }})
   {% endif %}
  </li>
