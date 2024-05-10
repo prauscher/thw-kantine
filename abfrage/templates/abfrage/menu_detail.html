@@ -2,21 +2,16 @@
 
 {% block title %}{{ object.label }}{% endblock %}
 
+{% block buttons %}
+ <a class="btn btn-warning" href="{% url 'abfrage:menu_update' object.pk %}">Bearbeiten</a>
+ <a class="btn btn-danger" href="{% url 'abfrage:menu_delete' object.pk %}">Löschen</a>
+{% endblock %}
+
 {% block content %}
 
-<div class="row">
-<div class="col-8 col-md-10">
 {% if changed %}
  <div class="alert alert-success">Deine Anmeldung wurde gespeichert!</div>
 {% endif %}
-</div>
-<div class="col-4 col-md-2 text-end">
-{% if is_admin %}
- <a class="btn btn-warning" href="{% url 'abfrage:menu_update' object.pk %}">Bearbeiten</a>
- <a class="btn btn-danger" href="{% url 'abfrage:menu_delete' object.pk %}">Löschen</a>
-{% endif %}
-</div>
-</div>
 
 <form action="" method="post">{% csrf_token %}
 <table class="table table-striped">
@@ -24,7 +19,10 @@
  <tr>
   <td>&nbsp;</td>
   {% for serving in servings %}
-   <th scope="col">{{ serving.obj.label }}</th>
+   <th scope="col">
+    <span class="float-end" style="width:1.5em;">{% include "abfrage/_menu_icon.html" with icon=serving.obj.icon %}</span>
+    {{ serving.obj.label }}
+   </th>
   {% endfor %}
  </tr>
 {% if object.is_open %}

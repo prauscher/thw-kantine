@@ -11,7 +11,10 @@
  </head>
  <body>
   <main role="main" class="mt-2 container">
+   <div class="clearfix">
+   <div class="float-end mt-2">{% block buttons %}{% endblock %}</div>
    <h1>{% block title_h1 %}{% endblock %}</h1>
+   </div>
    {% block content %}{% endblock %}
   </main>
 
