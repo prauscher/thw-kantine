@@ -1,6 +1,7 @@
 from collections import defaultdict
 from django import forms
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views.generic import ListView
@@ -100,6 +101,7 @@ class MenuDetailView(DetailView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.changed = False
+        self.error_message = None
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -127,6 +129,7 @@ class MenuDetailView(DetailView):
         ]
 
         context["changed"] = self.changed
+        context["error_message"] = self.error_message
         context["is_admin"] = (userdata["uid"] == self.object.owner)
 
         return context
@@ -137,31 +140,43 @@ class MenuDetailView(DetailView):
         if not userdata:
             raise PermissionDenied
 
+        try:
+            with transaction.atomic():
+                self._update(userdata, request.POST)
+        except ValidationError as exception:
+            self.error_message = exception.message
+        else:
+            self.changed = True
+
+        return self.get(request, *args, **kwargs)
+
+    def _update(self, userdata, post_data):
         _object = self.get_object()
         servings = {str(serving.pk): serving for serving in _object.servings.all()}
 
         if not _object.is_open:
-            raise PermissionDenied
+            raise ValidationError("Die Anmeldung für das Menü ist bereits geschlossen")
 
-        for field, value in request.POST.items():  # type: (str, str)
+        for field, value in post_data.items():  # type: (str, str)
             if field not in servings:
                 continue
 
-            if not value:
-                value = "0"
+            try:
+                value_num = int(value) if value else 0
+            except ValueError:
+                raise ValidationError(f"Bestellmenge für {servings[field].label} ist keine Ganzzahl")
 
-            if not value.isnumeric():
-                raise ValidationError(f"Wert muss eine Ganzzahl sein nicht: {value!r}")
+            if value_num < 0:
+                raise ValidationError(f"Negative Bestellung für {servings[field].label} sind nicht zulässig")
+
+            if value_num > 20:
+                raise ValidationError(f"Bestellmenge für {servings[field].label} zu hoch")
 
             models.Reservation.objects.update_or_create(
                 customer_uid=userdata["uid"],
                 serving=servings[field],
-                defaults={"count": int(value), "customer": userdata["displayName"]},
+                defaults={"count": value_num, "customer": userdata["displayName"]},
             )
-
-        self.changed = True
-
-        return self.get(request, *args, **kwargs)
 
 
 def _get_userdata(request):
