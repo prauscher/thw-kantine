@@ -3,13 +3,17 @@
 
 import os
 import jwt
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.shortcuts import redirect
+from django.urls import reverse
 
 
-def jwt_login(request):
+def jwt_login(request, token, next=""):
     pubkey = os.environ.get("JWT_PUBKEY", "")
-    token = request.GET.get("jwt", "")
     decoded = jwt.decode(token, pubkey, algorithms=["ES256"])
     request.session["jwt_userdata"] = decoded.get("userdata")
-    print("decoded", decoded, flush=True)
-    return redirect('abfrage:start')
+
+    if next.rtrim("/") == "" or not url_has_allowed_host_and_scheme(url=next, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        next = reverse("abfrage:start")
+
+    return redirect(next)
