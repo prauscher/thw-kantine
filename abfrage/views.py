@@ -1,4 +1,5 @@
 from collections import defaultdict
+from urllib.parse import urlencode
 from django import forms
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -7,7 +8,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from . import models
 
@@ -18,6 +19,18 @@ class MenuListView(ListView):
     def get_context_data(self, *args, **kwargs):
         return {**super().get_context_data(*args, **kwargs),
                 "userdata": _get_userdata(self.request)}
+
+    def get(self, *args, **kwargs):
+        if self.get_queryset().count() == 0:
+            closed_at = timezone.now()
+            # Go to next tuesday
+            closed_at += timezone.timedelta(days=(1 - closed_at.weekday()) % 7)
+            # use specific time of day
+            closed_at = closed_at.replace(hour=10, minute=0)
+            return redirect(reverse('abfrage:menu_create') + "?" + urlencode({
+                "closed_at": closed_at.strftime("%Y-%m-%dT%H:%M")}))
+
+        return super().get(*args, **kwargs)
 
     def get_queryset(self):
         return super().get_queryset().filter(Q(closed_at__isnull=True) | Q(closed_at__gte=timezone.now() - timezone.timedelta(days=2)))
@@ -62,6 +75,10 @@ class MenuModelForm(forms.ModelForm):
 class MenuCreateView(CreateView):
     form_class = MenuModelForm
     template_name = "abfrage/menu_form.html"
+
+    def get_initial(self):
+        return {**super().get_initial(),
+                "closed_at": self.request.GET.get("closed_at")}
 
     def get_context_data(self, **kwargs):
         return {**super().get_context_data(**kwargs), "icons": models.Serving.ICONS}
