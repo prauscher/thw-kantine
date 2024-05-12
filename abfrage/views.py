@@ -115,7 +115,7 @@ class MenuCreateView(CreateView):
                        for channel in hermine_client.get_channels(company["id"])]
            channel_dict = next(filter(lambda chan_dict: chan_dict["name"] == hermine_channel, channels))
            hermine_client.send_msg(("channel", channel_dict["id"]),
-                                   f"{userdata['displayName']} hat ein neues Menü {form.instance.label} angelegt. Melde dich{frist_text} unter {form.instance.get_absolute_url()} an.")
+                                   f"{userdata['displayName']} hat ein neues Menü {form.instance.label} angelegt. Melde dich{frist_text} unter {self.request.build_absolute_uri(form.instance.get_absolute_url())} an.")
 
         return super().form_valid(form)
 
