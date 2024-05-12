@@ -33,7 +33,8 @@ class MenuListView(ListView):
             # use specific time of day
             closed_at = closed_at.replace(hour=10, minute=0)
             return redirect(reverse('abfrage:menu_create') + "?" + urlencode({
-                "closed_at": closed_at.strftime("%Y-%m-%dT%H:%M")}))
+                "closed_at": closed_at.strftime("%Y-%m-%dT%H:%M"),
+                "label": f"Dienst am {closed_at:%d.%m.%Y}"}))
 
         return super().get(*args, **kwargs)
 
@@ -83,6 +84,7 @@ class MenuCreateView(CreateView):
 
     def get_initial(self):
         return {**super().get_initial(),
+                "label": self.request.GET.get("label"),
                 "closed_at": self.request.GET.get("closed_at")}
 
     def get_context_data(self, **kwargs):
