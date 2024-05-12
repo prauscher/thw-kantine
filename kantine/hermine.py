@@ -401,6 +401,7 @@ def setup_logging(debug=False):
     requests_log.setLevel(loglevel)
 
 
+_hermine_data = {}
 _hermine_device_id = None
 _hermine_client_key = None
 _hermine_user_id = None
@@ -415,21 +416,28 @@ def get_hermine_client():
     if not username or not password or not encryption:
         return None
 
-    client = StashCatClient(_hermine_device_id, _hermine_client_key,
-                            _hermine_user_id, _hermine_hidden_id)
+    client = None
+    if _hermine_data:
+        client = StashCatClient(_hermine_data["device_id"],
+                                _hermine_data["client_key"],
+                                _hermine_data["user_id"],
+                                _hermine_data["hidden_id"])
 
-    try:
-        client.check()
-    except ValueError:
+        try:
+            client.check()
+        except ValueError:
+            client = None
+
+    if not client:
         client = StashCatClient()
         payload = client.login(username, password)
         if not payload:
             return None
 
-        _hermine_device_id = client.device_id
-        _hermine_client_key = client.client_key
-        _hermine_user_id = client.user_id
-        _hermine_hidden_id = client.hidden_id
+        _hermine_data["device_id"] = client.device_id
+        _hermine_data["client_key"] = client.client_key
+        _hermine_data["user_id"] = client.user_id
+        _hermine_data["hidden_id"] = client.hidden_id
 
     client.open_private_key(encryption)
     return client
