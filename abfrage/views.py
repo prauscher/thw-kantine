@@ -21,7 +21,12 @@ class MenuListView(ListView):
                 "userdata": _get_userdata(self.request)}
 
     def get(self, *args, **kwargs):
-        if self.get_queryset().count() == 0:
+        count = self.get_queryset().count()
+
+        if count == 1:
+            return redirect(self.get_queryset().get().get_absolute_url() + "?redirected=1")
+
+        if count == 0:
             closed_at = timezone.now()
             # Go to next tuesday
             closed_at += timezone.timedelta(days=(1 - closed_at.weekday()) % 7)
@@ -147,6 +152,7 @@ class MenuDetailView(DetailView):
 
         context["changed"] = self.changed
         context["error_message"] = self.error_message
+        context["is_redirected"] = (self.request.GET.get("redirected", "0") != "0")
         context["is_admin"] = (userdata["uid"] == self.object.owner)
 
         return context
