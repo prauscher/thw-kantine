@@ -21,7 +21,52 @@
  <div class="alert alert-danger">{{ error_message }}</div>
 {% endif %}
 
+{% if object.is_open %}
+<p>
+ Hier kannst du für das oben genannte Menü bestellen. Deine Bestellung wird automatisch mit deinem Anmeldenamen verknüpft.
+ Bitte trage die gewünschte Anzahl an Essen ein. Über die Buttons <em>+</em> bzw. <em>-</em> kannst du die Zahl je um eins erhöhen bzw. verringern.
+ Anschließend musst du deine Änderungen mit dem Button "Speichern" sichern.
+</p>
+{% endif %}
+
 <form action="" method="post">{% csrf_token %}
+<div class="table-responsive">
+<table class="table table-striped">
+<thead>
+<tr>
+ <th scope="row" style="width:70%">Essen</th>
+ <th scope="row" style="width:30%" class="d-lg-none">Bestellung</th>
+</tr>
+</thead>
+<tbody>
+{% for serving in servings %}
+<tr>
+ <th scope="col">
+  <div style="width:3em; height:3em;" class="float-start d-inline-block me-2">{% include "abfrage/_menu_icon.html" with icon=serving.obj.icon %}</div>
+  {{ serving.obj.label }}
+ </th>
+ <td style="min-width:8em;">
+  {% if object.is_open %}
+  <div class="input-group flex-nowrap">
+   <button type="button" class="btn btn-outline-danger decrease">-</button>
+   <input type="number" class="form-control text-end value" min="0" name="{{ serving.obj.pk }}" value="{{ serving.own }}" />
+   <button type="button" class="btn btn-outline-success increase">+</button>
+  </div>
+  {% else %}
+  <div class="text-end">Eigene: <strong>{{ serving.own }}</strong></div>
+  {% endif %}
+  <div class="text-end">Gesamt: {{ serving.total }}</div>
+ </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% if object.is_open %}<div class="text-end"><input type="submit" value="Speichern" class="btn btn-success" /></div>{% endif %}
+</form>
+
+<h3>Alle Anmeldungen</h3>
+
 <table class="table table-striped">
 <thead>
  <tr>
@@ -33,28 +78,13 @@
    </th>
   {% endfor %}
  </tr>
-{% if object.is_open %}
- <tr>
-  <td><input type="submit" class="btn btn-sm btn-success" value="Speichern" /></td>
-  {% for serving in servings %}
-   <td><input type="number" class="form-control text-end" min="0" name="{{ serving.obj.pk }}" value="{{ serving.own }}" /></td>
-  {% endfor %}
- </tr>
-{% else %}
- <tr>
-  <td>{{ userdata.displayName }}</td>
-  {% for serving in servings %}
-   <td class="text-end">{{ serving.obj.pk }}</td>
-  {% endfor %}
- </tr>
-{% endif %}
 </thead>
 <tbody>
- {% for customer in others %}
+ {% for user in all_users %}
  <tr>
-  <th scope="row">{{ customer.displayName }}</th>
-  {% for count in customer.servings %}
-   <td class="text-end">{{ count }}</td>
+  <th scope="row">{{ user.displayName }}</th>
+  {% for count in user.servings %}
+   <td class="text-end">{% if count == 0 %}&nbsp;{% else %}{{ count }}{% endif %}</td>
   {% endfor %}
  </tr>
  {% endfor %}
@@ -68,6 +98,21 @@
  </tr>
 </tfoot>
 </table>
-</form>
+{% endblock %}
 
+{% block script %}
+<script type="text/javascript">
+
+$(function () {
+	$(".decrease").click(function () {
+		var value = $(this).parent().find(".value").val();
+		$(this).parent().find(".value").val(Math.max(0, parseInt(value - 1)));
+	});
+	$(".increase").click(function () {
+		var value = $(this).parent().find(".value").val();
+		$(this).parent().find(".value").val(parseInt(value) + 1);
+	});
+});
+
+</script>
 {% endblock %}

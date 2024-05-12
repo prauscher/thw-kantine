@@ -160,21 +160,21 @@ class MenuDetailView(DetailView):
 
         serving_objects = self.object.servings.all()
         servings = {serving.pk: {"obj": serving, "own": 0, "total": 0} for serving in serving_objects}
-        others = defaultdict(lambda: {"displayName": "", "servings": {pk: 0 for pk in servings.keys()}})
+        all_users = defaultdict(lambda: {"displayName": "", "servings": {pk: 0 for pk in servings.keys()}})
 
         for reservation in models.Reservation.objects.filter(serving__menu=self.object):
             servings[reservation.serving.pk]["total"] += reservation.count
 
+            all_users[reservation.customer_uid]["displayName"] = reservation.customer
+            all_users[reservation.customer_uid]["servings"][reservation.serving.pk] += reservation.count
+
             if reservation.customer_uid == userdata["uid"]:
                 servings[reservation.serving.pk]["own"] += reservation.count
-            else:
-                others[reservation.customer_uid]["displayName"] = reservation.customer
-                others[reservation.customer_uid]["servings"][reservation.serving.pk] += reservation.count
 
         context["servings"] = servings.values()
-        context["others"] = [
-            {"displayName": other["displayName"], "servings": [other["servings"][pk] for pk in servings.keys()]}
-            for other in others.values()
+        context["all_users"] = [
+            {"displayName": user["displayName"], "servings": [user["servings"][pk] for pk in servings.keys()]}
+            for user in all_users.values()
         ]
 
         context["changed"] = self.changed
