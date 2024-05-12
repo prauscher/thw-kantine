@@ -1,7 +1,7 @@
 from collections import defaultdict
 from urllib.parse import urlencode
 from django import forms
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
@@ -10,9 +10,12 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from kantine.decorators import require_jwt_login
 from . import models
 
 
+@method_decorator(require_jwt_login, name="dispatch")
 class MenuListView(ListView):
     model = models.Menu
 
@@ -78,6 +81,7 @@ class MenuModelForm(forms.ModelForm):
         fields = ["label", "closed_at"]
 
 
+@method_decorator(require_jwt_login, name="dispatch")
 class MenuCreateView(CreateView):
     form_class = MenuModelForm
     template_name = "abfrage/menu_form.html"
@@ -98,6 +102,7 @@ class MenuCreateView(CreateView):
         return super().form_valid(form)
 
 
+@method_decorator(require_jwt_login, name="dispatch")
 class MenuUpdateView(UpdateView):
     model = models.Menu
     form_class = MenuModelForm
@@ -114,11 +119,13 @@ class MenuUpdateView(UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(require_jwt_login, name="dispatch")
 class MenuDeleteView(DeleteView):
     model = models.Menu
     success_url = reverse_lazy("abfrage:start")
 
 
+@method_decorator(require_jwt_login, name="dispatch")
 class MenuDetailView(DetailView):
     model = models.Menu
 
@@ -161,9 +168,6 @@ class MenuDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         userdata = _get_userdata(request)
-
-        if not userdata:
-            raise PermissionDenied
 
         try:
             with transaction.atomic():
