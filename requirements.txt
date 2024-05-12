@@ -5,3 +5,4 @@ pyjwt[crypto]==2.8.0
 django-bootstrap5==24.2
 crispy-bootstrap5==2024.2
 django_bootstrap_icons==0.8.7
+pycryptodome==3.20.0
