@@ -37,7 +37,7 @@ class MenuListView(ListView):
             closed_at = closed_at.replace(hour=10, minute=0)
             return redirect(reverse('abfrage:menu_create') + "?" + urlencode({
                 "closed_at": closed_at.strftime("%Y-%m-%dT%H:%M"),
-                "label": f"Dienst am {closed_at:%d.%m.%Y}"}))
+                "label": f"Dienst am {closed_at:%d.%m.%Y}, Essensausgabe ab 18:00 Uhr"}))
 
         return super().get(*args, **kwargs)
 
