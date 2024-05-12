@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+import os
 import argparse
 import base64
 import http.client
