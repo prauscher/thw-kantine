@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 from urllib.parse import urlencode
+from threading import Thread
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -114,8 +115,10 @@ class MenuCreateView(CreateView):
                        for company in hermine_client.get_companies()
                        for channel in hermine_client.get_channels(company["id"])]
            channel_dict = next(filter(lambda chan_dict: chan_dict["name"] == hermine_channel, channels))
-           hermine_client.send_msg(("channel", channel_dict["id"]),
-                                   f"{userdata['displayName']} hat ein neues Menü {form.instance.label} angelegt. Melde dich{frist_text} unter {self.request.build_absolute_uri(form.instance.get_absolute_url())} an.")
+
+           Thread(target=hermine_client.send_msg,
+                  args=(("channel", channel_dict["id"]),
+                        f"{userdata['displayName']} hat ein neues Menü {form.instance.label} angelegt. Melde dich{frist_text} unter {self.request.build_absolute_uri(form.instance.get_absolute_url())} an.")).start()
 
         return super().form_valid(form)
 
