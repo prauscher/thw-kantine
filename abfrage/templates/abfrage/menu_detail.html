@@ -3,8 +3,10 @@
 {% block title %}{{ object.label }}{% endblock %}
 
 {% block buttons %}
+{% if is_admin %}
  <a class="btn btn-warning" href="{% url 'abfrage:menu_update' object.pk %}">Bearbeiten</a>
  <a class="btn btn-danger" href="{% url 'abfrage:menu_delete' object.pk %}">Löschen</a>
+{% endif %}
 {% endblock %}
 
 {% block content %}

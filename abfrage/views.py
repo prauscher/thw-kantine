@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 from threading import Thread
 from django import forms
 from django.core.exceptions import ValidationError
+from django.http import Http404
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
@@ -135,6 +136,12 @@ class MenuUpdateView(UpdateView):
                              for serving in self.object.servings.all()],
                 "icons": models.Serving.ICONS}
 
+    def get_object(self, *args):
+        menu = super().get_object(*args)
+        if menu.owner != _get_userdata(self.request)["uid"]:
+            raise Http404
+        return menu
+
     def form_valid(self, form):
         form.process_servings(self.request.POST)
         return super().form_valid(form)
@@ -144,6 +151,12 @@ class MenuUpdateView(UpdateView):
 class MenuDeleteView(DeleteView):
     model = models.Menu
     success_url = reverse_lazy("abfrage:start")
+
+    def get_object(self, *args):
+        menu = super().get_object(*args)
+        if menu.owner != _get_userdata(self.request)["uid"]:
+            raise Http404
+        return menu
 
 
 @method_decorator(require_jwt_login, name="dispatch")
