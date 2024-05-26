@@ -64,7 +64,7 @@ class MenuModelForm(forms.ModelForm):
                 serving_no, _, option = field[8:].partition("-")
                 servings[serving_no][option] = value
 
-        if not servings:
+        if all(not value for value in servings.values()):
             raise ValidationError("Es muss mindestens eine Option eingegeben werden.")
 
         return {**cleaned_data, "servings": servings}
