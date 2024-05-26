@@ -112,6 +112,8 @@ class MenuCreateView(CreateView):
            if form.instance.closed_at:
                frist_text = f" bis {form.instance.closed_at:%H:%M am %d.%m.%Y}"
            servings = "\n".join(f"- {serving.label}" for serving in form.instance.servings.all())
+           if servings:
+               servings = f" Es gibt\n{servings}"
 
            channels = [channel
                        for company in hermine_client.get_companies()
@@ -119,7 +121,7 @@ class MenuCreateView(CreateView):
            channel_dict = next(filter(lambda chan_dict: chan_dict["name"] == hermine_channel, channels))
 
            hermine_client.send_msg(("channel", channel_dict["id"]),
-                                   f"{userdata['displayName']} hat ein neues Menü {form.instance.label} angelegt. Melde dich{frist_text} unter {self.request.build_absolute_uri(form.instance.get_absolute_url())} an. Es gibt\n{servings}")
+                                   f"{userdata['displayName']} hat ein neues Menü {form.instance.label} angelegt. Melde dich{frist_text} unter {self.request.build_absolute_uri(form.instance.get_absolute_url())} an.{servings}")
 
         return super().form_valid(form)
 
