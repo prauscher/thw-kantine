@@ -55,14 +55,22 @@ class MenuModelForm(forms.ModelForm):
         self.fields["closed_at"].widget.input_type = "datetime-local"
         self.fields["closed_at"].widget.format = "%Y-%m-%dT%H:%M"
 
-    def process_servings(self, post_data):
+    def clean(self):
+        cleaned_data = super().clean()
+
         servings = defaultdict(dict)
-        for field, value in post_data.items():
+        for field, value in self.data.items():
             if field.startswith("serving-") and "-" in field[8:]:
                 serving_no, _, option = field[8:].partition("-")
                 servings[serving_no][option] = value
 
-        for serving_id, serving_data in servings.items():
+        if not servings:
+            raise ValidationError("Es muss mindestens eine Option eingegeben werden.")
+
+        return {**cleaned_data, "servings": servings}
+
+    def process_servings(self):
+        for serving_id, serving_data in self.cleaned_data["servings"].items():
             if serving_id.startswith("new"):
                 if not serving_data.get("label"):
                     continue
@@ -103,7 +111,7 @@ class MenuCreateView(CreateView):
         form.save(commit=False)
         form.instance.owner = userdata["uid"]
         form.save(commit=True)
-        form.process_servings(self.request.POST)
+        form.process_servings()
 
         hermine_client = get_hermine_client()
         hermine_channel = os.environ.get("ABFRAGE_HERMINE_CHANNEL")
@@ -145,7 +153,7 @@ class MenuUpdateView(UpdateView):
         return menu
 
     def form_valid(self, form):
-        form.process_servings(self.request.POST)
+        form.process_servings()
         return super().form_valid(form)
 
 
