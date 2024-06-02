@@ -86,7 +86,7 @@
  <tr>
   <th scope="row">{{ user.displayName }}</th>
   {% for count in user.servings %}
-   <td class="text-end">{% if count == 0 %}&nbsp;{% else %}{{ count }}{% endif %}</td>
+   <td class="text-center">{% if count == 0 %}&nbsp;{% else %}{{ count }}{% endif %}</td>
   {% endfor %}
  </tr>
  {% endfor %}
@@ -95,7 +95,7 @@
  <tr>
   <th scope="row">Gesamt</th>
   {% for serving in servings %}
-   <td class="text-end">{{ serving.total }}</td>
+   <td class="text-center">{{ serving.total }}</td>
   {% endfor %}
  </tr>
 </tfoot>
