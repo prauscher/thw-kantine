@@ -238,7 +238,7 @@ class Teilnahme(models.Model):
     ergebnis = models.TextField(blank=True)
 
     def __str__(self) -> str:
-        return (f'{self.unterweisung}: {self.fullname} ('
+        return (f'{self.unterweisung}: {self.fullname or self.username} ('
                 f'{"Offen" if self.abgeschlossen_at is None else "Abgeschlossen"})')
 
     class Meta:
