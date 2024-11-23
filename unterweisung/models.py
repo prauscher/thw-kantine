@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.urls import reverse
 from polymorphic.models import PolymorphicModel
 from markdownx.models import MarkdownxField
@@ -127,6 +128,7 @@ class InfoSeite(Seite):
 class MultipleChoiceSeite(Seite):
     min_richtig = models.IntegerField(
         default=0,
+        validators=[MinValueValidator(0)],
         verbose_name="Benötigte richtig beantwortete Fragen",
         help_text="Wie viele Fragen muss ein*e Teilnehmer*in richtig beantworten, um die Seite zu "
                   "bestehen. Hinweis: Erforderliche Fragen müssen immer richtig beantwortet werden"
@@ -134,6 +136,10 @@ class MultipleChoiceSeite(Seite):
     )
     fragen = models.ManyToManyField("MultipleChoiceFrage",
                                     related_name="seiten")
+
+    def clean(self) -> None:
+        if self.min_richtig > self.fragen.count():
+            raise ValidationError("Benötige mehr richtige Fragen als hinterlegt sind.")
 
     def get_template_context(self) -> tuple[str, dict]:
         fragen = []
