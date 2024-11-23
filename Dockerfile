@@ -39,6 +39,7 @@ WORKDIR /opt/app
 COPY ./manage.py /opt/app/manage.py
 COPY ./kantine /opt/app/kantine
 COPY ./abfrage /opt/app/abfrage
+COPY ./unterweisung /opt/app/unterweisung
 #COPY ./strichliste /opt/app/strichliste
 
 RUN find "." -exec chown root:root '{}' +  && \
