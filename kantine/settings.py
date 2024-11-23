@@ -166,8 +166,11 @@ STORAGES = {
     }
 }
 
-STATIC_URL = _read_setting("STATIC_URL", '/static/')
+STATIC_URL = _read_setting("STATIC_URL", "/static/")
 STATIC_ROOT = _read_setting("STATIC_ROOT", BASE_DIR / "static")
+
+MEDIA_URL = _read_setting("MEDIA_URL", "/media/")
+MEDIA_ROOT = _read_setting("MEDIA_ROOT", BASE_DIR / "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
