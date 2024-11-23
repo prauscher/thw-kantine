@@ -1,0 +1,52 @@
+{% extends "abfrage/base.html" %}
+
+{% block title %}Online-Unterweisungen{% endblock %}
+
+{% block content %}
+<p>Die Unterweisungen werden in diesem Jahr hybrid durchgeführt: Online erfolgt eine umfangreiche
+ Wissensbelehrung, die jeweils mit einer Lernerfolgskontrolle abgeschlossen wird. Anschließend
+ werden einige Kerninformationen in einem Präsenzteil innerhalb der ersten etwa halben Stunde
+ der ersten Dienste im Jahr wiederholt. Die Einteilung hierfür findet vor Ort statt.</p>
+<p>Nachfolgend findest du eine Übersicht der Online-Unterweisungen. Einige wurden automatisch für
+ dich ausgewählt und sind in der Tabelle als <span class="badge bg-danger">Offen</span>
+ markiert. Hierzu gehören neben der allgemeinen Sicherheitsunterweisung für alle Helfer*innen z.B.
+ die Kraftfahrer-Unterweisung für alle Kraftfahrer*innen im OV.</p>
+<p>Sobald die Unterweisung erfolgreich beendet wurde, wird sie in der Übersicht als
+ <span class="badge bg-success">Abgeschlossen</span> angezeigt. Beachte, dass die
+ Online-Unterweisungen zwingend vor dem ersten Dienst abgeschlossen werden müssen.</p>
+<p>Einige Unterweisungen (z.B. für die Verwendung der Hubameise) sind hier als
+ <span class="badge bg-secondary">Weitere</span> dargestellt. Hierzu gehören z.B. die Unterweisung
+ für die Hubameise in Halle 16. Diese Unterweisungen sind erforderlich, wenn die entsprechenden
+ Geräte verwendet werden sollen.</p>
+
+<table class="table table-striped">
+<thead>
+<tr>
+ <th scope="col">Unterweisung</th>
+ <th scope="col" style="width:4em;" class="text-end">Status</th>
+</tr>
+</thead>
+<tbody>
+ {% for unterweisung, teilnahme in unterweisungen %}
+ <tr>
+  <th scope="row">
+   <a href="{{ unterweisung.get_absolute_url }}">{{ unterweisung.label }}</a>
+  </th>
+  <td class="text-end">
+   {% if teilnahme is None %}
+    <span class="badge bg-secondary">Weitere</span>
+   {% elif teilnahme.abgeschlossen_at is None %}
+    <span class="badge bg-danger">Offen</span>
+   {% else %}
+    <span class="badge bg-success">Abgeschlossen</span>
+   {% endif %}
+  </td>
+ </tr>
+ {% empty %}
+ <tr>
+  <td colspan="2" class="text-center">Aktuell sind keine Unterweisungen hinterlegt.</td>
+ </tr>
+ {% endfor %}
+</tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "abfrage/base.html" %}
+{% load mathfilters %}
+
+{% block title %}Überweisungsübersicht{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url "unterweisung:start" %}">Unterweisungen</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Übersicht</li>
+ </ol>
+</nav>
+
+<table class="table table-striped">
+<thead>
+ <tr>
+  <th scope="col">Helfer*in</th>
+  {% for unterweisung in unterweisungen %}
+  <th scope="col">{{ unterweisung.short_label }}</th>
+  {% endfor %}
+ </tr>
+</thead>
+<tbody>
+ {% for username, data in personen %}
+ <tr>
+  <th scope="row">{{ data.namen|join:" / " }}</th>
+  {% for teilnahme in data.teilnahmen %}
+  <td>
+   {% if teilnahme.1 is False %}
+    <span class="badge bg-danger">Offen</span>
+   {% elif teilnahme.1 is None %}
+    <em>-</em>
+   {% else %}
+    {{ teilnahme.1|linebreaksbr }}
+   {% endif %}
+  </td>
+  {% endfor %}
+ </tr>
+ {% endfor %}
+</tbody>
+</table>
+{% endblock %}

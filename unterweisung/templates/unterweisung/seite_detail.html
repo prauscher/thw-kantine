@@ -1,0 +1,48 @@
+{% extends "abfrage/base.html" %}
+{% load mathfilters %}
+
+{% block title %}{{ object.unterweisung.label }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url "unterweisung:start" %}">Unterweisungen</a></li>
+  <li class="breadcrumb-item"><a href="{% url "unterweisung:unterweisung_detail" pk=object.unterweisung.pk %}">{{ object.unterweisung.label }}</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{{ object.titel }}</li>
+ </ol>
+</nav>
+
+<h3>{{ object.titel }}</h3>
+
+{% if errors %}
+{% for error in errors %}
+<p class="alert alert-danger">{{ error }}</p>
+{% endfor %}
+{% endif %}
+
+<form action="" method="post">
+ {% csrf_token %}
+{{ inhalt }}
+
+<div class="text-end">
+ <div class="btn-group dropup">
+  <button type="button" class="btn btn-lg btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+   Springe zu Seite...
+  </button>
+  <ul class="dropdown-menu">
+   {% for nr, seite, erledigt, _ in seiten %}
+    <li><button name="_redirect" value="{{ nr|sub:1 }}" class="dropdown-item {% if seite == object %}active{% elif erledigt %}text-success{% endif %}">{{ seite.titel }}</a></li>
+   {% endfor %} 
+  </ul>
+  </div>
+
+ <button type="submit" name="_redirect" value="next" class="btn btn-lg btn-primary">Weiter</button>
+</div>
+
+<nav aria-label="Page navigation">
+ <ul class="pagination justify-content-center">
+ </ul>
+</nav>
+</form>
+
+{% endblock %}

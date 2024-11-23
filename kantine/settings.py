@@ -43,6 +43,10 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [
     'abfrage',
+    'unterweisung',
+    'polymorphic',
+    'mathfilters',
+    'markdownx',
     'django_bootstrap5',
     'django_bootstrap_icons',
     'crispy_forms',
@@ -154,6 +158,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
     }

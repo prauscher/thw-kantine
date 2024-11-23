@@ -1,0 +1,17 @@
+{% for frage in fragen %}
+<h5>{{ frage.frage }}</h5>
+{% if frage.optional %}
+<p>Zum Bestehen müssen insgesamt {{ min_richtig }} Fragen richtig beantwortet werden.</p>
+{% else %}
+<p>Diese Frage muss zum bestehen zwingend richtig beantwortet werden.</p>
+{% endif %}
+<p>Insgesamt sind {{ frage.richtige_antworten }} Antworten richtig.</p>
+{% for antwort_id, antwort_text in frage.antworten %}
+<div class="form-check">
+  <input class="form-check-input" type="{% if frage.richtige_antworten == 1 %}radio{% else %}checkbox{% endif %}" name="frage_{{ frage.pk }}" value="{{ antwort_id }}" id="antwort_{{ antwort_id }}" />
+  <label class="form-check-label" for="antwort_{{ antwort_id }}">
+    {{ antwort_text }}
+  </label>
+</div>
+{% endfor %}
+{% endfor %}

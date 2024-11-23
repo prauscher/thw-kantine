@@ -1,0 +1,69 @@
+<p>Bitte gib zum Abgleich der Daten die Nummer und Fahrerlaubnisklassen deines <em>aktuellen</em>
+ Führerscheins an. Wähle hierfür zunächst aus, ob es sich um einen "alten" Führerschein oder
+ um einen "neuen" EU-Führerschein im Scheckkartenformat handelt. Anschließend kannst du die
+ Nummer sowie die Fahrerlaubnisklassen auswählen.</p>
+
+<nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <button class="nav-link" id="nav-papier-tab" data-bs-toggle="tab" data-bs-target="#nav-papier" type="button" role="tab" aria-controls="nav-home" aria-selected="false">Papierführerschein</button>
+    <button class="nav-link active" id="nav-karte-tab" data-bs-toggle="tab" data-bs-target="#nav-karte" type="button" role="tab" aria-controls="nav-karte" aria-selected="true">EU-Kartenführerschein</button>
+  </div>
+</nav>
+<div class="tab-content">
+ <div class="tab-pane fade" id="nav-papier" role="tabpanel" aria-labelledby="nav-papier-tab" tabindex="0">
+  <p><strong>Wichtig:</strong> In Abhängigkeit zu deinem Geburtsjahr müssen alle
+   Papierführerscheine durch EU-Kartenführerscheine ersetzt werden. Die genauen Fristen findest
+   du beim <a href="https://bmdv.bund.de/SharedDocs/DE/Artikel/StV/Strassenverkehr/faq-fuehrerschein-umtausch.html" target="_blank">BMDV</a>.</p>
+
+
+  <div class="mb-3">
+   <label for="nummer_papier">Führerscheinnummer</label>
+   <input type="text" class="form-control" id="nummer_papier" name="nummer_papier" placeholder="E12115941" />
+  </div>
+
+  <div class="mb-3">
+   <label>Fahrerlaubnisklassen</label>
+   <div class="form-control">
+   {% with "2 3" as klassen %}
+   {% for klasse in klassen.split %}
+   <div class="form-check form-check-inline">
+    <input class="form-check-input" type="checkbox" id="klassen_papier_{{ klasse }}" name="klassen_papier" value="{{ klasse }}" />
+    <label class="form-check-label" for="klassen_papier_{{ klasse }}">{{ klasse }}</label>
+   </div>
+   {% endfor %}
+   {% endwith %}
+   </div>
+  </div>
+ </div>
+ <div class="tab-pane fade show active" id="nav-karte" role="tabpanel" aria-labelledby="nav-karte-tab" tabindex="0">
+  <p><strong>Wichtig:</strong> Wähle nur die Fahrerlaubnisklassen aus, die auf dich ohne
+   Einschränkung (Schlüsselzahlen 78 oder 79) zutreffen: Wurde dein alter Führerschein der Klasse 3
+   auf einen Kartenführerschein mit Klasse CE und Schlüsselzahl "79 (C1E>12000kg,L=&lt;3)"
+   umgeschrieben, kreuze <strong>nicht</strong> die Klasse CE an.</em>
+  <p>Beachte außerdem die Ablauffristen des Kartenführerscheins (Ziffer 4b) sowie der
+   Führerscheinklassen (Ziffer 11) und bemühe dich rechtzeitig um einen Austausch. Enthält
+   dein Führerschein unter Ziffer 4b kein Datum, gelten
+   <a href="https://bmdv.bund.de/SharedDocs/DE/Artikel/StV/Strassenverkehr/faq-fuehrerschein-umtausch.html" target="_blank">Umtauschfristen</a>.</p>
+
+  <div class="mb-3">
+   <label for="nummer_karte">Führerscheinnummer</label>
+   <input type="text" class="form-control" id="nummer_karte" name="nummer_karte" placeholder="B072RRE2I55" />
+  </div>
+
+  <div class="mb-3">
+   <label>Fahrerlaubnisklassen</label>
+   <div class="form-control">
+   {% with "B BE C1E C CE" as klassen %}
+   {% for klasse in klassen.split %}
+   <div class="form-check form-check-inline">
+    <input class="form-check-input" type="checkbox" id="klassen_karte_{{ klasse }}" name="klassen_karte" value="{{ klasse }}" />
+    <label class="form-check-label" for="klassen_karte_{{ klasse }}">{{ klasse }}</label>
+   </div>
+   {% endfor %}
+   {% endwith %}
+   </div>
+  </div>
+ </div>
+</div>
+<script type="text/javascript">
+</script>

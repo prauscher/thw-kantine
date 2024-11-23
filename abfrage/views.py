@@ -1,7 +1,6 @@
 import os
 from collections import defaultdict
 from urllib.parse import urlencode
-from threading import Thread
 from django import forms
 from django.core.exceptions import ValidationError
 from django.http import Http404

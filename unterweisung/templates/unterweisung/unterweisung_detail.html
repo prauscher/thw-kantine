@@ -1,0 +1,45 @@
+{% extends "abfrage/base.html" %}
+
+{% block title %}{{ object.label }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url "unterweisung:start" %}">Unterweisungen</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{{ object.label }}</li>
+ </ol>
+</nav>
+
+{% if teilnahme is None %}
+<p class="alert alert-info">
+ Diese Unterweisung kann von dir innerhalb der Frist abgeschlossen werden (z.B. um spezielle
+ Geräte zu bedienen). Genauere Informationen findest du weiter unten - sofern du dir nicht sicher
+ bist, ob du diese Unterweisung absolvieren musst, sprich bitte deine Führungskraft an.
+</p>
+{% elif teilnahme.abgeschlossen_at is None %}
+<p class="alert alert-warning">
+ Diese Unterweisung ist für dich vorgeschrieben und muss innerhalb der Frist abgeschlossen werden.
+</p>
+{% else %}
+<p class="alert alert-success">{{ object.success_text }}</p>
+{% endif %}
+
+<p>{{ object.description }}</p>
+
+<p>Mittels "Starten" kannst du die Unterweisung (erneut) starten. Keine Sorge: Sofern du die
+ Unterweisung bereits erfolgreich abgeschlossen hast, geht dieser Abschluss dabei nicht
+ verloren. Somit kannst du die Inhalte jederzeit wiederholen.</p>
+<p>Eine Unterweisung muss in einem Durchgang durchgeführt werden: Wird nur ein Teil der
+ Unterweisung durchgeführt, ist zu einem späteren Zeitpunkt eine vollständige Wiederholung
+ erforderlich.</p>
+<p>Die Unterweisung besteht aus insgesamt {{ object.seiten.count }} Seiten, die du nacheinander
+ lesen bzw. bearbeiten wirst. Anschließend kannst du mittels "Weiter" zur nächsten Seite springen
+ und ggf. deine Antworten überprüfen. Sobald du alle Seiten erfolgreich bearbeitet hast, wirst du
+ auf diese Seite zurückgeleitet: Eine grüne Box zeigt dir dort an, dass du die Unterweisung
+ erfolgreich abgeschlossen hast.</p>
+
+<p class="text-end">
+ <a href="{% url "unterweisung:start" %}" class="btn btn-lg btn-outline-primary">Zur Übersicht</a>
+ {% if erste_seite is not None %}<a href="{{ erste_seite.get_absolute_url }}" class="btn btn-lg btn-primary">Starten</a>{% endif %}
+</p>
+{% endblock %}
