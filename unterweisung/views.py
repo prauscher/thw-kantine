@@ -147,7 +147,9 @@ class UnterweisungExportView(TemplateView):
                                                        for unterweisung in unterweisungen]})
 
         for teilnahme in models.Teilnahme.objects.filter(unterweisung__in=unterweisungen):
-            personen[teilnahme.username]["namen"].add(teilnahme.fullname)
+            if teilnahme.fullname:
+                personen[teilnahme.username]["namen"].add(teilnahme.fullname)
+
             unterweisung_index = unterweisungen.index(teilnahme.unterweisung)
             personen[teilnahme.username]["teilnahmen"][unterweisung_index] = (
                 teilnahme.unterweisung,
@@ -155,7 +157,6 @@ class UnterweisungExportView(TemplateView):
 
         context["unterweisungen"] = unterweisungen
         context["personen"] = personen.items()
-        print(context)
 
         return context
 
