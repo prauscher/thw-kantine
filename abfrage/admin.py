@@ -2,5 +2,14 @@ from django.contrib import admin
 from . import models
 
 
-admin.site.register(models.Menu)
-admin.site.register(models.Serving)
+class ServingInline(admin.StackedInline):
+    model = models.Serving
+    extra = 3
+
+
+@admin.register(models.Menu)
+class MenuAdmin(admin.ModelAdmin):
+    inlines = (ServingInline,)
+
+
+admin.site.register(models.Reservation)
