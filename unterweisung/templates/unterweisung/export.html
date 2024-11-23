@@ -23,7 +23,9 @@
 <tbody>
  {% for username, data in personen %}
  <tr>
-  <th scope="row">{{ data.namen|join:" / " }}</th>
+  <th scope="row">
+   {% if data.namen %}{{ data.namen|join:" / " }}{% else %}{{ username }}{% endif %}
+  </th>
   {% for teilnahme in data.teilnahmen %}
   <td>
    {% if teilnahme.1 is False %}
