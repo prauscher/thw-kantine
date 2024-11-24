@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'polymorphic',
     'mathfilters',
     'markdownx',
+    'django_object_actions',
     'django_bootstrap5',
     'django_bootstrap_icons',
     'crispy_forms',

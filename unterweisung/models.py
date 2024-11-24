@@ -6,9 +6,15 @@ from polymorphic.models import PolymorphicModel
 from markdownx.models import MarkdownxField
 
 
+# https://github.com/django-polymorphic/django-polymorphic/issues/229#issuecomment-398434412
+def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
+    return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
+
+
 class Unterweisung(models.Model):
     label = models.CharField(
         max_length=100,
+        unique=True,
         verbose_name="Bezeichnung",
         help_text='Eindeutiger Name der Unterweisung, z.B. "Kraftfahrerunterweisung 2024"',
     )
@@ -51,7 +57,7 @@ class Unterweisung(models.Model):
 
 
 class Seite(PolymorphicModel):
-    unterweisung = models.ForeignKey("Unterweisung", on_delete=models.CASCADE,
+    unterweisung = models.ForeignKey("Unterweisung", on_delete=NON_POLYMORPHIC_CASCADE,
                                      related_name="seiten")
     sort = models.IntegerField(
         help_text="Sortierreihenfolge der Seite innerhalb der Unterweisung",
@@ -63,6 +69,12 @@ class Seite(PolymorphicModel):
 
     def __str__(self) -> str:
         return f"{self.unterweisung}: #{self.sort} {self.titel}"
+
+    def clone(self):
+        self.pk = None
+        self.id = None
+        self.save()
+        return self
 
     def get_template_context(self) -> None:
         raise NotImplementedError
@@ -136,6 +148,24 @@ class MultipleChoiceSeite(Seite):
     )
     fragen = models.ManyToManyField("MultipleChoiceFrage",
                                     related_name="seiten")
+
+    def clone(self):
+        fragen = []
+        for frage in self.fragen.all():
+            antworten = []
+            for antwort in frage.antworten.all():
+                antwort.pk = None
+                antwort.save()
+                antworten.append(antwort)
+
+            frage.pk = None
+            frage.save()
+            frage.antworten.set(antworten)
+            fragen.append(frage)
+
+        clone = super().clone()
+        clone.fragen.set(fragen)
+        return clone
 
     def clean(self) -> None:
         if self.min_richtig > self.fragen.count():

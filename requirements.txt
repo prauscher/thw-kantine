@@ -10,5 +10,6 @@ pycryptodome==3.21.0
 pillow==11.0.0
 django-mathfilters==1.0.0
 django-markdownx==4.0.7
+django-object-actions==4.3.0
 # required for django-polymorphic
 setuptools==75.6.0
