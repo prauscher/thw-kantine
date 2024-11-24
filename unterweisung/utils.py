@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 
 
 def validate_kartenfuehrerschein_nummer(nummer: str) -> str:
-    nummer = nummer.upper()
+    nummer = nummer.strip().upper()
 
     if len(nummer) != 11:
         raise ValidationError("Führerscheinnummer ist nicht 11-Stellig")
