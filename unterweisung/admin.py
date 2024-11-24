@@ -1,4 +1,6 @@
+from django import forms
 from django.contrib import admin
+from django.db import models as db_models
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
     PolymorphicInlineSupportMixin,
@@ -12,12 +14,21 @@ from . import models
 
 class MultipleChoiceOptionInline(admin.StackedInline):
     model = models.MultipleChoiceOption
-    extra = 4
+    min_num = 4
+    extra = 1
+
+    formfield_overrides = {
+        db_models.TextField: {'widget': forms.Textarea(attrs={"rows": 1, "cols": 60})},
+    }
 
 
 @admin.register(models.MultipleChoiceFrage)
 class MultipleChoiceFrageAdmin(admin.ModelAdmin):
     inlines = (MultipleChoiceOptionInline,)
+
+    formfield_overrides = {
+        db_models.TextField: {'widget': forms.Textarea(attrs={"rows": 2, "cols": 60})},
+    }
 
 
 class SeiteInline(StackedPolymorphicInline):
