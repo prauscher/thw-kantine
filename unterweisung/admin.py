@@ -1,10 +1,11 @@
+from collections import defaultdict
 from django import forms
 from django.contrib import admin, messages
 from django.db import models as db_models
 from django.urls import path, reverse_lazy
-from django.views.generic.edit import FormView
+from django.utils.safestring import mark_safe
+from django.views.generic import FormView, TemplateView
 from polymorphic.admin import (
-    PolymorphicChildModelAdmin,
     PolymorphicInlineSupportMixin,
     PolymorphicParentModelAdmin,
     StackedPolymorphicInline,
@@ -48,10 +49,52 @@ class SeiteInline(StackedPolymorphicInline):
                      MultipleChoiceInline)
 
 
+class UnterweisungExportView(TemplateView):
+    template_name = "unterweisung/export_unterweisungen.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["unterweisungen"] = [
+            (unterweisung,
+             [(nr, seite, mark_safe(seite.render(self.request, export=True)))
+              for nr, seite in enumerate(unterweisung.seiten.all(), 1)])
+            for unterweisung in models.Unterweisung.objects.filter(active=True)]
+
+        return context
+
+
+class UnterweisungExportTeilnahmeView(TemplateView):
+    template_name = "unterweisung/export_teilnahme.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        unterweisungen = list(models.Unterweisung.objects.filter(active=True))
+        personen = defaultdict(lambda: {"namen": set(),
+                                        "teilnahmen": [(unterweisung, None)
+                                                       for unterweisung in unterweisungen]})
+
+        for teilnahme in models.Teilnahme.objects.filter(unterweisung__in=unterweisungen):
+            if teilnahme.fullname:
+                personen[teilnahme.username]["namen"].add(teilnahme.fullname)
+
+            unterweisung_index = unterweisungen.index(teilnahme.unterweisung)
+            personen[teilnahme.username]["teilnahmen"][unterweisung_index] = (
+                teilnahme.unterweisung,
+                False if teilnahme.abgeschlossen_at is None else teilnahme.ergebnis)
+
+        context["unterweisungen"] = unterweisungen
+        context["personen"] = personen.items()
+
+        return context
+
+
 @admin.register(models.Unterweisung)
 class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admin.ModelAdmin):
     inlines = (SeiteInline,)
     change_actions = ["copy_recursive"]
+    change_list_template = "admin/unterweisung/unterweisung/change_list.html"
 
     @action(label="Kopie erstellen",
             description="Kopiert die Unterweisung vollständig.")
@@ -72,6 +115,18 @@ class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admi
             seite.unterweisung = obj
             seite.save()
             print(obj.pk, seite.pk)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        urls = [
+            path("export/unterweisung",
+                 self.admin_site.admin_view(UnterweisungExportView.as_view()),
+                 name="unterweisung_export"),
+            path("export/teilnahme",
+                 self.admin_site.admin_view(UnterweisungExportTeilnahmeView.as_view()),
+                 name="unterweisung_teilnahme_export"),
+        ] + urls
+        return urls
 
 
 class ImportTeilnahmeForm(forms.Form):
@@ -123,4 +178,3 @@ class TeilnahmeAdmin(admin.ModelAdmin):
                  name="unterweisung_teilnahme_import"),
         ] + urls
         return urls
-    pass

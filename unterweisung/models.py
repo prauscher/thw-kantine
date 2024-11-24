@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
+from django.template.loader import render_to_string
 from django.urls import reverse
 from polymorphic.models import PolymorphicModel
 from markdownx.models import MarkdownxField
@@ -73,13 +74,17 @@ class Seite(PolymorphicModel):
     def __str__(self) -> str:
         return f"{self.unterweisung}: #{self.sort} {self.titel}"
 
+    def render(self, request, *, export: bool = False) -> str:
+        seite_template_name, seite_context = self.get_template_context(request, export=export)
+        return render_to_string(seite_template_name, seite_context)
+
     def clone(self):
         self.pk = None
         self.id = None
         self.save()
         return self
 
-    def get_template_context(self, request) -> tuple[str, dict]:
+    def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
         raise NotImplementedError
 
     def parse_result(self, kwargs) -> str | None:
@@ -96,7 +101,9 @@ class Seite(PolymorphicModel):
 
 
 class FuehrerscheinDatenSeite(Seite):
-    def get_template_context(self, request) -> tuple[str, dict]:
+    def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
+        if export:
+            return "unterweisung/seite_fuehrerschein_export.html", {}
         return "unterweisung/seite_fuehrerschein.html", {}
 
     def parse_result(self, kwargs) -> str:
@@ -127,7 +134,7 @@ class FuehrerscheinDatenSeite(Seite):
 class InfoSeite(Seite):
     content = MarkdownxField()
 
-    def get_template_context(self, request) -> tuple[str, dict]:
+    def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
         return "unterweisung/seite_info.html", {
             "content": self.content,
         }
@@ -174,20 +181,19 @@ class MultipleChoiceSeite(Seite):
         if self.min_richtig > self.fragen.count():
             raise ValidationError("Benötige mehr richtige Fragen als hinterlegt sind.")
 
-    def get_template_context(self, request) -> tuple[str, dict]:
-        fragen = []
-        for frage in self.fragen.all():
-            fragen.append({
-                "pk": frage.pk,
-                "frage": frage.text,
-                "optional": frage.optional,
-                "antworten": [(antwort.pk, antwort.text,
-                               str(antwort.pk) in request.POST.getlist(f"frage_{frage.pk}"))
-                              for antwort in frage.antworten.order_by("?").all()],
-                "richtige_antworten": sum(
-                    1 if antwort.richtig else 0
-                    for antwort in frage.antworten.all()),
-            })
+    def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
+        fragen = [
+            {"pk": frage.pk,
+             "frage": frage.text,
+             "optional": frage.optional,
+             "antworten": [(antwort.pk, antwort.text,
+                            antwort.richtig if export else str(antwort.pk) in request.POST.getlist(f"frage_{frage.pk}"))
+                           for antwort in frage.antworten.order_by("?").all()],
+             "richtige_antworten": sum(
+                 1 if antwort.richtig else 0
+                 for antwort in frage.antworten.all())}
+            for frage in self.fragen.all()
+        ]
 
         return "unterweisung/seite_multiplechoice.html", {
             "fragen": fragen,

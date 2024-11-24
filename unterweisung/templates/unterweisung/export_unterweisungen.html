@@ -1,0 +1,27 @@
+{% extends "abfrage/base.html" %}
+{% load mathfilters %}
+
+{% block title %}Überweisungsübersicht{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url "unterweisung:start" %}">Unterweisungen</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Übersicht</li>
+ </ol>
+</nav>
+
+{% for unterweisung, seiten in unterweisungen %}
+<h3>{{ unterweisung.label }}</h3>
+
+<p class="alert alert-info">{{ unterweisung.description }}</p>
+<p class="alert alert-success">{{ unterweisung.success_text }}</p>
+
+{% for nr, seite, inhalt in seiten %}
+<h5>#{{ nr }}: {{ seite.titel }}</h5>
+
+{{ inhalt }}
+{% endfor %}
+
+{% endfor %}
+{% endblock %}

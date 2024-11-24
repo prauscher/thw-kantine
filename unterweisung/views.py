@@ -1,11 +1,7 @@
 import os
-from collections import defaultdict
-from django.db.models import Q
 from django.core.exceptions import ValidationError
-from django.views.generic import DetailView, ListView, TemplateView
+from django.views.generic import DetailView, ListView
 from django.shortcuts import redirect
-from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
@@ -75,8 +71,7 @@ class SeiteDetailView(DetailView):
         context["seiten"] = self._get_seiten()
         context["errors"] = self.errors
 
-        seite_template_name, seite_context = self.object.get_template_context(self.request)
-        context["inhalt"] = mark_safe(render_to_string(seite_template_name, seite_context))
+        context["inhalt"] = mark_safe(self.object.render(self.request))
 
         return context
 
@@ -137,33 +132,6 @@ class SeiteDetailView(DetailView):
             # Unknown _redirect parameter
             self.errors = ["Ungültiger Redirect-Parameter"]
             return self.get(request, *args, **kwargs)
-
-
-@method_decorator(require_jwt_login, name="dispatch")
-class UnterweisungExportView(TemplateView):
-    template_name = "unterweisung/export.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        unterweisungen = list(models.Unterweisung.objects.filter(active=True))
-        personen = defaultdict(lambda: {"namen": set(),
-                                        "teilnahmen": [(unterweisung, None)
-                                                       for unterweisung in unterweisungen]})
-
-        for teilnahme in models.Teilnahme.objects.filter(unterweisung__in=unterweisungen):
-            if teilnahme.fullname:
-                personen[teilnahme.username]["namen"].add(teilnahme.fullname)
-
-            unterweisung_index = unterweisungen.index(teilnahme.unterweisung)
-            personen[teilnahme.username]["teilnahmen"][unterweisung_index] = (
-                teilnahme.unterweisung,
-                False if teilnahme.abgeschlossen_at is None else teilnahme.ergebnis)
-
-        context["unterweisungen"] = unterweisungen
-        context["personen"] = personen.items()
-
-        return context
 
 
 def _get_userdata(request):
