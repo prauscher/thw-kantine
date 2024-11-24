@@ -16,8 +16,7 @@ from . import models
 
 class MultipleChoiceOptionInline(admin.StackedInline):
     model = models.MultipleChoiceOption
-    min_num = 4
-    extra = 1
+    extra = 3
 
     formfield_overrides = {
         db_models.TextField: {'widget': forms.Textarea(attrs={"rows": 1, "cols": 60})},
