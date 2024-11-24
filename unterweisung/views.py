@@ -103,7 +103,7 @@ class SeiteDetailView(DetailView):
         if redirect_seite == "next":
             unterweisung_result = []
             prev_seite = None
-            for i, (_, seite, seite_success, seite_result) in enumerate(seiten):
+            for i, (_, seite_loop, seite_success, seite_result) in enumerate(seiten):
                 # Go to the next "waiting" seite, or the next in line
                 # Note that if we hit the last seite, no break will occur
                 if not seite_success or prev_seite == seite:
@@ -113,7 +113,7 @@ class SeiteDetailView(DetailView):
                 if seite_result is not None:
                     unterweisung_result.append(seite_result)
 
-                prev_seite = seite
+                prev_seite = seite_loop
             else:
                 # All Seiten are successful and we are at the end!
                 # store results and redirect to overview
