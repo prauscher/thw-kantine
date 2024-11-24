@@ -4,8 +4,7 @@ from . import models
 
 class ServingInline(admin.StackedInline):
     model = models.Serving
-    min_num = 3
-    extra = 1
+    extra = 3
 
 
 @admin.register(models.Menu)

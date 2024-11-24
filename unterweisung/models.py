@@ -61,6 +61,8 @@ class Seite(PolymorphicModel):
     unterweisung = models.ForeignKey("Unterweisung", on_delete=NON_POLYMORPHIC_CASCADE,
                                      related_name="seiten")
     sort = models.IntegerField(
+        default=0,
+        db_index=True,
         help_text="Sortierreihenfolge der Seite innerhalb der Unterweisung",
     )
     titel = models.CharField(
@@ -88,7 +90,7 @@ class Seite(PolymorphicModel):
                        kwargs={"pk": self.pk})
 
     class Meta:
-        ordering = ["unterweisung", "sort"]
+        ordering = ["sort"]
         verbose_name = "Seite"
         verbose_name_plural = "Seiten"
 
@@ -224,6 +226,8 @@ class MultipleChoiceFrage(models.Model):
         help_text="Überschrift der einzelnen Optionen",
     )
     sort = models.IntegerField(
+        default=0,
+        db_index=True,
         verbose_name="Sortierreihenfolge",
         help_text="Sortierreihenfolge der Frage innerhalb der Seite",
     )
