@@ -4,6 +4,7 @@ from django.core.validators import MinValueValidator
 from django.urls import reverse
 from polymorphic.models import PolymorphicModel
 from markdownx.models import MarkdownxField
+from . import utils
 
 
 # https://github.com/django-polymorphic/django-polymorphic/issues/229#issuecomment-398434412
@@ -106,7 +107,7 @@ class FuehrerscheinDatenSeite(Seite):
             nummer = nummer_papier
             klassen = ",".join(sorted(kwargs.getlist("klassen_papier")))
         elif nummer_karte:
-            nummer = nummer_karte
+            nummer = utils.validate_kartenfuehrerschein_nummer(nummer_karte)
             klassen = ",".join(sorted(kwargs.getlist("klassen_karte")))
         else:
             raise ValidationError("Keine Führerscheinnummer angegeben")
