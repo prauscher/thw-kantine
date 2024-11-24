@@ -75,7 +75,7 @@ class SeiteDetailView(DetailView):
         context["seiten"] = self._get_seiten()
         context["errors"] = self.errors
 
-        seite_template_name, seite_context = self.object.get_template_context()
+        seite_template_name, seite_context = self.object.get_template_context(self.request)
         context["inhalt"] = mark_safe(render_to_string(seite_template_name, seite_context))
 
         return context

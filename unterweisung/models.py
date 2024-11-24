@@ -79,7 +79,7 @@ class Seite(PolymorphicModel):
         self.save()
         return self
 
-    def get_template_context(self) -> None:
+    def get_template_context(self, request) -> tuple[str, dict]:
         raise NotImplementedError
 
     def parse_result(self, kwargs) -> str | None:
@@ -96,7 +96,7 @@ class Seite(PolymorphicModel):
 
 
 class FuehrerscheinDatenSeite(Seite):
-    def get_template_context(self) -> None:
+    def get_template_context(self, request) -> tuple[str, dict]:
         return "unterweisung/seite_fuehrerschein.html", {}
 
     def parse_result(self, kwargs) -> str:
@@ -127,7 +127,7 @@ class FuehrerscheinDatenSeite(Seite):
 class InfoSeite(Seite):
     content = MarkdownxField()
 
-    def get_template_context(self) -> tuple[str, dict]:
+    def get_template_context(self, request) -> tuple[str, dict]:
         return "unterweisung/seite_info.html", {
             "content": self.content,
         }
@@ -174,19 +174,19 @@ class MultipleChoiceSeite(Seite):
         if self.min_richtig > self.fragen.count():
             raise ValidationError("Benötige mehr richtige Fragen als hinterlegt sind.")
 
-    def get_template_context(self) -> tuple[str, dict]:
+    def get_template_context(self, request) -> tuple[str, dict]:
         fragen = []
         for frage in self.fragen.all():
-            richtige_antworten = sum(
-                1 if antwort.richtig else 0
-                for antwort in frage.antworten.all())
             fragen.append({
                 "pk": frage.pk,
                 "frage": frage.text,
                 "optional": frage.optional,
-                "antworten": [(antwort.pk, antwort.text)
+                "antworten": [(antwort.pk, antwort.text,
+                               str(antwort.pk) in request.POST.getlist(f"frage_{frage.pk}"))
                               for antwort in frage.antworten.order_by("?").all()],
-                "richtige_antworten": richtige_antworten,
+                "richtige_antworten": sum(
+                    1 if antwort.richtig else 0
+                    for antwort in frage.antworten.all()),
             })
 
         return "unterweisung/seite_multiplechoice.html", {
@@ -198,13 +198,13 @@ class MultipleChoiceSeite(Seite):
         result = ""
         richtige_fragen = 0
         for frage in self.fragen.all():
-            gewaehlte_antworten = set(kwargs.get(f"frage_{frage.pk}", []))
+            gewaehlte_antworten = set(kwargs.getlist(f"frage_{frage.pk}"))
             richtige_antworten = set(str(antwort.pk)
                                      for antwort in frage.antworten.all()
                                      if antwort.richtig)
             if gewaehlte_antworten != richtige_antworten:
                 if not frage.optional:
-                    raise ValidationError("Antwort falsch")
+                    raise ValidationError("Mindestens eine erforderliche Antwort war falsch")
                 result += "❌"
             else:
                 richtige_fragen += 1

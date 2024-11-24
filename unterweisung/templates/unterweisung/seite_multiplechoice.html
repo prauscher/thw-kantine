@@ -5,9 +5,9 @@
 {% else %}
 <p>Diese Frage muss zum bestehen zwingend richtig beantwortet werden.</p>
 {% endif %}
-{% for antwort_id, antwort_text in frage.antworten %}
+{% for antwort_id, antwort_text, antwort_checked in frage.antworten %}
 <div class="form-check">
-  <input class="form-check-input" type="{% if frage.richtige_antworten == 1 %}radio{% else %}checkbox{% endif %}" name="frage_{{ frage.pk }}" value="{{ antwort_id }}" id="antwort_{{ antwort_id }}" />
+  <input class="form-check-input" type="{% if frage.richtige_antworten == 1 %}radio{% else %}checkbox{% endif %}" {% if antwort_checked %}checked="checked"{% endif %} name="frage_{{ frage.pk }}" value="{{ antwort_id }}" id="antwort_{{ antwort_id }}" />
   <label class="form-check-label" for="antwort_{{ antwort_id }}">
     {{ antwort_text }}
   </label>
