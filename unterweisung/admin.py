@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib import admin
 from django.db import models as db_models
+from django.urls import path, reverse_lazy
+from django.views.generic.edit import FormView
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
     PolymorphicInlineSupportMixin,
@@ -73,4 +75,44 @@ class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admi
             print(obj.pk, seite.pk)
 
 
-admin.site.register(models.Teilnahme)
+class ImportTeilnahmeForm(forms.Form):
+    unterweisung = forms.ModelChoiceField(models.Unterweisung.objects)
+    usernames = forms.CharField(widget=forms.Textarea(attrs={"cols": "60", "rows": "40"}))
+
+
+class ImportTeilnahmeView(FormView):
+    form_class = ImportTeilnahmeForm
+    template_name = "admin/unterweisung/teilnahme/import.html"
+    success_url = reverse_lazy("admin:unterweisung_teilnahme_changelist")
+
+    def get_context_data(self, **kwargs):
+        print(self.get_form().base_fields)
+        return {**admin.site.each_context(self.request),
+                "title": "Teilnehmer importieren",
+                **super().get_context_data(**kwargs)}
+
+    def form_valid(self, form):
+        unterweisung = form.cleaned_data["unterweisung"]
+        for username in form.cleaned_data["usernames"].splitlines():
+            username = username.strip()
+            if not username:
+                continue
+            models.Teilnahme.objects.create(
+                unterweisung=unterweisung,
+                username=username,
+                abgeschlossen_at=None,
+            )
+
+        return super().form_valid(form)
+
+
+@admin.register(models.Teilnahme)
+class TeilnahmeAdmin(admin.ModelAdmin):
+    def get_urls(self):
+        urls = super().get_urls()
+        urls = [
+            path("import/", self.admin_site.admin_view(ImportTeilnahmeView.as_view()),
+                 name="unterweisung_teilnahme_import"),
+        ] + urls
+        return urls
+    pass
