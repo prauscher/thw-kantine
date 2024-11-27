@@ -39,9 +39,17 @@ class UnterweisungDetailView(DetailView):
 
         userdata = _get_userdata(self.request)
         context["userdata"] = userdata
-        context["teilnahme"] = self.object.get_teilnahme(userdata["uid"])
+
+        teilnahme = self.object.get_teilnahme(userdata["uid"])
+        context["teilnahme"] = teilnahme
+
         if self.object.seiten.count() > 0:
             context["erste_seite"] = self.object.seiten.all()[0]
+
+        context["return"] = (
+            (self.request.GET.get("return", None) is not None) and
+            teilnahme is not None and
+            teilnahme.abgeschlossen_at is not None)
 
         return context
 
@@ -121,7 +129,7 @@ class SeiteDetailView(DetailView):
                         "ergebnis": "\n".join(unterweisung_result),
                     },
                 )
-                return redirect(seite.unterweisung.get_absolute_url())
+                return redirect(seite.unterweisung.get_absolute_url() + "?return=1")
 
         # go to explicitly asked seite
         if redirect_seite.isnumeric():

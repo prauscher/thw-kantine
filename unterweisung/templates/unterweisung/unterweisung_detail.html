@@ -10,6 +10,11 @@
  </ol>
 </nav>
 
+{% if return %}
+<p>Herzlichen Glückwunsch, du hast die Unterweisung erfolgreich abgeschlossen. Nachdem du die
+ unten stehenden Abschlusshinweise gelesen hast, kannst du zur Übersicht zurückkehren.</p>
+{% endif %}
+
 {% if teilnahme is None %}
 <p class="alert alert-info">
  Diese Unterweisung kann von dir innerhalb der Frist abgeschlossen werden (z.B. um spezielle
@@ -24,6 +29,7 @@
 <p class="alert alert-success">{{ object.success_text }}</p>
 {% endif %}
 
+{% if not return %}
 <p>{{ object.description }}</p>
 
 <p>Mittels "Starten" kannst du die Unterweisung (erneut) starten. Keine Sorge: Sofern du die
@@ -37,9 +43,10 @@
  und ggf. deine Antworten überprüfen. Sobald du alle Seiten erfolgreich bearbeitet hast, wirst du
  auf diese Seite zurückgeleitet: Eine grüne Box zeigt dir dort an, dass du die Unterweisung
  erfolgreich abgeschlossen hast.</p>
+{% endif %}
 
 <p class="text-end">
- <a href="{% url "unterweisung:start" %}" class="btn btn-lg btn-outline-primary">Zur Übersicht</a>
- {% if erste_seite is not None %}<a href="{{ erste_seite.get_absolute_url }}" class="btn btn-lg btn-primary">Starten</a>{% endif %}
+ <a href="{% url "unterweisung:start" %}" class="btn btn-lg btn-{% if not return %}outline-{% endif %}primary">Zur Übersicht</a>
+ {% if not return and erste_seite is not None %}<a href="{{ erste_seite.get_absolute_url }}" class="btn btn-lg btn-primary">Starten</a>{% endif %}
 </p>
 {% endblock %}
