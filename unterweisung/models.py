@@ -177,10 +177,6 @@ class MultipleChoiceSeite(Seite):
         clone.fragen.set(fragen)
         return clone
 
-    def clean(self) -> None:
-        if self.min_richtig > self.fragen.count():
-            raise ValidationError("Benötige mehr richtige Fragen als hinterlegt sind.")
-
     def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
         fragen = [
             {"pk": frage.pk,
