@@ -67,7 +67,7 @@ class Seite(PolymorphicModel):
         help_text="Sortierreihenfolge der Seite innerhalb der Unterweisung",
     )
     titel = models.CharField(
-        max_length=50,
+        max_length=70,
         help_text="Überschrift der Seite",
     )
 
