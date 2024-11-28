@@ -152,12 +152,13 @@ class ImportTeilnahmeView(FormView):
             username = username.strip()
             if not username:
                 continue
-            models.Teilnahme.objects.create(
+            _, obj_created = models.Teilnahme.objects.get_or_create(
                 unterweisung=unterweisung,
                 username=username,
-                abgeschlossen_at=None,
+                defaults={"abgeschlossen_at": None},
             )
-            created += 1
+            if obj_created:
+                created += 1
 
         self.model_admin.message_user(
             self.request,
