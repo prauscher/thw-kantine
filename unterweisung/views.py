@@ -87,11 +87,13 @@ class SeiteDetailView(DetailView):
         userdata = _get_userdata(request)
         seite = self.get_object()
 
+        teilnahme = self.object.get_teilnahme(userdata["uid"])
+
         data = request.POST.copy()
         redirect_seite = data.pop("_redirect", "next")[0]
 
         try:
-            result = seite.parse_result(data)
+            result = seite.parse_result(request, data, teilnahme=teilnahme)
         except ValidationError as error:
             # retry for user
             if redirect_seite == "next":

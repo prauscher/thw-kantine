@@ -1,3 +1,4 @@
+import time
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -87,7 +88,7 @@ class Seite(PolymorphicModel):
     def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
         raise NotImplementedError
 
-    def parse_result(self, kwargs) -> str | None:
+    def parse_result(self, request, kwargs, *, teilnahme: "Teilnahme | None") -> str | None:
         raise NotImplementedError
 
     def get_absolute_url(self) -> str:
@@ -106,7 +107,7 @@ class FuehrerscheinDatenSeite(Seite):
             return "unterweisung/seite_fuehrerschein_export.html", {}
         return "unterweisung/seite_fuehrerschein.html", {}
 
-    def parse_result(self, kwargs) -> str:
+    def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str:
         nummer_papier = kwargs.get("nummer_papier", "")
         nummer_karte = kwargs.get("nummer_karte", "")
 
@@ -133,13 +134,37 @@ class FuehrerscheinDatenSeite(Seite):
 
 class InfoSeite(Seite):
     content = MarkdownxField()
+    min_time = models.IntegerField(
+        default=10,
+        validators=[MinValueValidator(0)],
+        verbose_name="Mindestaufenthalt",
+        help_text="Wie lange (in Sekunden) muss diese Seite mindestens angezeigt werden, um als be"
+                  "standen zu zählen?",
+    )
 
     def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
+        # store last timestamp
+        seite_pk, timestamp = request.session.get(f"unterweisung_seite_{self.unterweisung.pk}",
+                                                  (None, 0))
+        if seite_pk != self.pk:
+            request.session[f"unterweisung_seite_{self.unterweisung.pk}"] = (self.pk, time.monotonic())
+
         return "unterweisung/seite_info.html", {
             "content": self.content,
         }
 
-    def parse_result(self, kwargs) -> str | None:
+    def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str | None:
+        # ignore minimum time iff unterweisung is done
+        if teilnahme is None:
+            seite_pk, timestamp = request.session.get(f"unterweisung_seite_{self.unterweisung.pk}",
+                                                      (None, 0))
+
+            if seite_pk != self.pk:
+                raise ValidationError("Ungültige Bearbeitungsreihenfolge")
+
+            if time.monotonic() - timestamp < self.min_time:
+                raise ValidationError("Die Folie wurde zu schnell weitergeschaltet")
+
         return None
 
     class Meta:
@@ -196,7 +221,7 @@ class MultipleChoiceSeite(Seite):
             "min_richtig": self.min_richtig,
         }
 
-    def parse_result(self, kwargs) -> str | None:
+    def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str | None:
         result = ""
         richtige_fragen = 0
         for frage in self.fragen.all():
