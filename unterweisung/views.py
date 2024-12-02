@@ -87,7 +87,7 @@ class SeiteDetailView(DetailView):
         userdata = _get_userdata(request)
         seite = self.get_object()
 
-        teilnahme = seite.get_teilnahme(userdata["uid"])
+        teilnahme = seite.unterweisung.get_teilnahme(userdata["uid"])
 
         data = request.POST.copy()
         redirect_seite = data.pop("_redirect", "next")[0]

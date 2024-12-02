@@ -9,7 +9,6 @@ def require_jwt_login(view):
     jwt_url = os.environ.get("JWT_LOGINURL")
 
     def _view(request, *args, **kwargs):
-        request.session["jwt_userdata"] = {"uid": "muh", "displayName": "Muh"}
         if "jwt_userdata" not in request.session:
             if jwt_url is None:
                 raise PermissionDenied
