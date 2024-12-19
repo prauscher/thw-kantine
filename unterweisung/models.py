@@ -163,7 +163,7 @@ class InfoSeite(Seite):
                 raise ValidationError("Ungültige Bearbeitungsreihenfolge")
 
             if time.monotonic() - timestamp < self.min_time:
-                raise ValidationError("Die Folie wurde zu schnell weitergeschaltet")
+                raise ValidationError("Die Folie wurde zu schnell weitergeschaltet. Bitte lese die Inhalte aufmerksam durch, bevor du auf \"Weiter\" klickst.")
 
         return None
 
