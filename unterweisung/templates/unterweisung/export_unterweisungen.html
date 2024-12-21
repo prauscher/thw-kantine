@@ -12,15 +12,17 @@
 </nav>
 
 {% for unterweisung, seiten in unterweisungen %}
-<h3>{{ unterweisung.label }}</h3>
+<h3 style="break-before:page;">{{ unterweisung.label }}</h3>
 
 <p class="alert alert-info">{{ unterweisung.description }}</p>
 <p class="alert alert-success">{{ unterweisung.success_text }}</p>
 
 {% for nr, seite, inhalt in seiten %}
+<div style="break-inside:avoid;">
 <h5>#{{ nr }}: {{ seite.titel }}</h5>
 
 {{ inhalt }}
+</div>
 {% endfor %}
 
 {% endfor %}
