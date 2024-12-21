@@ -6,12 +6,22 @@ from django.shortcuts import redirect
 
 
 def require_jwt_login(view):
-    jwt_url = os.environ.get("JWT_LOGINURL")
+    jwt_url_parts = os.environ.get("JWT_LOGINURL", "").split(":")
+    if len(jwt_url_parts) % 2 > 0:
+        jwt_url_parts.insert(len(jwt_url_parts) - 1, None)
+
+    jwt_urls = list(zip(*[iter(jwt_url_parts)] * 2))
 
     def _view(request, *args, **kwargs):
         if "jwt_userdata" not in request.session:
-            if jwt_url is None:
+            jwt_url = ""
+            for path_prefix, jwt_url in jwt_urls:
+                if path_prefix is None or request.path.startswith(path_prefix):
+                    break
+
+            if not jwt_url:
                 raise PermissionDenied
+
             return redirect(jwt_url.rstrip("/") + request.get_full_path())
 
         return view(request, *args, **kwargs)
