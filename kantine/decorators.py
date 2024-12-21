@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 
 
 def require_jwt_login(view):
-    jwt_url_parts = os.environ.get("JWT_LOGINURL", "").split(":")
+    jwt_url_parts = os.environ.get("JWT_LOGINURL", "").split("|")
     if len(jwt_url_parts) % 2 > 0:
         jwt_url_parts.insert(len(jwt_url_parts) - 1, None)
 
