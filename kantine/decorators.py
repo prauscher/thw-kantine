@@ -14,12 +14,10 @@ def require_jwt_login(view):
 
     def _view(request, *args, **kwargs):
         if "jwt_userdata" not in request.session:
-            jwt_url = ""
             for path_prefix, jwt_url in jwt_urls:
                 if path_prefix is None or request.path.startswith(path_prefix):
                     break
-
-            if not jwt_url:
+            else:
                 raise PermissionDenied
 
             return redirect(jwt_url.rstrip("/") + request.get_full_path())
