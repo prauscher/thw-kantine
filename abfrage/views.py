@@ -24,7 +24,8 @@ class MenuListView(ListView):
 
     def get_context_data(self, *args, **kwargs):
         return {**super().get_context_data(*args, **kwargs),
-                "userdata": _get_userdata(self.request)}
+                "user_id": self.request.jwt_user_id,
+                "user_display": self.request.jwt_user_display}
 
     def get(self, *args, **kwargs):
         count = self.get_queryset().count()
@@ -106,29 +107,28 @@ class MenuCreateView(CreateView):
         return {**super().get_context_data(**kwargs), "icons": models.Serving.ICONS}
 
     def form_valid(self, form):
-        userdata = _get_userdata(self.request)
         form.save(commit=False)
-        form.instance.owner = userdata["uid"]
+        form.instance.owner = self.request.jwt_user_id
         form.save(commit=True)
         form.process_servings()
 
         hermine_client = get_hermine_client()
         hermine_channel = os.environ.get("ABFRAGE_HERMINE_CHANNEL")
         if hermine_client and hermine_channel:
-           frist_text = ""
-           if form.instance.closed_at:
-               frist_text = f" bis {form.instance.closed_at:%H:%M am %d.%m.%Y}"
-           servings = "\n".join(f"- {serving.label}" for serving in form.instance.servings.all())
-           if servings:
-               servings = f" Es gibt\n{servings}"
+            frist_text = ""
+            if form.instance.closed_at:
+                frist_text = f" bis {form.instance.closed_at:%H:%M am %d.%m.%Y}"
+            servings = "\n".join(f"- {serving.label}" for serving in form.instance.servings.all())
+            if servings:
+                servings = f" Es gibt\n{servings}"
 
-           channels = [channel
-                       for company in hermine_client.get_companies()
-                       for channel in hermine_client.get_channels(company["id"])]
-           channel_dict = next(filter(lambda chan_dict: chan_dict["name"] == hermine_channel, channels))
+            channels = [channel
+                        for company in hermine_client.get_companies()
+                        for channel in hermine_client.get_channels(company["id"])]
+            channel_dict = next(filter(lambda chan_dict: chan_dict["name"] == hermine_channel, channels))
 
-           hermine_client.send_msg(("channel", channel_dict["id"]),
-                                   f"{userdata['displayName']} hat ein neues Menü {form.instance.label} angelegt. Melde dich{frist_text} unter {self.request.build_absolute_uri(form.instance.get_absolute_url())} an.{servings}")
+            hermine_client.send_msg(("channel", channel_dict["id"]),
+                                    f"{self.request.jwt_user_display} hat ein neues Menü {form.instance.label} angelegt. Melde dich{frist_text} unter {self.request.build_absolute_uri(form.instance.get_absolute_url())} an.{servings}")
 
         return super().form_valid(form)
 
@@ -147,7 +147,7 @@ class MenuUpdateView(UpdateView):
 
     def get_object(self, *args):
         menu = super().get_object(*args)
-        if menu.owner != _get_userdata(self.request)["uid"]:
+        if menu.owner != self.request.jwt_user_id:
             raise Http404
         return menu
 
@@ -163,7 +163,7 @@ class MenuDeleteView(DeleteView):
 
     def get_object(self, *args):
         menu = super().get_object(*args)
-        if menu.owner != _get_userdata(self.request)["uid"]:
+        if menu.owner != self.request.jwt_user_id:
             raise Http404
         return menu
 
@@ -180,8 +180,8 @@ class MenuDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        userdata = _get_userdata(self.request)
-        context["userdata"] = userdata
+        context["user_id"] = self.request.jwt_user_id
+        context["user_display"] = self.request.jwt_user_display
 
         serving_objects = self.object.servings.all()
         servings = {serving.pk: {"obj": serving, "own": 0, "total": 0} for serving in serving_objects}
@@ -193,7 +193,7 @@ class MenuDetailView(DetailView):
             all_users[reservation.customer_uid]["displayName"] = reservation.customer
             all_users[reservation.customer_uid]["servings"][reservation.serving.pk] += reservation.count
 
-            if reservation.customer_uid == userdata["uid"]:
+            if reservation.customer_uid == self.request.jwt_user_id:
                 servings[reservation.serving.pk]["own"] += reservation.count
 
         context["servings"] = servings.values()
@@ -205,16 +205,14 @@ class MenuDetailView(DetailView):
         context["changed"] = self.changed
         context["error_message"] = self.error_message
         context["is_redirected"] = (self.request.GET.get("redirected", "0") != "0")
-        context["is_admin"] = (userdata["uid"] == self.object.owner)
+        context["is_admin"] = (self.request.jwt_user_id == self.object.owner)
 
         return context
 
     def post(self, request, *args, **kwargs):
-        userdata = _get_userdata(request)
-
         try:
             with transaction.atomic():
-                self._update(userdata, request.POST)
+                self._update(request.jwt_user_id, request.jwt_user_display, request.POST)
         except ValidationError as exception:
             self.error_message = exception.message
         else:
@@ -222,7 +220,7 @@ class MenuDetailView(DetailView):
 
         return self.get(request, *args, **kwargs)
 
-    def _update(self, userdata, post_data):
+    def _update(self, user_id, user_display, post_data):
         _object = self.get_object()
         servings = {str(serving.pk): serving for serving in _object.servings.all()}
 
@@ -245,12 +243,7 @@ class MenuDetailView(DetailView):
                 raise ValidationError(f"Bestellmenge für {servings[field].label} zu hoch")
 
             models.Reservation.objects.update_or_create(
-                customer_uid=userdata["uid"],
+                customer_uid=user_id,
                 serving=servings[field],
-                defaults={"count": value_num, "customer": userdata["displayName"]},
+                defaults={"count": value_num, "customer": user_display},
             )
-
-
-def _get_userdata(request):
-    userdata = request.session.get("jwt_userdata", {})
-    return userdata

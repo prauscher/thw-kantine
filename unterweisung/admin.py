@@ -40,12 +40,16 @@ class SeiteInline(StackedPolymorphicInline):
     class InfoInline(StackedPolymorphicInline.Child):
         model = models.InfoSeite
 
+    class HermineNachrichtInline(StackedPolymorphicInline.Child):
+        model = models.HermineNachrichtSeite
+
     class MultipleChoiceInline(StackedPolymorphicInline.Child):
         model = models.MultipleChoiceSeite
 
     model = models.Seite
     child_inlines = (FuehrerscheinDatenInline,
                      InfoInline,
+                     HermineNachrichtInline,
                      MultipleChoiceInline)
 
 
@@ -114,7 +118,6 @@ class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admi
             seite = seite.clone()
             seite.unterweisung = obj
             seite.save()
-            print(obj.pk, seite.pk)
 
     def get_urls(self):
         urls = super().get_urls()

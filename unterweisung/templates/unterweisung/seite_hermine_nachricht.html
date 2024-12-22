@@ -1,0 +1,12 @@
+<p>{{ description }}</p>
+
+{% if anonymous %}
+<p><strong>Hinweis:</strong> Die Nachricht wird anonym versendet. Wenn du eine Rückantwort wünschst, gib bitte deinen Namen in der Nachricht mit an.</p>
+{% else %}
+<p><strong>Hinweis:</strong> Die Nachricht wird zusammen mit deinem Namen verschickt, damit auf deine Nachricht geantwortet werden kann.</p>
+{% endif %}
+
+<div class="mb-3 form-group">
+ <label for="message">Nachricht</label>
+ <textarea class="form-control" id="message" name="message" rows="4"></textarea>
+</div>

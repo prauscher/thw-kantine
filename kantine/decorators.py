@@ -22,6 +22,10 @@ def require_jwt_login(view):
 
             return redirect(jwt_url.rstrip("/") + request.get_full_path())
 
+        userdata = request.session["jwt_userdata"]
+        request.jwt_user_id = userdata["uid"]
+        request.jwt_user_display = userdata["displayName"]
+
         return view(request, *args, **kwargs)
 
     return _view

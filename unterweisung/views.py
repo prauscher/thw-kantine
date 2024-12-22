@@ -6,7 +6,6 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from kantine.decorators import require_jwt_login
-from kantine.hermine import get_hermine_client
 from . import models
 
 
@@ -15,7 +14,7 @@ class UnterweisungListView(ListView):
     model = models.Unterweisung
 
     def get_context_data(self, *args, **kwargs):
-        username = _get_userdata(self.request)["uid"]
+        username = self.request.jwt_user_id
         unterweisungen = [
             (unterweisung,
              unterweisung.get_teilnahme(username))
@@ -24,7 +23,8 @@ class UnterweisungListView(ListView):
 
         return {**super().get_context_data(*args, **kwargs),
                 "unterweisungen": unterweisungen,
-                "userdata": _get_userdata(self.request)}
+                "user_id": self.request.jwt_user_id,
+                "user_display": self.request.jwt_user_display}
 
     def get_queryset(self):
         return super().get_queryset().filter(active=True)
@@ -37,10 +37,10 @@ class UnterweisungDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        userdata = _get_userdata(self.request)
-        context["userdata"] = userdata
+        context["user_id"] = self.request.jwt_user_id
+        context["user_display"] = self.request.jwt_user_display
 
-        teilnahme = self.object.get_teilnahme(userdata["uid"])
+        teilnahme = self.object.get_teilnahme(self.request.jwt_user_id)
         context["teilnahme"] = teilnahme
 
         if self.object.seiten.count() > 0:
@@ -74,8 +74,8 @@ class SeiteDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        userdata = _get_userdata(self.request)
-        context["userdata"] = userdata
+        context["user_id"] = self.request.jwt_user_id
+        context["user_display"] = self.request.jwt_user_display
         context["seiten"] = self._get_seiten()
         context["errors"] = self.errors
 
@@ -84,10 +84,9 @@ class SeiteDetailView(DetailView):
         return context
 
     def post(self, request, *args, **kwargs):
-        userdata = _get_userdata(request)
         seite = self.get_object()
 
-        teilnahme = seite.unterweisung.get_teilnahme(userdata["uid"])
+        teilnahme = seite.unterweisung.get_teilnahme(request.jwt_user_id)
 
         data = request.POST.copy()
         redirect_seite = data.pop("_redirect", "next")[0]
@@ -123,10 +122,10 @@ class SeiteDetailView(DetailView):
                 # All Seiten are successful and we are at the end!
                 # store results and redirect to overview
                 models.Teilnahme.objects.update_or_create(
-                    username=userdata["uid"],
+                    username=request.jwt_user_id,
                     unterweisung=seite.unterweisung,
                     defaults={
-                        "fullname": userdata["displayName"],
+                        "fullname": request.jwt_user_display,
                         "abgeschlossen_at": timezone.now(),
                         "ergebnis": "\n".join(unterweisung_result),
                     },
@@ -142,8 +141,3 @@ class SeiteDetailView(DetailView):
             # Unknown _redirect parameter
             self.errors = ["Ungültiger Redirect-Parameter"]
             return self.get(request, *args, **kwargs)
-
-
-def _get_userdata(request):
-    userdata = request.session.get("jwt_userdata", {})
-    return userdata

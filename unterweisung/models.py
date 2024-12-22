@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from polymorphic.models import PolymorphicModel
 from markdownx.models import MarkdownxField
+from kantine.hermine import get_hermine_client
 from . import utils
 
 
@@ -170,6 +171,69 @@ class InfoSeite(Seite):
     class Meta:
         verbose_name = "Folie"
         verbose_name_plural = "Folien"
+
+
+class HermineNachrichtSeite(Seite):
+    ziel_gruppe = models.CharField(
+        max_length=20,
+        verbose_name="Hermine-Gruppe",
+        help_text="Gruppe, in der die Nachricht geschrieben werden soll. In dieser muss der Bot Schreibrechte haben.",
+    )
+    description = models.TextField(
+        verbose_name="Beschreibung",
+        help_text="Informationstext für den Benutzer",
+    )
+    anonymous = models.BooleanField(
+        verbose_name="Anonym?",
+        help_text="Soll die Hermine-Nachricht anonym erfolgen oder den Namen des aktuellen Benutzers enthalten?",
+    )
+    required = models.BooleanField(
+        verbose_name="Erforderlich?",
+        help_text="Muss eine Nachricht angegeben werden oder kann dies unterbleiben?",
+    )
+    force_message = models.BooleanField(
+        verbose_name="Erzwinge eine Nachricht?",
+        help_text="Soll auch eine (leere) Nachricht gesendet werden wenn der Benutzer keine angegeben hat?",
+    )
+
+    def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
+        return "unterweisung/seite_hermine_nachricht.html", {
+            "description": self.description,
+            "anonymous": self.anonymous,
+            "required": self.required,
+        }
+
+    def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str | None:
+        message = kwargs.get("message", "").strip()
+        if not message and self.required:
+            raise ValidationError("Es muss eine Nachricht angegeben werden")
+
+        if message or self.force_message:
+            # Send message
+            hermine_client = get_hermine_client()
+
+            channels = [channel
+                        for company in hermine_client.get_companies()
+                        for channel in hermine_client.get_channels(company["id"])]
+            channel_dict = next(filter(lambda chan_dict: chan_dict["name"] == hermine_channel, channels))
+
+            if self.anonymous:
+                hermine_message = (
+                    f"In Unterweisung {self.unterweisung.label} wurde bei Folie {self.titel} eine"
+                    f"Nachricht hinterlassen: {message}")
+            else:
+                hermine_message = (
+                    f"{request.jwt_user_display} hat bei Folie {self.titel} in Unterweisung "
+                    f"{self.unterweisung.label} eine Nachricht hinterlassen: {message}")
+
+            hermine_client.send_msg(("channel", self.ziel_gruppe),
+                                    hermine_message)
+
+        return None
+
+    class Meta:
+        verbose_name = "Nachrichten-Seite"
+        verbose_name_plural = "Nachrichten-Seiten"
 
 
 class MultipleChoiceSeite(Seite):
