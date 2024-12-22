@@ -175,7 +175,7 @@ class InfoSeite(Seite):
 
 class HermineNachrichtSeite(Seite):
     ziel_gruppe = models.CharField(
-        max_length=20,
+        max_length=50,
         verbose_name="Hermine-Gruppe",
         help_text="Gruppe, in der die Nachricht geschrieben werden soll. In dieser muss der Bot Schreibrechte haben.",
     )
