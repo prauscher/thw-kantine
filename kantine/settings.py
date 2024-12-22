@@ -155,6 +155,48 @@ USE_I18N = True
 USE_TZ = True
 
 
+# Logging
+
+ADMINS = [("Admin", admin_mail)
+          for admin_mail in _read_setting("ADMINS", default="").split(",")
+          if admin_mail]
+
+SERVER_EMAIL = _read_setting("SERVER_EMAIL", default="webmaster@localhost")
+EMAIL_USE_TLS = True
+EMAIL_HOST = _read_setting("EMAIL_HOST", default="localhost")
+EMAIL_PORT = 587
+EMAIL_HOST_USER = _read_setting("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = _read_setting("EMAIL_HOST_PASSWORD", default="")
+EMAIL_SUBJECT_PREFIX = "[THW ODAR App] "
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "generic": {
+            "format": "%(asctime)s [%(process)d] [%(levelname)s] [%(name)s] "
+                      "%(message)s",
+            "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
+            "class": "logging.Formatter",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "generic",
+        },
+        "mail_admins": {
+            "level": "WARNING",
+            "class": "django.utils.log.AdminEmailHandler",
+            "include_html": True,
+        },
+    },
+    "root": {
+        "handlers": ["console", "mail_admins"],
+        "level": "WARNING",
+    },
+}
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
