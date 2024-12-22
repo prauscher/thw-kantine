@@ -215,7 +215,7 @@ class HermineNachrichtSeite(Seite):
             channels = [channel
                         for company in hermine_client.get_companies()
                         for channel in hermine_client.get_channels(company["id"])]
-            channel_dict = next(filter(lambda chan_dict: chan_dict["name"] == hermine_channel, channels))
+            channel_dict = next(filter(lambda chan_dict: chan_dict["name"] == self.ziel_gruppe, channels))
 
             if self.anonymous:
                 hermine_message = (
@@ -226,7 +226,7 @@ class HermineNachrichtSeite(Seite):
                     f"{request.jwt_user_display} hat bei Folie {self.titel} in Unterweisung "
                     f"{self.unterweisung.label} eine Nachricht hinterlassen: {message}")
 
-            hermine_client.send_msg(("channel", self.ziel_gruppe),
+            hermine_client.send_msg(("channel", channel_dict["id"]),
                                     hermine_message)
 
         return None
