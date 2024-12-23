@@ -111,7 +111,7 @@ class UnterweisungExportTeilnahmeView(TemplateView):
             key=lambda item: (1, "".join(item[1]["namen"])) if item[1]["namen"] else (2, item[0]))
 
         context["unterweisungen"] = unterweisungen
-        context["personen"] = personen
+        context["personen"] = personen_output
 
         return context
 
