@@ -194,7 +194,6 @@ LOGGING = {
     "root": {
         "handlers": ["console", "mail_admins"],
         "level": "WARNING",
-        "propagate": False,
     },
 }
 
