@@ -127,17 +127,17 @@ class FuehrerscheinDatenSeite(Seite):
         elif nummer_papier:
             nummer = nummer_papier
             klassen_set = set(kwargs.getlist("klassen_papier"))
-            for klasse in klassen_set:
-                klassen_set.update(self.EINSCHLUESSE_KLASSE_PAPIER.get(klasse, set()))
-            klassen = ",".join(sorted(klassen_set))
+            einschluesse = self.EINSCHLUESSE_KLASSE_PAPIER
         elif nummer_karte:
             nummer = utils.validate_kartenfuehrerschein_nummer(nummer_karte)
             klassen_set = set(kwargs.getlist("klassen_karte"))
-            for klasse in klassen_set:
-                klassen_set.update(self.EINSCHLUESSE_KLASSE_KARTE.get(klasse, set()))
-            klassen = ",".join(sorted(klassen_set))
+            einschluesse = self.EINSCHLUESSE_KLASSE_KARTE
         else:
             raise ValidationError("Keine Führerscheinnummer angegeben")
+
+        for klasse in klassen_set.copy():
+            klassen_set.update(einschluesse.get(klasse, set()))
+        klassen = ",".join(sorted(klassen_set))
 
         if not klassen:
             raise ValidationError("Keine Führerscheinklassen angegeben")
