@@ -11,8 +11,8 @@
  </ol>
 </nav>
 
-<p>Mit der Unterschrift bestätige ich, die Unterweisung vollständig und alleine bearbeitet zu
- haben.</p>
+<p>Mit der Unterschrift bestätige ich, die Unterweisung alleine bearbeitet und vollständig
+ verstanden zu haben.</p>
 
 <table class="table table-striped">
 <thead>
@@ -46,4 +46,11 @@
  {% endfor %}
 </tbody>
 </table>
+
+<style type="text/css">
+@media print {
+	h1 {display:none;}
+	nav {display:none;}
+}
+</style>
 {% endblock %}
