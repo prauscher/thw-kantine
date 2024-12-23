@@ -89,7 +89,10 @@ class UnterweisungExportTeilnahmeView(TemplateView):
                 False if teilnahme.abgeschlossen_at is None else teilnahme.ergebnis)
 
         context["unterweisungen"] = unterweisungen
-        context["personen"] = personen.items()
+        context["personen"] = sorted(
+            personen.items(),
+            key=lambda item: (1, "".join(item[1]["namen"])) if item[1]["namen"] else (2, item[0])
+        )
 
         return context
 
