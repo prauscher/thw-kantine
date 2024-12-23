@@ -108,7 +108,7 @@ class FuehrerscheinDatenSeite(Seite):
     EINSCHLUESSE_KLASSE_KARTE = {"B": set(),
                                  "BE": {"B"},
                                  "C": {"B"},
-                                 "C1E": {"BE", "C1E"},
+                                 "C1E": {"B", "BE", "C1E"},
                                  "CE": {"C", "C1E", "BE"}}
 
     def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
@@ -126,22 +126,17 @@ class FuehrerscheinDatenSeite(Seite):
             raise ValidationError("Entweder Papier- oder EU-Kartenführerscheinnummer angeben")
         elif nummer_papier:
             nummer = nummer_papier
-            klassen_set = set(kwargs.getlist("klassen_papier"))
-            einschluesse = self.EINSCHLUESSE_KLASSE_PAPIER
+            klassen_list = kwargs.getlist("klassen_papier")
         elif nummer_karte:
             nummer = utils.validate_kartenfuehrerschein_nummer(nummer_karte)
-            klassen_set = set(kwargs.getlist("klassen_karte"))
-            einschluesse = self.EINSCHLUESSE_KLASSE_KARTE
+            klassen_list = kwargs.getlist("klassen_karte")
         else:
             raise ValidationError("Keine Führerscheinnummer angegeben")
 
-        for klasse in klassen_set.copy():
-            klassen_set.update(einschluesse.get(klasse, set()))
-        klassen = ",".join(sorted(klassen_set))
-
-        if not klassen:
+        if not klassen_list:
             raise ValidationError("Keine Führerscheinklassen angegeben")
 
+        klassen = ",".join(sorted(klassen_list))
         return f"{nummer} ({klassen})"
 
     class Meta:
