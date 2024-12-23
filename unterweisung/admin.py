@@ -102,7 +102,8 @@ class UnterweisungExportTeilnahmeView(TemplateView):
         with suppress(ValueError):
             filter_after = timezone.make_aware(
                 datetime.strptime(self.request.GET.get("after", ""), "%Y-%m-%d"))
-            personen_output = filter(lambda item: item["last_abgeschlossen"] > filter_after,
+            personen_output = filter(lambda item: item["last_abgeschlossen"] is not None and
+                                                  item["last_abgeschlossen"] >= filter_after,
                                      personen_output)
 
         personen_output = sorted(
