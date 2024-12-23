@@ -67,8 +67,8 @@ document.addEventListener("DOMContentLoaded", function () {
 	$("input[name=klassen_karte], input[name=klassen_papier]").on("change", function () {
 		const checkbox = this;
 		if (checkbox.checked) {
-			$(this).data("einschluesse").split(",").forEach(function (einschluss) {
-				$(checkbox).parent(".form-control").find("value=" + einschluss).prop("checked", true);
+			$(checkbox).data("einschluesse").split(",").forEach(function (einschluss) {
+				$(checkbox).parents(".form-control").find("[value=" + einschluss + "]").prop("checked", true);
 			});
 		}
 	});
