@@ -22,6 +22,7 @@ from kantine.views import jwt_login
 
 urlpatterns = [
     re_path(r'^jwt/(?P<token>[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*)(?P<next>/.*)$', jwt_login),
+    path('', RedirectView.as_view(url="https://cloud.thw-darmstadt.de/")),
     path('abfrage/', include('abfrage.urls')),
     path('unterweisung/', include('unterweisung.urls')),
     path('admin/', admin.site.urls),

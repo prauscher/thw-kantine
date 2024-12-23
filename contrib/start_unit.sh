@@ -30,7 +30,7 @@ cat >"${UNIT_CONFIG}" <<EOT
     "main": [
       {
         "match": {
-          "uri": ["/static/*"]
+          "uri": ["/static/*", "/favicon.ico"]
         },
         "action": {
           "share": "/opt/static\$uri",
