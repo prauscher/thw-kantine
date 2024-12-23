@@ -112,8 +112,8 @@ class FuehrerscheinDatenSeite(Seite):
                                  "CE": {"C", "C1E", "BE"}}
 
     def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
-        context = {"klassen_papier": sorted(self.EINSCHLUESSE_KLASSE_PAPIER),
-                   "klassen_karte": sorted(self.EINSCHLUESSE_KLASSE_KARTE)}
+        context = {"klassen_papier": sorted(self.EINSCHLUESSE_KLASSE_PAPIER.items()),
+                   "klassen_karte": sorted(self.EINSCHLUESSE_KLASSE_KARTE.items())}
         if export:
             return "unterweisung/seite_fuehrerschein_export.html", context
         return "unterweisung/seite_fuehrerschein.html", context

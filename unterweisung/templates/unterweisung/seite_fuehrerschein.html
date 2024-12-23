@@ -26,7 +26,7 @@
    <div class="form-control">
    {% for klasse in klassen_papier %}
    <div class="form-check form-check-inline">
-    <input class="form-check-input" type="checkbox" id="klassen_papier_{{ klasse }}" name="klassen_papier" value="{{ klasse }}" />
+    <input class="form-check-input" type="checkbox" id="klassen_papier_{{ klasse }}" name="klassen_papier" data-einschluesse="{{ einschluesse|join:"," }}" value="{{ klasse }}" />
     <label class="form-check-label" for="klassen_papier_{{ klasse }}">{{ klasse }}</label>
    </div>
    {% endfor %}
@@ -51,9 +51,9 @@
   <div class="mb-3">
    <label>Fahrerlaubnisklassen</label>
    <div class="form-control">
-   {% for klasse in klassen_karte %}
+   {% for klasse, einschluesse in klassen_karte %}
    <div class="form-check form-check-inline">
-    <input class="form-check-input" type="checkbox" id="klassen_karte_{{ klasse }}" name="klassen_karte" value="{{ klasse }}" />
+    <input class="form-check-input" type="checkbox" id="klassen_karte_{{ klasse }}" name="klassen_karte" data-einschluesse="{{ einschluesse|join:"," }}" value="{{ klasse }}" />
     <label class="form-check-label" for="klassen_karte_{{ klasse }}">{{ klasse }}</label>
    </div>
    {% endfor %}
@@ -61,3 +61,16 @@
   </div>
  </div>
 </div>
+
+<script type="text/javascript">
+$(function() {
+	$("input[name=klassen_karte], input[name=klassen_papier]").on("change", function () {
+		const checkbox = this;
+		if (checkbox.checked) {
+			$(this).data("einschluesse").split(",").forEach(function (einschluss) {
+				$(checkbox).parent(".form-control").find("value=" + einschluss).prop("checked", true);
+			});
+		}
+	});
+});
+</script>
