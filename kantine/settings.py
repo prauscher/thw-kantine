@@ -217,6 +217,7 @@ MEDIA_ROOT = _read_setting("MEDIA_ROOT", BASE_DIR / "media")
 
 # Avoid constant resizing
 MARKDOWNX_EDITOR_RESIZABLE = False
+MARKDOWNX_IMAGE_MAX_SIZE = {"size": (1000, 1000), "quality": 100}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
