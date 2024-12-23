@@ -1,8 +1,11 @@
 from collections import defaultdict
+from contextlib import suppress
+from datetime import datetime
 from django import forms
 from django.contrib import admin, messages
 from django.db import models as db_models
 from django.urls import path, reverse_lazy
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.views.generic import FormView, TemplateView
 from polymorphic.admin import (
@@ -76,6 +79,7 @@ class UnterweisungExportTeilnahmeView(TemplateView):
 
         unterweisungen = list(models.Unterweisung.objects.filter(active=True))
         personen = defaultdict(lambda: {"namen": set(),
+                                        "last_abgeschlossen": None,
                                         "teilnahmen": [(unterweisung, None)
                                                        for unterweisung in unterweisungen]})
 
@@ -83,16 +87,30 @@ class UnterweisungExportTeilnahmeView(TemplateView):
             if teilnahme.fullname:
                 personen[teilnahme.username]["namen"].add(teilnahme.fullname)
 
+            personen[teilnahme.username]["last_abgeschlossen"] = max(
+                filter(lambda i: i is not None,
+                       [personen[teilnahme.username]["last_abgeschlossen"],
+                        teilnahme.abgeschlossen_at]),
+                default=None)
+
             unterweisung_index = unterweisungen.index(teilnahme.unterweisung)
             personen[teilnahme.username]["teilnahmen"][unterweisung_index] = (
                 teilnahme.unterweisung,
                 False if teilnahme.abgeschlossen_at is None else teilnahme.ergebnis)
 
+        personen_output = personen.items()
+        with suppress(ValueError):
+            filter_after = timezone.make_aware(
+                datetime.strptime(self.request.GET.get("after", ""), "%Y-%m-%d"))
+            personen_output = filter(lambda item: item["last_abgeschlossen"] > filter_after,
+                                     personen_output)
+
+        personen_output = sorted(
+            personen_output,
+            key=lambda item: (1, "".join(item[1]["namen"])) if item[1]["namen"] else (2, item[0]))
+
         context["unterweisungen"] = unterweisungen
-        context["personen"] = sorted(
-            personen.items(),
-            key=lambda item: (1, "".join(item[1]["namen"])) if item[1]["namen"] else (2, item[0])
-        )
+        context["personen"] = personen
 
         return context
 

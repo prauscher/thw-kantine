@@ -11,6 +11,9 @@
  </ol>
 </nav>
 
+<p>Mit der Unterschrift bestätige ich, die Unterweisung vollständig und alleine bearbeitet zu
+ haben.</p>
+
 <table class="table table-striped">
 <thead>
  <tr>
@@ -18,6 +21,7 @@
   {% for unterweisung in unterweisungen %}
   <th scope="col">{{ unterweisung.short_label }}</th>
   {% endfor %}
+  <th scope="col" style="min-width:10em;">Unterschrift</th>
  </tr>
 </thead>
 <tbody>
@@ -37,6 +41,7 @@
    {% endif %}
   </td>
   {% endfor %}
+  <td>&nbsp;</td>
  </tr>
  {% endfor %}
 </tbody>
