@@ -196,6 +196,8 @@ class ImportTeilnahmeView(FormView):
 
 @admin.register(models.Teilnahme)
 class TeilnahmeAdmin(admin.ModelAdmin):
+    list_filter = ("unterweisung", "username", "abgeschlossen_at__isnull")
+
     def get_urls(self):
         urls = super().get_urls()
         urls = [
