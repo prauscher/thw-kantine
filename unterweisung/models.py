@@ -103,10 +103,20 @@ class Seite(PolymorphicModel):
 
 
 class FuehrerscheinDatenSeite(Seite):
+    EINSCHLUESSE_KLASSE_PAPIER = {"2": {"3"},
+                                  "3": set()}
+    EINSCHLUESSE_KLASSE_KARTE = {"B": set(),
+                                 "BE": {"B"},
+                                 "C": {"B"},
+                                 "C1E": {"BE", "C1E"},
+                                 "CE": {"C", "C1E", "BE"}}
+
     def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
+        context = {"klassen_papier": sorted(self.EINSCHLUESSE_KLASSE_PAPIER),
+                   "klassen_karte": sorted(self.EINSCHLUESSE_KLASSE_KARTE)}
         if export:
-            return "unterweisung/seite_fuehrerschein_export.html", {}
-        return "unterweisung/seite_fuehrerschein.html", {}
+            return "unterweisung/seite_fuehrerschein_export.html", context
+        return "unterweisung/seite_fuehrerschein.html", context
 
     def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str:
         nummer_papier = kwargs.get("nummer_papier", "")
@@ -116,10 +126,16 @@ class FuehrerscheinDatenSeite(Seite):
             raise ValidationError("Entweder Papier- oder EU-Kartenführerscheinnummer angeben")
         elif nummer_papier:
             nummer = nummer_papier
-            klassen = ",".join(sorted(kwargs.getlist("klassen_papier")))
+            klassen_set = set(kwargs.getlist("klassen_papier"))
+            for klasse in klassen_set:
+                klassen_set.update(self.EINSCHLUESSE_PAPIER.get(klasse, set()))
+            klassen = ",".join(sorted(klassen_set))
         elif nummer_karte:
             nummer = utils.validate_kartenfuehrerschein_nummer(nummer_karte)
-            klassen = ",".join(sorted(kwargs.getlist("klassen_karte")))
+            klassen_set = set(kwargs.getlist("klassen_karte"))
+            for klasse in klassen_set:
+                klassen_set.update(self.EINSCHLUESSE_KLASSE.get(klasse, set()))
+            klassen = ",".join(sorted(klassen_set))
         else:
             raise ValidationError("Keine Führerscheinnummer angegeben")
 
