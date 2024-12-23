@@ -63,7 +63,7 @@
 </div>
 
 <script type="text/javascript">
-$(function() {
+document.addEventListener("DOMContentLoaded", function () {
 	$("input[name=klassen_karte], input[name=klassen_papier]").on("change", function () {
 		const checkbox = this;
 		if (checkbox.checked) {
