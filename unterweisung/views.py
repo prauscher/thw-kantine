@@ -1,4 +1,5 @@
 import os
+import time
 from django.core.exceptions import ValidationError
 from django.views.generic import DetailView, ListView
 from django.shortcuts import redirect
@@ -74,6 +75,9 @@ class SeiteDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        self.request.session.setdefault(f"unterweisung_{self.object.unterweisung.pk}_start",
+                                        time.time())
+
         context["user_id"] = self.request.jwt_user_id
         context["user_display"] = self.request.jwt_user_display
         context["seiten"] = self._get_seiten()
@@ -120,6 +124,10 @@ class SeiteDetailView(DetailView):
                 prev_seite = seite_loop
             else:
                 # All Seiten are successful and we are at the end!
+
+                start = request.session.get(f"unterweisung_{seite.unterweisung.pk}_start")
+                duration = None if start is None else time.time() - start
+
                 # store results and redirect to overview
                 models.Teilnahme.objects.update_or_create(
                     username=request.jwt_user_id,
@@ -127,6 +135,7 @@ class SeiteDetailView(DetailView):
                     defaults={
                         "fullname": request.jwt_user_display,
                         "abgeschlossen_at": timezone.now(),
+                        "duration": duration,
                         "ergebnis": "\n".join(unterweisung_result),
                     },
                 )

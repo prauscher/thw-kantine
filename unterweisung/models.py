@@ -378,6 +378,7 @@ class Teilnahme(models.Model):
     unterweisung = models.ForeignKey("Unterweisung", on_delete=models.CASCADE,
                                      related_name="teilnahmen")
     abgeschlossen_at = models.DateTimeField(null=True, blank=True)
+    duration = models.FloatField(null=True, blank=True)
     ergebnis = models.TextField(blank=True)
 
     def __str__(self) -> str:
