@@ -187,7 +187,7 @@ LOGGING = {
         },
         "mail_admins": {
             "level": "WARNING",
-            "class": "django.utils.log.AdminEmailHandler",
+            "class": "kantine.utils.CustomEmailHandler",
             "include_html": True,
         },
     },
