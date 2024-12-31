@@ -144,7 +144,7 @@ class SeiteDetailView(DetailView):
                 self.errors = error.messages
                 return self.get(request, *args, **kwargs)
         else:
-            if result.startswith("confirm:"):
+            if result is not None and result.startswith("confirm:"):
                 redirect_seite = None
                 result = result[8:]
             # store success in session
