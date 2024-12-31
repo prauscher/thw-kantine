@@ -111,11 +111,17 @@ class SeiteDetailView(DetailView):
         if redirect_seite == "next":
             unterweisung_result = []
             prev_seite = None
-            for i, (_, seite_loop, seite_success, seite_result) in enumerate(seiten):
-                # Go to the next "waiting" seite, or the next in line
-                # Note that if we hit the last seite, no break will occur
-                if not seite_success or prev_seite == seite:
-                    redirect_seite = str(i)
+            redirect_seite = None
+            for i, (seite_seite, seite_loop, seite_success, seite_result) in enumerate(seiten):
+                # are we looking for a viable next page still?
+                if redirect_seite is None:
+                    # Go to the next "waiting" seite, or the next in line
+                    # Note that if we hit the last seite, no break will occur
+                    if not seite_success or prev_seite == seite:
+                        redirect_seite = str(i)
+
+                # do not create teilnahme yet
+                if not seite_success and seite_seite.is_required:
                     break
 
                 if seite_result is not None:
@@ -139,7 +145,10 @@ class SeiteDetailView(DetailView):
                         "ergebnis": "\n".join(unterweisung_result),
                     },
                 )
-                return redirect(seite.unterweisung.get_absolute_url() + "?return=1")
+
+                # loop back to intro-page if all pages are done
+                if redirect_seite is None:
+                    return redirect(seite.unterweisung.get_absolute_url() + "?return=1")
 
         # go to explicitly asked seite
         if redirect_seite.isnumeric():

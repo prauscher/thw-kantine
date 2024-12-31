@@ -73,6 +73,10 @@ class Seite(PolymorphicModel):
         max_length=70,
         help_text="Überschrift der Seite",
     )
+    is_required = models.BooleanField(
+        default=True,
+        help_text="Muss diese Seite erfolgreich abgeschlossen werden, um eine Teilnahme zu hinterlegen?",
+    )
 
     def __str__(self) -> str:
         return f"{self.unterweisung}: #{self.sort} {self.titel}"
