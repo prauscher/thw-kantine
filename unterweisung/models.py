@@ -170,7 +170,7 @@ class InfoSeite(Seite):
             "content": self.content,
         }
 
-    def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str | None:
+    def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> None:
         # ignore minimum time iff unterweisung is done
         if teilnahme is None:
             seite_pk, timestamp = request.session.get(f"unterweisung_seite_{self.unterweisung.pk}",
@@ -219,20 +219,13 @@ class HermineNachrichtSeite(Seite):
             "required": self.required,
         }
 
-    def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str | None:
+    def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> None:
         message = kwargs.get("message", "").strip()
         if not message and self.required:
             raise ValidationError("Es muss eine Nachricht angegeben werden")
 
         if message or self.force_message:
             # Send message
-            hermine_client = get_hermine_client()
-
-            channels = [channel
-                        for company in hermine_client.get_companies()
-                        for channel in hermine_client.get_channels(company["id"])]
-            channel_dict = next(filter(lambda chan_dict: chan_dict["name"] == self.ziel_gruppe, channels))
-
             if self.anonymous:
                 hermine_message = (
                     f"In Unterweisung {self.unterweisung.label} wurde bei Folie {self.titel} eine"
@@ -242,14 +235,24 @@ class HermineNachrichtSeite(Seite):
                     f"{request.jwt_user_display} hat bei Folie {self.titel} in Unterweisung "
                     f"{self.unterweisung.label} eine Nachricht hinterlassen: {message}")
 
-            hermine_client.send_msg(("channel", channel_dict["id"]),
-                                    hermine_message)
+            Thread(target=_send_hermine_worker,
+                   args=(self.ziel_gruppe, hermine_message),
+                   daemon=True).start()
 
         return None
 
     class Meta:
         verbose_name = "Nachrichten-Seite"
         verbose_name_plural = "Nachrichten-Seiten"
+
+
+def _send_hermine_worker(channel_name, message):
+    hermine_client = get_hermine_client()
+    channel = next([channel
+                    for company in hermine_client.get_companies()
+                    for channel in hermine_client.get_channels(company["id"])
+                    if channel["name"] == channel_name])
+    hermine_client.send_msg(("channel", channel["id"]), message)
 
 
 class MultipleChoiceSeite(Seite):
