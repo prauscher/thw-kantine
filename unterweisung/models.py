@@ -236,9 +236,7 @@ class HermineNachrichtSeite(Seite):
                     f"{request.jwt_user_display} hat bei Folie {self.titel} in Unterweisung "
                     f"{self.unterweisung.label} eine Nachricht hinterlassen: {message}")
 
-            Thread(target=_send_hermine_worker,
-                   args=(self.ziel_gruppe, hermine_message),
-                   daemon=True).start()
+            _send_hermine_worker(self.ziel_gruppe, hermine_message)
 
         return None
 
