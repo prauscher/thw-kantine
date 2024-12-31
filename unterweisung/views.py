@@ -110,7 +110,7 @@ class SeiteDetailView(DetailView):
         else:
             # All Seiten are successful and we are at the end!
 
-            start = request.session.get(f"unterweisung_{seite.unterweisung.pk}_start")
+            start = request.session.get(f"unterweisung_{current_seite.unterweisung.pk}_start")
             duration = None if start is None else time.time() - start
 
             # store results and redirect to overview
