@@ -1,4 +1,5 @@
 import time
+from collections.abc import Iterator
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -277,43 +278,55 @@ class MultipleChoiceSeite(Seite):
         clone.fragen.set(fragen)
         return clone
 
-    def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
-        fragen = [
-            {"pk": frage.pk,
-             "frage": frage.text,
-             "optional": frage.optional,
-             "antworten": [(antwort.pk, antwort.text,
-                            antwort.richtig if export else str(antwort.pk) in request.POST.getlist(f"frage_{frage.pk}"))
-                           for antwort in frage.antworten.order_by("?").all()],
-             "richtige_antworten": sum(
-                 1 if antwort.richtig else 0
-                 for antwort in frage.antworten.all())}
-            for frage in self.fragen.all()
-        ]
+    def _get_fragen(self, request, *, check_richtig: bool = False) -> tuple[bool, list[dict]]:
+        fragen = []
+        fragen_korrekt = 0
+        geloest = True
+        for frage in self.fragen.all():
+            antworten = [
+                (antwort.pk, antwort.text, antwort.richtig,
+                 antwort.richtig if check_richtig else str(antwort.pk) in request.POST.getlist(f"frage_{frage.pk}"))
+                for antwort in frage.antworten.order_by("?").all()
+            ]
+            korrekt = all(richtig == gewaehlt
+                          for _, _, richtig, gewaehlt in antworten)
 
+            if korrekt:
+                fragen_korrekt += 1
+            if not korrekt and not frage.optional:
+                geloest = False
+
+            fragen.append({
+                "pk": frage.pk,
+                "frage": frage.text,
+                "optional": frage.optional,
+                "antworten": antworten,
+                "korrekt": korrekt,
+                "richtige_antworten": sum(1 if antwort.richtig else 0
+                                          for antwort in frage.antworten.all()),
+            })
+        geloest = geloest and fragen_korrekt >= self.min_richtig
+        return geloest, fragen
+
+    def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
+        geloest, fragen = self._get_fragen(request, check_richtig=export)
         return "unterweisung/seite_multiplechoice.html", {
+            "geloest": geloest,
             "fragen": fragen,
             "min_richtig": self.min_richtig,
         }
 
     def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str | None:
-        result = ""
-        richtige_fragen = 0
-        for frage in self.fragen.all():
-            gewaehlte_antworten = set(kwargs.getlist(f"frage_{frage.pk}"))
-            richtige_antworten = set(str(antwort.pk)
-                                     for antwort in frage.antworten.all()
-                                     if antwort.richtig)
-            if gewaehlte_antworten != richtige_antworten:
-                if not frage.optional:
-                    raise ValidationError("Mindestens eine erforderliche Antwort war falsch")
-                result += "❌"
-            else:
-                richtige_fragen += 1
-                result += "✓"
+        geloest, fragen = self._get_fragen(request)
+        result = "".join("✓" if frage["korrekt"] else "❌" for frage in fragen)
+        print(geloest, result, fragen)
+        if not geloest:
+            raise ValidationError("Du hast leider zu viele Fragen falsch beantwortet")
 
-        if richtige_fragen < self.min_richtig:
-            raise ValidationError("Zu viele Falsche Antworten")
+        if "bestaetigt" not in request.POST:
+            # Hack: use empty ValidationError to return to page, get_template_context
+            # will detect this
+            raise ValidationError([])
 
         return result
 
