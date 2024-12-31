@@ -112,7 +112,7 @@ class SeiteDetailView(DetailView):
             unterweisung_result = []
             prev_seite = None
             redirect_seite = None
-            for i, (seite_seite, seite_loop, seite_success, seite_result) in enumerate(seiten):
+            for i, (_, seite_loop, seite_success, seite_result) in enumerate(seiten):
                 # are we looking for a viable next page still?
                 if redirect_seite is None:
                     # Go to the next "waiting" seite, or the next in line
@@ -121,7 +121,7 @@ class SeiteDetailView(DetailView):
                         redirect_seite = str(i)
 
                 # do not create teilnahme yet
-                if not seite_success and seite_seite.is_required:
+                if not seite_success and seite_loop.is_required:
                     break
 
                 if seite_result is not None:
