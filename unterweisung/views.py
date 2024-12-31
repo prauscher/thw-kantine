@@ -87,6 +87,46 @@ class SeiteDetailView(DetailView):
 
         return context
 
+    def _check_teilnahme(self, request) -> models.Seite | None:
+        current_seite = self.get_object()
+
+        unterweisung_result = []
+        prev_seite = None
+        redirect_seite = None
+        for _, seite_loop, seite_success, seite_result in self._get_seiten():
+            # Go to the next "waiting" seite, or the next in line
+            # Note that if we hit the last seite, no break will occur
+            if redirect_seite is None and (not seite_success or prev_seite == current_seite):
+                redirect_seite = seite_loop
+
+            # do not create teilnahme yet
+            if not seite_success and seite_loop.is_required:
+                break
+
+            if seite_result is not None:
+                unterweisung_result.append(seite_result)
+
+            prev_seite = seite_loop
+        else:
+            # All Seiten are successful and we are at the end!
+
+            start = request.session.get(f"unterweisung_{seite.unterweisung.pk}_start")
+            duration = None if start is None else time.time() - start
+
+            # store results and redirect to overview
+            models.Teilnahme.objects.update_or_create(
+                username=request.jwt_user_id,
+                unterweisung=current_seite.unterweisung,
+                defaults={
+                    "fullname": request.jwt_user_display,
+                    "abgeschlossen_at": timezone.now(),
+                    "duration": duration,
+                    "ergebnis": "\n".join(unterweisung_result),
+                },
+            )
+
+        return redirect_seite
+
     def post(self, request, *args, **kwargs):
         seite = self.get_object()
 
@@ -94,68 +134,43 @@ class SeiteDetailView(DetailView):
 
         data = request.POST.copy()
         redirect_seite = data.pop("_redirect", "next")[0]
+        next_seite = None
 
         try:
             result = seite.parse_result(request, data, teilnahme=teilnahme)
         except ValidationError as error:
-            # retry for user
+            # retry for user, ignore validation errors during explicit page request
             if redirect_seite == "next":
                 self.errors = error.messages
                 return self.get(request, *args, **kwargs)
         else:
+            if result.startswith("confirm:"):
+                redirect_seite = None
+                result = result[8:]
             # store success in session
             self.request.session[f"seite_{seite.pk}"] = (True, result)
 
-        seiten = self._get_seiten()
+        # create Teilnahme object if possible
+        next_seite = self._check_teilnahme(request)
 
-        if redirect_seite == "next":
-            unterweisung_result = []
-            prev_seite = None
-            redirect_seite = None
-            for i, (_, seite_loop, seite_success, seite_result) in enumerate(seiten):
-                # are we looking for a viable next page still?
-                if redirect_seite is None:
-                    # Go to the next "waiting" seite, or the next in line
-                    # Note that if we hit the last seite, no break will occur
-                    if not seite_success or prev_seite == seite:
-                        redirect_seite = str(i)
-
-                # do not create teilnahme yet
-                if not seite_success and seite_loop.is_required:
-                    break
-
-                if seite_result is not None:
-                    unterweisung_result.append(seite_result)
-
-                prev_seite = seite_loop
-            else:
-                # All Seiten are successful and we are at the end!
-
-                start = request.session.get(f"unterweisung_{seite.unterweisung.pk}_start")
-                duration = None if start is None else time.time() - start
-
-                # store results and redirect to overview
-                models.Teilnahme.objects.update_or_create(
-                    username=request.jwt_user_id,
-                    unterweisung=seite.unterweisung,
-                    defaults={
-                        "fullname": request.jwt_user_display,
-                        "abgeschlossen_at": timezone.now(),
-                        "duration": duration,
-                        "ergebnis": "\n".join(unterweisung_result),
-                    },
-                )
-
-                # loop back to intro-page if all pages are done
-                if redirect_seite is None:
-                    return redirect(seite.unterweisung.get_absolute_url() + "?return=1")
-
-        # go to explicitly asked seite
-        if redirect_seite.isnumeric():
-            seite = self._get_seiten()[int(redirect_seite)][1]
-            return redirect(seite.get_absolute_url())
-
+        # Decide for next step
+        if redirect_seite is None:
+            # re-show page for confirmation
+            return self.get(request, *args, **kwargs)
+        elif redirect_seite == "next":
+            # loop back to intro-page if all pages are done, else next_seite
+            # already contains correct object
+            if next_seite is None:
+                return redirect(seite.unterweisung.get_absolute_url() + "?return=1")
+        elif redirect_seite.isnumeric():
+            try:
+                next_seite = self._get_seiten()[int(redirect_seite)][1]
+            except IndexError:
+                self.errors = ["Ungültiger Redirect-Parameter"]
+                return self.get(request, *args, **kwargs)
         else:
             # Unknown _redirect parameter
             self.errors = ["Ungültiger Redirect-Parameter"]
             return self.get(request, *args, **kwargs)
+
+        return redirect(next_seite.get_absolute_url())

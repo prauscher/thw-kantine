@@ -323,17 +323,16 @@ class MultipleChoiceSeite(Seite):
             "min_richtig": self.min_richtig,
         }
 
-    def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str | None:
+    def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str:
         geloest, fragen = self._get_fragen(request)
         result = "".join("✓" if frage["korrekt"] else "❌" for frage in fragen)
-        print(geloest, result, fragen)
+
         if not geloest:
             raise ValidationError("Du hast leider zu viele Fragen falsch beantwortet")
 
         if "bestaetigt" not in request.POST:
-            # Hack: use empty ValidationError to return to page, get_template_context
-            # will detect this
-            raise ValidationError([])
+            # show page again for confirmation
+            result = f"confirm:{result}"
 
         return result
 
