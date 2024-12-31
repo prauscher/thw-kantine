@@ -122,12 +122,12 @@ class MenuCreateView(CreateView):
             if servings:
                 servings = f" Es gibt\n{servings}"
 
-            channels = [channel
-                        for company in hermine_client.get_companies()
-                        for channel in hermine_client.get_channels(company["id"])]
-            channel_dict = next(filter(lambda chan_dict: chan_dict["name"] == hermine_channel, channels))
+            channel = next(channel
+                           for company in hermine_client.get_companies()
+                           for channel in hermine_client.get_channels(company["id"])
+                           if channel["name"] == hermine_channel)
 
-            hermine_client.send_msg(("channel", channel_dict["id"]),
+            hermine_client.send_msg(("channel", channel["id"]),
                                     f"{self.request.jwt_user_display} hat ein neues Menü {form.instance.label} angelegt. Melde dich{frist_text} unter {self.request.build_absolute_uri(form.instance.get_absolute_url())} an.{servings}")
 
         return super().form_valid(form)
