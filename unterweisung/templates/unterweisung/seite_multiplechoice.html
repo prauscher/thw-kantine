@@ -3,7 +3,11 @@
 <input type="hidden" name="bestaetigt" value="1" />
 {% endif %}
 {% for frage in fragen %}
-<h5>{{ frage.frage }}</h5>
+<h5 class="mt-3">
+ {% if frage.korrekt %}<span class="badge text-bg-success">Richtig beantwortet</span>
+ {% elif geloest %}<span class="badge text-bg-danger">Falsch beantwortet</span>{% endif %}
+ {{ frage.frage }}
+</h5>
 {% if frage.optional %}
 <p>Zum Bestehen müssen insgesamt {{ min_richtig }} Fragen richtig beantwortet werden.</p>
 {% else %}
@@ -11,9 +15,9 @@
 {% endif %}
 {% for antwort_id, antwort_text, antwort_richtig, antwort_checked in frage.antworten %}
 <div class="form-check">
-  <input class="form-check-input" type="{% if frage.richtige_antworten == 1 %}radio{% else %}checkbox{% endif %}" {% if antwort_checked %}checked="checked"{% endif %} name="frage_{{ frage.pk }}" value="{{ antwort_id }}" id="antwort_{{ antwort_id }}" />
+  <input class="form-check-input" type="{% if frage.richtige_antworten == 1 %}radio{% else %}checkbox{% endif %}" {% if geloest %}onclick="return false;"{% endif %} {% if antwort_checked %}checked="checked"{% endif %} name="frage_{{ frage.pk }}" value="{{ antwort_id }}" id="antwort_{{ antwort_id }}" />
   <label class="form-check-label" for="antwort_{{ antwort_id }}">
-   {% if frage.korrekt or geloest %}
+   {% if geloest and not frage.korrekt %}
     {% if antwort_richtig == antwort_checked %}
      <span class="badge rounded-pill text-bg-success">Antwort Korrekt</span>
     {% else %}

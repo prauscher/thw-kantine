@@ -331,7 +331,11 @@ class MultipleChoiceSeite(Seite):
         if not geloest:
             raise ValidationError("Du hast leider zu viele Fragen falsch beantwortet")
 
-        if "bestaetigt" not in request.POST:
+        if "bestaetigt" in request.POST:
+            # use stored result to avoid manipulation afterwards
+            result = request.session.get(f"multiple_choice_{self.pk}_result", result)
+        else:
+            request.session[f"multiple_choice_{self.pk}_result"] = result
             # show page again for confirmation
             result = f"confirm:{result}"
 
