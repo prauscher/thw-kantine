@@ -1,6 +1,5 @@
 import time
 from collections.abc import Iterator
-from threading import Thread
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -236,9 +235,7 @@ class HermineNachrichtSeite(Seite):
                     f"{request.jwt_user_display} hat bei Folie {self.titel} in Unterweisung "
                     f"{self.unterweisung.label} eine Nachricht hinterlassen: {message}")
 
-            Thread(target=_send_hermine_worker,
-                   args=(self.ziel_gruppe, hermine_message),
-                   daemon=True).start()
+            _send_hermine_worker(self.ziel_gruppe, hermine_message)
 
         return None
 
