@@ -130,6 +130,7 @@ class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admi
         obj.pk = None
         orig_label = obj.label
         obj.label = f"Kopie von {orig_label}"
+        obj.active = False
         i = 1
         while models.Unterweisung.objects.filter(label=obj.label).count() > 0:
             i += 1
