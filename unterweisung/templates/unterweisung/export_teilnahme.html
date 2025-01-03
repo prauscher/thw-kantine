@@ -18,7 +18,7 @@
 <thead>
  <tr>
   <th scope="col">Helfer*in</th>
-  {% for unterweisung in unterweisungen %}
+  {% for unterweisung, _ in unterweisungen %}
   <th scope="col">{{ unterweisung.short_label }}</th>
   {% endfor %}
   <th scope="col" style="min-width:10em;">Unterschrift</th>
@@ -45,6 +45,22 @@
  </tr>
  {% endfor %}
 </tbody>
+<tfoot>
+ <tr>
+  <th scope="row">Median-Dauer</th>
+  {% for _, quantile in unterweisungen %}
+  <td>
+   {% if quantile is None %}
+    <em>-</em>
+   {% else %}
+    {% widthratio quantile.median 60 1 as median_minutes %}
+    {{ median_minutes|floatformat:1 }}min
+   {% endif %}
+  </td>
+  {% endfor %}
+  <td>&nbsp;</td>
+ </tr>
+</tfoot>
 </table>
 
 <style type="text/css">
