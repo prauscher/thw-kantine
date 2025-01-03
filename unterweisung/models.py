@@ -339,8 +339,13 @@ class MultipleChoiceSeite(Seite):
         geloest, fragen = self._get_fragen(request)
         result = "".join("✓" if frage["korrekt"] else "❌" for frage in fragen)
 
+        retries = request.session.get(f"multiple_choice_{self.pk}_retries", 0) + 1
+
         if not geloest:
+            request.session[f"multiple_choice_{self.pk}_retries"] = retries
             raise ValidationError("Du hast leider zu viele Fragen falsch beantwortet")
+
+        result = f"{result} ({retries}x)"
 
         if "bestaetigt" in request.POST:
             # use stored result to avoid manipulation afterwards
