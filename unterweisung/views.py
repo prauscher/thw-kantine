@@ -64,7 +64,7 @@ class SeiteDetailView(DetailView):
         super().__init__(*args, **kwargs)
         self.errors = None
 
-    def _get_seiten(self) -> list[tuple[int, models.Seite, bool, bool]]:
+    def _get_seiten(self) -> list[tuple[int, models.Seite, bool, str | None]]:
         return [
             (i + 1,
              seite,
@@ -78,9 +78,15 @@ class SeiteDetailView(DetailView):
         self.request.session.setdefault(f"unterweisung_{self.object.unterweisung.pk}_start",
                                         time.time())
 
+        seiten = self._get_seiten()
+
         context["user_id"] = self.request.jwt_user_id
         context["user_display"] = self.request.jwt_user_display
-        context["seiten"] = self._get_seiten()
+        context["seiten"] = seiten
+        context["seite_nr"] = next(seite_nr
+                                   for seite_nr, seite_loop, _, _ in seiten
+                                   if seite_loop == self.object)
+        context["seite_count"] = len(seiten)
         context["errors"] = self.errors
 
         context["inhalt"] = mark_safe(self.object.render(self.request))
