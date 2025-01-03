@@ -127,20 +127,22 @@ class UnterweisungExportTeilnahmeView(TemplateView):
             personen_output,
             key=lambda item: (1, "".join(item[1]["namen"])) if item[1]["namen"] else (2, item[0]))
 
-        context["unterweisungen"] = []
-        for i, unterweisung in enumerate(unterweisungen):
-            unterweisung_durations = durations[i]
-            quantiles = None
+        context["unterweisungen"] = unterweisungen
+        context["quantiles"] = []
+        if "include_stats" in self.request.GET:
+            for i, unterweisung in enumerate(unterweisungen):
+                unterweisung_durations = durations[i]
+                quantiles = None
 
-            if len(unterweisung_durations) == 1:
-                # avoid StatisticsWarning
-                unterweisung_durations.append(unterweisung_durations[0])
+                if len(unterweisung_durations) == 1:
+                    # avoid StatisticsWarning
+                    unterweisung_durations.append(unterweisung_durations[0])
 
-            if unterweisung_durations:
-                _quantiles = statistics.quantiles(unterweisung_durations, n=2)
-                quantiles = {"median": _quantiles[0]}
+                if unterweisung_durations:
+                    _quantiles = statistics.quantiles(unterweisung_durations, n=2)
+                    quantiles = {"median": _quantiles[0]}
 
-            context["unterweisungen"].append((unterweisung, quantiles))
+                context["quantiles"].append(quantiles)
         context["personen"] = personen_output
 
         return context
