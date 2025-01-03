@@ -13,7 +13,13 @@ def require_jwt_login(view):
     jwt_urls = list(zip(*[iter(jwt_url_parts)] * 2))
 
     def _view(request, *args, **kwargs):
-        if "jwt_userdata" not in request.session:
+        if "FORCE_LOGIN" in os.environ:
+            request.session["jwt_userdata"] = {
+                "uid": os.environ["FORCE_LOGIN"],
+                "displayName": os.environ["FORCE_LOGIN"],
+            }
+
+        elif "jwt_userdata" not in request.session:
             full_path = request.get_full_path()
 
             for path_prefix, jwt_url in jwt_urls:
