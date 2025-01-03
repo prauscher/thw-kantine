@@ -224,18 +224,32 @@ class HermineNachrichtSeite(Seite):
         if not message and self.required:
             raise ValidationError("Es muss eine Nachricht angegeben werden")
 
-        if message or self.force_message:
-            # Send message
-            if self.anonymous:
-                hermine_message = (
-                    f"In Unterweisung {self.unterweisung.label} wurde bei Folie {self.titel} eine"
-                    f"Nachricht hinterlassen: {message}")
-            else:
-                hermine_message = (
-                    f"{request.jwt_user_display} hat bei Folie {self.titel} in Unterweisung "
-                    f"{self.unterweisung.label} eine Nachricht hinterlassen: {message}")
+        if not message and not self.force_message:
+            return None
 
-            _send_hermine_worker(self.ziel_gruppe, hermine_message)
+        last_message = request.session.get(f"hermine_message_{self.pk}_last")
+
+        # avoid resending of feedback
+        if last_message is not None and last_message[0] + 3*60 < time.time():
+            if last_message[1] == message:
+                # avoid resending quietly
+                return None
+            else:
+                raise ValidationError("Du kannst nur alle 3 Minuten ein neues Feedback geben.")
+
+        request.session[f"hermine_message_{self.pk}_last"] = (time.time(), message)
+
+        # Send message
+        if self.anonymous:
+            hermine_message = (
+                f"In Unterweisung {self.unterweisung.label} wurde bei Folie {self.titel} eine"
+                f"Nachricht hinterlassen: {message}")
+        else:
+            hermine_message = (
+                f"{request.jwt_user_display} hat bei Folie {self.titel} in Unterweisung "
+                f"{self.unterweisung.label} eine Nachricht hinterlassen: {message}")
+
+        _send_hermine_worker(self.ziel_gruppe, hermine_message)
 
         return None
 
