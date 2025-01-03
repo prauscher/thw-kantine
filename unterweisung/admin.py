@@ -101,7 +101,12 @@ class UnterweisungExportTeilnahmeView(TemplateView):
         personen_output = personen.items()
 
         if "only_open" in self.request.GET:
-            personen_output = filter(lambda item: any(ergebnis is not False
+            # ergebnis can be
+            # - None (no Teilnahme-object)
+            # - False (incomplete Teilnahme-object)
+            # - a str (complete Teilnahme-object)
+            # We only want rows where at least one Teilnahme-object is incomplete
+            personen_output = filter(lambda item: any(ergebnis is False
                                                       for _, ergebnis in item[1]["teilnahmen"]),
                                      personen_output)
 
