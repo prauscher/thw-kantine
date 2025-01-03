@@ -119,8 +119,8 @@ class SeiteDetailView(DetailView):
             start = request.session.get(f"unterweisung_{current_seite.unterweisung.pk}_start")
             duration = None if start is None else time.time() - start
 
-            # store results and redirect to overview
-            models.Teilnahme.objects.update_or_create(
+            # store results (if not already existing)
+            models.Teilnahme.objects.get_or_create(
                 username=request.jwt_user_id,
                 unterweisung=current_seite.unterweisung,
                 defaults={
