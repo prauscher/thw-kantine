@@ -102,7 +102,7 @@ class UnterweisungExportTeilnahmeView(TemplateView):
 
         if "only_open" in self.request.GET:
             personen_output = filter(lambda item: any(ergebnis is not False
-                                                      for _, ergebnis in item[1]["teilnamen"].values()),
+                                                      for _, ergebnis in item[1]["teilnahmen"].values()),
                                      personen_output)
 
         with suppress(ValueError):
