@@ -98,12 +98,13 @@ class UnterweisungExportTeilnahmeView(TemplateView):
                 teilnahme.unterweisung,
                 False if teilnahme.abgeschlossen_at is None else teilnahme.ergebnis)
 
+        personen_output = personen.items()
+
         if "only_open" in self.request.GET:
             personen_output = filter(lambda item: any(ergebnis is not False
                                                       for _, ergebnis in item[1]["teilnamen"].values()),
                                      personen_output)
 
-        personen_output = personen.items()
         with suppress(ValueError):
             filter_after = timezone.make_aware(
                 datetime.strptime(self.request.GET.get("after", ""), "%Y-%m-%d"))
