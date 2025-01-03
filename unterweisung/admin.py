@@ -102,7 +102,8 @@ class UnterweisungExportTeilnahmeView(TemplateView):
 
             personen[teilnahme.username]["teilnahmen"][unterweisung_index] = (
                 teilnahme.unterweisung,
-                False if teilnahme.abgeschlossen_at is None else teilnahme.ergebnis)
+                False if teilnahme.abgeschlossen_at is None else teilnahme.ergebnis,
+                teilnahme.duration)
 
         personen_output = personen.items()
 
