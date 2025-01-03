@@ -83,7 +83,7 @@ class UnterweisungExportTeilnahmeView(TemplateView):
                                         "last_abgeschlossen": None,
                                         "teilnahmen": [(unterweisung, None)
                                                        for unterweisung in unterweisungen]})
-        durations = [[] for _ in unterweisung]
+        durations = [[] for _ in unterweisungen]
 
         for teilnahme in models.Teilnahme.objects.filter(unterweisung__in=unterweisungen):
             if teilnahme.fullname:
