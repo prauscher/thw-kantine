@@ -20,10 +20,12 @@ cat >"${UNIT_CONFIG}" <<EOT
 {
   "listeners": {
     "0.0.0.0:$PORT": {
-      "pass": "routes/main"
-    },
-    "[::]:$PORT": {
-      "pass": "routes/main"
+      "pass": "routes/main",
+      "forwarded": {
+        "source": ["172.16.0.0/12"],
+        "client_ip": "X-Forwarded-For",
+        "protocol": "X-Forwarded-Proto"
+      }
     }
   },
   "routes": {
