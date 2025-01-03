@@ -39,7 +39,7 @@
    {% else %}
     {{ teilnahme.1|linebreaksbr }}
    {% endif %}
-   {% if quantile and teilnahme.2 %}
+   {% if quantiles and teilnahme.2 %}
     <br />
     {% widthratio teilnahme.2 60 1 as duration_minutes %}
     <em>{{ duration_minutes|floatformat:1 }}min</em>
