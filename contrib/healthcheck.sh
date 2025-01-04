@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 curl http://localhost:${PORT}/healthcheck/ || exit 1
 
