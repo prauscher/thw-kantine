@@ -40,6 +40,8 @@ EOT
 	CUR_DB_WAIT_TIME=$((CUR_DB_WAIT_TIME + DB_WAIT_TIMEOUT))
 done
 
+echo "$(date +'%Y/%m/%d %H:%M:%S') ✅ Connection available"
+
 # Check if update is needed
 if ! ./manage.py migrate --check >/dev/null 2>&1; then
 	echo "$(date +'%Y/%m/%d %H:%M:%S') ⚙️ Applying database migrations"
