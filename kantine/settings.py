@@ -44,6 +44,7 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 INSTALLED_APPS = [
     'abfrage',
     'unterweisung',
+    'login_hermine',
     'polymorphic',
     'mathfilters',
     'markdownx',
