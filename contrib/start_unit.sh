@@ -66,7 +66,7 @@ cat >"${UNIT_CONFIG}" <<EOT
   },
   "access_log": {
     "path": "/dev/stdout",
-    "if": "$host"
+    "if": "\$host"
   }
 }
 EOT
