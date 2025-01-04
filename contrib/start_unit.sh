@@ -64,7 +64,10 @@ cat >"${UNIT_CONFIG}" <<EOT
       "server_version": false
     }
   },
-  "access_log": "/dev/stdout"
+  "access_log": {
+    "path": "/dev/stdout",
+    "if": "`${uri.startsWith('/healthcheck') ? false : true}`"
+  }
 }
 EOT
 
