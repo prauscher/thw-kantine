@@ -443,14 +443,14 @@ def get_hermine_client():
     return client
 
 
-def send_hermine_channel(channel: str, message: str) -> None:
+def send_hermine_channel(channel_name: str, message: str) -> None:
     client = get_hermine_client()
     if not client:
         return
 
     channel_attrs = next(channel
-                         for company in hermine_client.get_companies()
-                         for _channel in hermine_client.get_channels(company["id"])
-                         if _channel["name"] == channel)
+                         for company in client.get_companies()
+                         for channel in client.get_channels(company["id"])
+                         if channel["name"] == channel_name)
 
     client.send_msg(("channel", channel_attrs["id"]), message)
