@@ -7,7 +7,7 @@
 # Stop when an error occurs
 set -e
 
-echo "⚙️ Starting nginx unit"
+echo "$(date +'%Y/%m/%d %H:%M:%S') ⚙️ Starting nginx unit"
 
 UNIT_SOCKET="/tmp/unitd/socket"
 UNIT_CONFIG="/tmp/unitd/config.json"
@@ -72,25 +72,25 @@ cat >"${UNIT_CONFIG}" <<EOT
 EOT
 
 load_configuration() {
-	MAX_WAIT=10
+	MAX_WAIT=20
 	WAIT_COUNT=0
 	while [ ! -S $UNIT_SOCKET ]; do
 		if [ $WAIT_COUNT -ge $MAX_WAIT ]; then
-			echo "⚠️ No control socket found; configuration will not be loaded."
+			echo "$(date +'%Y/%m/%d %H:%M:%S') ⚠️ No control socket found; configuration will not be loaded."
 			return 1
 		fi
 
 		WAIT_COUNT=$((WAIT_COUNT + 1))
-		echo "⏳ Waiting for control socket to be created... (${WAIT_COUNT}/${MAX_WAIT})"
+		echo "$(date +'%Y/%m/%d %H:%M:%S') ⏳ Waiting for control socket to be created... (${WAIT_COUNT}/${MAX_WAIT})"
 
-		sleep 1
+		sleep 0.5
 	done
 
 	# even when the control socket exists, it does not mean unit has finished initialization
 	# this curl call will get a reply once unit is fully launched
 	curl --silent --output /dev/null --request GET --unix-socket $UNIT_SOCKET http://localhost/
 
-	echo "⚙️ Applying configuration to nginx unit"
+	echo "$(date +'%Y/%m/%d %H:%M:%S') ⚙️ Applying configuration to nginx unit"
 
 	RESP_CODE=$(
 		curl \
@@ -103,14 +103,14 @@ load_configuration() {
 			http://localhost/config
 	)
 	if [ "$RESP_CODE" != "200" ]; then
-		echo "⚠️ Could no load Unit configuration (code $RESP_CODE)"
+		echo "$(date +'%Y/%m/%d %H:%M:%S') ⚠️ Could no load Unit configuration (code $RESP_CODE)"
 		cat /tmp/unitd/unitd_config_error
 		kill "$(cat ${UNIT_PIDFILE})"
 		return 1
 	fi
 	rm "${UNIT_CONFIG}"
-	echo "✅ Unit configuration loaded successfully"
-	echo "🏁 System is ready for connections"
+	echo "$(date +'%Y/%m/%d %H:%M:%S') ✅ Unit configuration loaded successfully"
+	echo "$(date +'%Y/%m/%d %H:%M:%S') 🏁 System is ready for connections"
 }
 
 load_configuration &
