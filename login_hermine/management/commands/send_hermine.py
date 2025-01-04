@@ -1,7 +1,7 @@
 from typing import Any
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from kantine.utils import get_hermine_client
+from kantine.hermine import get_hermine_client
 from login_hermine import models
 
 class Command(BaseCommand):
