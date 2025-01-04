@@ -20,10 +20,11 @@ FROM base AS build_contrib
 
 COPY ./contrib/prepare_db.sh /prepare_db.sh
 COPY ./contrib/start_unit.sh /start_unit.sh
+COPY ./contrib/healthcheck.sh /healthcheck.sh
 COPY ./contrib/housekeeping.sh /housekeeping.sh
 
-RUN chmod 555 /prepare_db.sh /start_unit.sh /housekeeping.sh && \
-    chown root:root /prepare_db.sh /start_unit.sh /housekeeping.sh
+RUN chmod 551 /prepare_db.sh /start_unit.sh /healthcheck.sh /housekeeping.sh && \
+    chown root:root /prepare_db.sh /start_unit.sh /healthcheck.sh /housekeeping.sh
 
 FROM base AS build_venv
 
@@ -61,10 +62,14 @@ ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 COPY --from=build_contrib /prepare_db.sh /prepare_db.sh
 COPY --from=build_contrib /start_unit.sh /start_unit.sh
+COPY --from=build_contrib /healthcheck.sh /healthcheck.sh
 COPY --from=build_contrib /housekeeping.sh /housekeeping.sh
 COPY --from=build_venv /opt/venv /opt/venv
 COPY --from=build_venv /opt/app /opt/app
 COPY --from=build_venv /opt/static /opt/static
+
+HEALTHCHECK --start-period=60s --interval=10s --timeout=60s \
+  CMD ["/healthcheck.sh"]
 
 ENV PATH="/opt/venv/bin:$PATH"
 USER worker

@@ -62,6 +62,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # support /healthcheck without checking other middlewares (must be first)
+    "kantine.middleware.health_check_middleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

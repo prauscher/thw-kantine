@@ -14,7 +14,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from kantine.decorators import require_jwt_login
-from kantine.hermine import send_hermine_channel
+from login_hermine.utils import send_hermine_channel
 from . import models
 
 

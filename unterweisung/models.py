@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from polymorphic.models import PolymorphicModel
 from markdownx.models import MarkdownxField
-from kantine.hermine import send_hermine_channel
+from login_hermine.utils import send_hermine_channel
 from . import utils
 
 

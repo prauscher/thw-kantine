@@ -441,16 +441,3 @@ def get_hermine_client():
 
     client.open_private_key(encryption)
     return client
-
-
-def send_hermine_channel(channel_name: str, message: str) -> None:
-    client = get_hermine_client()
-    if not client:
-        return
-
-    channel_attrs = next(channel
-                         for company in client.get_companies()
-                         for channel in client.get_channels(company["id"])
-                         if channel["name"] == channel_name)
-
-    client.send_msg(("channel", channel_attrs["id"]), message)

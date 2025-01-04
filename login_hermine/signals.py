@@ -8,7 +8,7 @@ from django.contrib.auth.signals import (
 from django.dispatch import receiver
 from django.http import HttpRequest
 from django.contrib.auth.models import User
-from kantine.hermine import send_hermine_channel
+from .utils import send_hermine_channel
 
 
 def _send_msg(message: str) -> None:
