@@ -23,7 +23,7 @@ COPY ./contrib/start_unit.sh /start_unit.sh
 COPY ./contrib/healthcheck.sh /healthcheck.sh
 COPY ./contrib/housekeeping.sh /housekeeping.sh
 
-RUN chmod 551 /prepare_db.sh /start_unit.sh /healthcheck.sh /housekeeping.sh && \
+RUN chmod 555 /prepare_db.sh /start_unit.sh /healthcheck.sh /housekeeping.sh && \
     chown root:root /prepare_db.sh /start_unit.sh /healthcheck.sh /housekeeping.sh
 
 FROM base AS build_venv
