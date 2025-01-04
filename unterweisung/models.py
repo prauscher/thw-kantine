@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from polymorphic.models import PolymorphicModel
 from markdownx.models import MarkdownxField
-from kantine.hermine import get_hermine_client
+from kantine.hermine import send_hermine_channel
 from . import utils
 
 
@@ -249,22 +249,13 @@ class HermineNachrichtSeite(Seite):
                 f"{request.jwt_user_display} hat bei Folie {self.titel} in Unterweisung "
                 f"{self.unterweisung.label} eine Nachricht hinterlassen: {message}")
 
-        _send_hermine_worker(self.ziel_gruppe, hermine_message)
+        send_hermine_channel(self.ziel_gruppe, hermine_message)
 
         return None
 
     class Meta:
         verbose_name = "Nachrichten-Seite"
         verbose_name_plural = "Nachrichten-Seiten"
-
-
-def _send_hermine_worker(channel_name, message):
-    hermine_client = get_hermine_client()
-    channel = next(channel
-                   for company in hermine_client.get_companies()
-                   for channel in hermine_client.get_channels(company["id"])
-                   if channel["name"] == channel_name)
-    hermine_client.send_msg(("channel", channel["id"]), message)
 
 
 class MultipleChoiceSeite(Seite):

@@ -14,7 +14,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from kantine.decorators import require_jwt_login
-from kantine.hermine import get_hermine_client
+from kantine.hermine import send_hermine_channel
 from . import models
 
 
@@ -112,9 +112,8 @@ class MenuCreateView(CreateView):
         form.save(commit=True)
         form.process_servings()
 
-        hermine_client = get_hermine_client()
         hermine_channel = os.environ.get("ABFRAGE_HERMINE_CHANNEL")
-        if hermine_client and hermine_channel:
+        if hermine_channel:
             frist_text = ""
             if form.instance.closed_at:
                 frist_text = f" bis {form.instance.closed_at:%H:%M am %d.%m.%Y}"
@@ -122,13 +121,11 @@ class MenuCreateView(CreateView):
             if servings:
                 servings = f" Es gibt\n{servings}"
 
-            channel = next(channel
-                           for company in hermine_client.get_companies()
-                           for channel in hermine_client.get_channels(company["id"])
-                           if channel["name"] == hermine_channel)
-
-            hermine_client.send_msg(("channel", channel["id"]),
-                                    f"{self.request.jwt_user_display} hat ein neues Menü {form.instance.label} angelegt. Melde dich{frist_text} unter {self.request.build_absolute_uri(form.instance.get_absolute_url())} an.{servings}")
+            send_hermine_channel(hermine_channel,
+                                 f"{self.request.jwt_user_display} hat ein neues Menü "
+                                 f"{form.instance.label} angelegt. Melde dich{frist_text} unter "
+                                 f"{self.request.build_absolute_uri(form.instance.get_absolute_url())}"
+                                 f" an.{servings}")
 
         return super().form_valid(form)
 

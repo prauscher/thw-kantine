@@ -8,7 +8,7 @@ from django.contrib.auth.signals import (
 from django.dispatch import receiver
 from django.http import HttpRequest
 from django.contrib.auth.models import User
-from kantine.hermine import get_hermine_client
+from kantine.hermine import send_hermine_channel
 
 
 def _send_msg(message: str) -> None:
@@ -16,15 +16,7 @@ def _send_msg(message: str) -> None:
     if not hermine_channel:
         return
 
-    hermine_client = get_hermine_client()
-    if not hermine_client:
-        return
-
-    channel = next(channel
-                   for company in hermine_client.get_companies()
-                   for channel in hermine_client.get_channels(company["id"])
-                   if channel["name"] == hermine_channel)
-    hermine_client.send_msg(("channel", channel["id"]), message)
+    send_hermine_channel(hermine_channel, message)
 
 
 @receiver(user_logged_in)
