@@ -52,16 +52,17 @@ if ! ./manage.py migrate --check >/dev/null 2>&1; then
 	./manage.py clearsessions
 fi
 
-# Create Superuser if required
-if [ "$SKIP_SUPERUSER" = "true" ]; then
-	echo "$(date +'%Y/%m/%d %H:%M:%S') ↩️ Skip creating the superuser"
-else
-	if [ -z ${SUPERUSER_PASSWORD+x} ] && [ -f "/run/secrets/superuser_password" ]; then
-		echo "$(date +'%Y/%m/%d %H:%M:%S') ⚙️ Reading SUPERUSER_PASSWORD from Docker Secrets"
-		SUPERUSER_PASSWORD="$(cat /run/secrets/superuser_password)"
-	fi
+create_superuser() {
+	# Create Superuser if required
+	if [ "$SKIP_SUPERUSER" = "true" ]; then
+		echo "$(date +'%Y/%m/%d %H:%M:%S') ↩️ Skip creating the superuser"
+	else
+		if [ -z ${SUPERUSER_PASSWORD+x} ] && [ -f "/run/secrets/superuser_password" ]; then
+			echo "$(date +'%Y/%m/%d %H:%M:%S') ⚙️ Reading SUPERUSER_PASSWORD from Docker Secrets"
+			SUPERUSER_PASSWORD="$(cat /run/secrets/superuser_password)"
+		fi
 
-	./manage.py shell --interface python <<END
+		./manage.py shell --interface python <<END
 from datetime import datetime
 import os
 from django.contrib.auth.models import User
@@ -81,8 +82,11 @@ if User.objects.exists():
 User.objects.create_superuser(superuser_name, superuser_email, superuser_password)
 print(f'{datetime.now().strftime("%Y/%m/%d %H:%M:%S")} 💡 Superuser \033[96m{superuser_name}\033[0m created')
 END
+	fi
+
+	echo "$(date +'%Y/%m/%d %H:%M:%S') ✅ Initialization is done."
 fi
 
-echo "$(date +'%Y/%m/%d %H:%M:%S') ✅ Initialization is done."
+create_superuser &
 
 exec "$@"
