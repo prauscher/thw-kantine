@@ -37,6 +37,7 @@ RUN python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
 WORKDIR /opt/app
 COPY ./manage.py /opt/app/manage.py
 COPY ./kantine /opt/app/kantine
+COPY ./login_hermine /opt/app/login_hermine
 COPY ./abfrage /opt/app/abfrage
 COPY ./unterweisung /opt/app/unterweisung
 #COPY ./strichliste /opt/app/strichliste
