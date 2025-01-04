@@ -85,7 +85,7 @@ END
 	fi
 
 	echo "$(date +'%Y/%m/%d %H:%M:%S') ✅ Initialization is done."
-fi
+}
 
 create_superuser &
 
