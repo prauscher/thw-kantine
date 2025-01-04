@@ -119,17 +119,17 @@ class SeiteDetailView(DetailView):
             start = request.session.get(f"unterweisung_{current_seite.unterweisung.pk}_start")
             duration = None if start is None else time.time() - start
 
-            # store results (if not already existing)
-            models.Teilnahme.objects.get_or_create(
+            # store results (but only store first success)
+            teilnahme, _ = models.Teilnahme.objects.get_or_create(
                 username=request.jwt_user_id,
                 unterweisung=current_seite.unterweisung,
-                defaults={
-                    "fullname": request.jwt_user_display,
-                    "abgeschlossen_at": timezone.now(),
-                    "duration": duration,
-                    "ergebnis": "\n".join(unterweisung_result),
-                },
             )
+            teilnahme.fullname = request.jwt_user_display
+            if teilnahme.abgeschlossen_at is None:
+                teilnahme.abgeschlossen_at = timezone.now()
+                teilnahme.duration = duration
+                teilnahme.ergebnis = "\n".join(unterweisung_result)
+            teilnahme.save()
 
         return redirect_seite
 
