@@ -24,7 +24,7 @@
   <div class="mb-3">
    <label>Fahrerlaubnisklassen</label>
    <div class="form-control">
-   {% for klasse in klassen_papier %}
+   {% for klasse, einschluesse in klassen_papier %}
    <div class="form-check form-check-inline">
     <input class="form-check-input" type="checkbox" id="klassen_papier_{{ klasse }}" name="klassen_papier" data-einschluesse="{{ einschluesse|join:"," }}" value="{{ klasse }}" />
     <label class="form-check-label" for="klassen_papier_{{ klasse }}">{{ klasse }}</label>

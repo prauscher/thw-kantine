@@ -298,8 +298,8 @@ class MultipleChoiceSeite(Seite):
                  antwort.richtig if check_richtig else str(antwort.pk) in request.POST.getlist(f"frage_{frage.pk}"))
                 for antwort in frage.antworten.order_by("?").all()
             ]
-            korrekt = all(richtig == gewaehlt
-                          for _, _, richtig, gewaehlt in antworten)
+            korrekt = not check_richtig and all(richtig == gewaehlt
+                                                for _, _, richtig, gewaehlt in antworten)
 
             if korrekt:
                 fragen_korrekt += 1
