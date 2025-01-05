@@ -15,14 +15,19 @@
 <div class="progress">
   <div class="progress-bar" role="progressbar" style="width: {% widthratio teilnahmen_done teilnahmen_total 100 %}%" aria-valuenow="{{ teilnahmen_done }}" aria-valuemin="0" aria-valuemax="{{ teilnahmen_total }}"></div>
 </div>
-<p>Teilnahmen erledigt: <strong>{{ teilnahmen_done }}</strong>, Teilnahmen offen: <strong>{{ teilnahmen_open }}</strong>, Teilnahmen insgesamt: {{ teilnahmen_total }}.</p>
-{% else %}
-<p>Mit der Unterschrift bestätige ich, die Unterweisung alleine bearbeitet und vollständig
- verstanden zu haben.</p>
+<p>Teilnahmen erledigt: <strong>{{ teilnahmen_done }}</strong>, Teilnahmen offen: <strong>{{ teilnahmen_open }}</strong>, Teilnahmen insgesamt: <strong>{{ teilnahmen_total }}</strong>.</p>
 {% endif %}
 
 <table class="table table-striped">
 <thead>
+{% if not quantiles %}
+ <tr>
+  <td colspan="{{ unterweisungen|length|add:2 }}">
+   Mit der Unterschrift bestätige ich, die Unterweisung alleine bearbeitet und vollständig
+   verstanden zu haben.
+  </td>
+ </tr>
+{% endif %}
  <tr>
   <th scope="col">Helfer*in</th>
   {% for unterweisung in unterweisungen %}
