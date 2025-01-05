@@ -93,13 +93,17 @@ class SeiteDetailView(DetailView):
 
         return context
 
-    def _check_teilnahme(self, request) -> models.Seite | None:
+    def _check_teilnahme(self, request, teilnahme: models.Teilnahme | None) -> models.Seite | None:
         current_seite = self.get_object()
 
         unterweisung_result = []
         prev_seite = None
         redirect_seite = None
         for _, seite_loop, seite_success, seite_result in self._get_seiten():
+            # Treat all pages as done once we have finished once
+            if teilnahme is not None and teilnahme.abgeschlossen_at is not None:
+                seite_success = True
+
             # Go to the next "waiting" seite, or the next in line
             # Note that if we hit the last seite, no break will occur
             if redirect_seite is None and (not seite_success or prev_seite == current_seite):
@@ -157,7 +161,7 @@ class SeiteDetailView(DetailView):
             self.request.session[f"seite_{seite.pk}"] = (True, result)
 
         # create Teilnahme object if possible
-        next_seite = self._check_teilnahme(request)
+        next_seite = self._check_teilnahme(request, teilnahme)
 
         # Decide for next step
         if redirect_seite is None:
