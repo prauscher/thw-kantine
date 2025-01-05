@@ -11,8 +11,15 @@
  </ol>
 </nav>
 
+{% if quantiles %}
+<div class="progress">
+  <div class="progress-bar" role="progressbar" style="width: {% widthratio teilnahmen_done teilnahmen_total 100 %}%" aria-valuenow="{{ teilnahmen_done }}" aria-valuemin="0" aria-valuemax="{{ teilnahmen_total }}"></div>
+</div>
+<p>Teilnahmen erledigt: <strong>{{ teilnahmen_done }}</strong>, Teilnahmen offen: <strong>{{ teilnahmen_open }}</strong>, Teilnahmen insgesamt: {{ teilnahmen_total }}.</p>
+{% else %}
 <p>Mit der Unterschrift bestätige ich, die Unterweisung alleine bearbeitet und vollständig
  verstanden zu haben.</p>
+{% endif %}
 
 <table class="table table-striped">
 <thead>
@@ -21,7 +28,9 @@
   {% for unterweisung in unterweisungen %}
   <th scope="col">{{ unterweisung.short_label }}</th>
   {% endfor %}
+  {% if not quantiles %}
   <th scope="col" style="min-width:10em;">Unterschrift</th>
+  {% endif %}
  </tr>
 </thead>
 <tbody>
@@ -46,7 +55,9 @@
    {% endif %}
   </td>
   {% endfor %}
+  {% if not quantiles %}
   <td>&nbsp;</td>
+  {% endif %}
  </tr>
  {% endfor %}
 </tbody>
@@ -64,7 +75,6 @@
    {% endif %}
   </td>
   {% endfor %}
-  <td>&nbsp;</td>
  </tr>
 </tfoot>
 {% endif %}

@@ -85,6 +85,9 @@ class UnterweisungExportTeilnahmeView(TemplateView):
                                                        for unterweisung in unterweisungen]})
         durations = [[] for _ in unterweisungen]
 
+        teilnahmen_open = 0
+        teilnahmen_done = 0
+
         for teilnahme in models.Teilnahme.objects.filter(unterweisung__in=unterweisungen):
             if teilnahme.fullname:
                 personen[teilnahme.username]["namen"].add(teilnahme.fullname)
@@ -99,6 +102,11 @@ class UnterweisungExportTeilnahmeView(TemplateView):
 
             if teilnahme.duration is not None:
                 durations[unterweisung_index].append(teilnahme.duration)
+
+            if teilnahme.abgeschlossen_at is None:
+                teilnahmen_open += 1
+            else:
+                teilnahmen_done += 1
 
             personen[teilnahme.username]["teilnahmen"][unterweisung_index] = (
                 teilnahme.unterweisung,
@@ -129,6 +137,9 @@ class UnterweisungExportTeilnahmeView(TemplateView):
             key=lambda item: (1, "".join(item[1]["namen"])) if item[1]["namen"] else (2, item[0]))
 
         context["unterweisungen"] = unterweisungen
+        context["teilnahmen_open"] = teilnahmen_open
+        context["teilnahmen_done"] = teilnahmen_done
+        context["teilnahmen_total"] = teilnahmen_open + teilnahmen_todo
         context["quantiles"] = []
         if "include_stats" in self.request.GET:
             for i, unterweisung in enumerate(unterweisungen):
