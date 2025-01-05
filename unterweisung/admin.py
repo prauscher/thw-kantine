@@ -139,7 +139,7 @@ class UnterweisungExportTeilnahmeView(TemplateView):
         context["unterweisungen"] = unterweisungen
         context["teilnahmen_open"] = teilnahmen_open
         context["teilnahmen_done"] = teilnahmen_done
-        context["teilnahmen_total"] = teilnahmen_open + teilnahmen_todo
+        context["teilnahmen_total"] = teilnahmen_open + teilnahmen_done
         context["quantiles"] = []
         if "include_stats" in self.request.GET:
             for i, unterweisung in enumerate(unterweisungen):
