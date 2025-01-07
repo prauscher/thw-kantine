@@ -4,12 +4,17 @@
 {% block title %}Überweisungsübersicht{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb">
- <ol class="breadcrumb">
-  <li class="breadcrumb-item"><a href="{% url "unterweisung:start" %}">Unterweisungen</a></li>
-  <li class="breadcrumb-item active" aria-current="page">Übersicht</li>
- </ol>
-</nav>
+<ul class="nav nav-tabs mb-2">
+ <li class="nav-item">
+  <a class="nav-link {% if quantiles %}active{% endif %}" href="?include_stats">Statistiken</a>
+ </li>
+ <li class="nav-item">
+  <a class="nav-link {% if "only_open" in request.GET %}active{% endif %}" href="?only_open">Fehlende</a>
+ </li>
+ <li class="nav-item">
+  <a class="nav-link {% if not quantiles and "only_open" not in request.GET %}active{% endif %}" href="?">Ausdruck</a>
+ </li>
+</ul>
 
 {% if quantiles %}
 <div class="progress">
@@ -87,8 +92,7 @@
 
 <style type="text/css">
 @media print {
-	h1 {display:none;}
-	nav {display:none;}
+	h1, nav, .nav {display:none;}
 }
 </style>
 {% endblock %}

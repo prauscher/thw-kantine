@@ -122,7 +122,7 @@ class UnterweisungExportTeilnahmeView(TemplateView):
             # - a str (complete Teilnahme-object)
             # We only want rows where at least one Teilnahme-object is incomplete
             personen_output = filter(lambda item: any(ergebnis is False
-                                                      for _, ergebnis in item[1]["teilnahmen"]),
+                                                      for _, ergebnis, _ in item[1]["teilnahmen"]),
                                      personen_output)
 
         with suppress(ValueError):
