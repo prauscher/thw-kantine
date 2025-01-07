@@ -81,7 +81,7 @@ class UnterweisungExportTeilnahmeView(TemplateView):
         unterweisungen = list(models.Unterweisung.objects.filter(active=True))
         personen = defaultdict(lambda: {"namen": set(),
                                         "last_abgeschlossen": None,
-                                        "teilnahmen": [(unterweisung, None)
+                                        "teilnahmen": [(unterweisung, None, None)
                                                        for unterweisung in unterweisungen]})
         durations = [[] for _ in unterweisungen]
 
