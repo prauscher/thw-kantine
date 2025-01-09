@@ -19,7 +19,7 @@ mkdir -p "$(dirname "${UNIT_SOCKET}")" "$(dirname "${UNIT_CONFIG}")" "$(dirname 
 cat >"${UNIT_CONFIG}" <<EOT
 {
   "listeners": {
-    "0.0.0.0:$PORT": {
+    "*:$PORT": {
       "pass": "routes/main",
       "forwarded": {
         "source": ["172.16.0.0/12"],
@@ -49,7 +49,7 @@ cat >"${UNIT_CONFIG}" <<EOT
     "app": {
       "type": "python 3",
       "path": "/opt/app",
-      "module": "kantine.wsgi",
+      "module": "${APP_WSGI}",
       "home": "/opt/venv",
       "prefix": "/",
       "processes": {

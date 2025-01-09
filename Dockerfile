@@ -1,14 +1,16 @@
+ARG PYTHON_VERSION=3.12.8-r1
+ARG POSTGRESQL_VERSION=17.2-r0
+ARG BUILD_BASE_VERSION=0.5-r3
+ARG PY3_PIP_VERSION=24.3.1-r0
+
 FROM alpine:3.21 AS base
 
-ENV PYTHON_VERSION=3.12.8-r1
-ENV UNIT_VERSION=1.34.0-r0
-ENV POSTGRESQL_VERSION=17.2-r0
-ENV TINI_VERSION=0.19.0-r3
-ENV TZDATA_VERSION=2024b-r1
-ENV CURL_VERSION=8.11.1-r0
-ENV BUILD_BASE_VERSION=0.5-r3
-ENV PY3_PIP_VERSION=24.3.1-r0
-ENV PIP_VERSION=24.3.1
+ARG PYTHON_VERSION
+ARG POSTGRESQL_VERSION
+ARG UNIT_VERSION=1.34.0-r0
+ARG TINI_VERSION=0.19.0-r3
+ARG TZDATA_VERSION=2024b-r1
+ARG CURL_VERSION=8.11.1-r0
 
 RUN apk add --no-cache "tini=${TINI_VERSION}" "tzdata=${TZDATA_VERSION}" "python3=${PYTHON_VERSION}" "unit=${UNIT_VERSION}" "unit-python3=${UNIT_VERSION}" "postgresql17-client=${POSTGRESQL_VERSION}" "curl=${CURL_VERSION}" \
     && adduser -S -D -H worker
@@ -28,6 +30,11 @@ RUN chmod 555 /prepare_db.sh /start_unit.sh /healthcheck.sh /housekeeping.sh && 
 
 FROM base AS build_venv
 
+ARG PYTHON_VERSION
+ARG POSTGRESQL_VERSION
+ARG BUILD_BASE_VERSION
+ARG PY3_PIP_VERSION
+
 RUN apk add --no-cache "build-base=${BUILD_BASE_VERSION}" "libpq-dev=${POSTGRESQL_VERSION}" "python3-dev=${PYTHON_VERSION}" "py3-pip=${PY3_PIP_VERSION}" && \
     python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -41,7 +48,6 @@ COPY ./kantine /opt/app/kantine
 COPY ./login_hermine /opt/app/login_hermine
 COPY ./abfrage /opt/app/abfrage
 COPY ./unterweisung /opt/app/unterweisung
-#COPY ./strichliste /opt/app/strichliste
 
 RUN find "." -exec chown root:root '{}' +  && \
     find "." -type d -exec chmod 755 '{}' +  && \
@@ -59,6 +65,7 @@ VOLUME /tmp
 
 ENV PORT=8080
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV APP_WSGI=kantine.wsgi
 
 COPY --from=build_contrib /prepare_db.sh /prepare_db.sh
 COPY --from=build_contrib /start_unit.sh /start_unit.sh

@@ -71,13 +71,9 @@ superuser_name = os.environ.get("SUPERUSER_NAME", "admin")
 superuser_email = os.environ.get("SUPERUSER_EMAIL", "admin@example.com")
 superuser_password = os.environ.get("SUPERUSER_PASSWORD", "admin")
 
-if User.objects.filter(username=superuser_name).exists():
-    print(f'{datetime.now().strftime("%Y/%m/%d %H:%M:%S")} ↩️ Superuser \033[96m{superuser_name}\033[0m already exists, skip creation')
-    exit()
-
 if User.objects.exists():
-    print(f'{datetime.now().strftime("%Y/%m/%d %H:%M:%S")} ↩️ Skip creating of superuser, as other users already exist')
-    exit()
+	print(f'{datetime.now().strftime("%Y/%m/%d %H:%M:%S")} ↩️ Skip creating of superuser, as other users already exist')
+	exit()
 
 User.objects.create_superuser(superuser_name, superuser_email, superuser_password)
 print(f'{datetime.now().strftime("%Y/%m/%d %H:%M:%S")} 💡 Superuser \033[96m{superuser_name}\033[0m created')
