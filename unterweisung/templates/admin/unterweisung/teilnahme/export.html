@@ -23,6 +23,8 @@
 <p>Teilnahmen erledigt: <strong>{{ teilnahmen_done }}</strong>, Teilnahmen offen: <strong>{{ teilnahmen_open }}</strong>, Teilnahmen insgesamt: <strong>{{ teilnahmen_total }}</strong>.</p>
 {% endif %}
 
+{% for gruppe, personen, quantiles in gruppen %}
+{% if personen %}
 <table class="table table-striped">
 <thead>
 {% if not quantiles %}
@@ -43,9 +45,7 @@
   {% endif %}
  </tr>
 </thead>
-{% for gruppe, personen in gruppen %}
-{% if personen %}
-<tbody style="border-top:.75rem solid white;">
+<tbody>
  <tr>
   {% if quantiles %}
    <th colspan="{{ unterweisungen|length|add:1 }}">{{ gruppe|default:"Ohne Gruppe" }}</th>
@@ -80,8 +80,6 @@
  </tr>
  {% endfor %}
 </tbody>
-{% endif %}
-{% endfor %}
 {% if quantiles %}
 <tfoot>
  <tr>
@@ -100,6 +98,8 @@
 </tfoot>
 {% endif %}
 </table>
+{% endif %}
+{% endfor %}
 
 <style type="text/css">
 @media print {

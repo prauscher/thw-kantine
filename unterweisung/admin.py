@@ -83,10 +83,6 @@ class TeilnahmeExportView(TemplateView):
             lambda: {"last_abgeschlossen": None,
                      "teilnahmen": [(unterweisung, None, None)
                                     for unterweisung in unterweisungen]})
-        durations = [[] for _ in unterweisungen]
-
-        teilnahmen_open = 0
-        teilnahmen_done = 0
 
         for teilnahme in models.Teilnahme.objects.filter(unterweisung__in=unterweisungen):
             personen_teilnahmen[teilnahme.teilnehmer]["last_abgeschlossen"] = max(
@@ -96,14 +92,6 @@ class TeilnahmeExportView(TemplateView):
                 default=None)
 
             unterweisung_index = unterweisungen.index(teilnahme.unterweisung)
-
-            if teilnahme.duration is not None:
-                durations[unterweisung_index].append(teilnahme.duration)
-
-            if teilnahme.abgeschlossen_at is None:
-                teilnahmen_open += 1
-            else:
-                teilnahmen_done += 1
 
             personen_teilnahmen[teilnahme.teilnehmer]["teilnahmen"][unterweisung_index] = (
                 teilnahme.unterweisung,
@@ -142,25 +130,47 @@ class TeilnahmeExportView(TemplateView):
             gruppen_output[teilnehmer.gruppe].append((teilnehmer, data))
 
         context["unterweisungen"] = unterweisungen
-        context["teilnahmen_open"] = teilnahmen_open
-        context["teilnahmen_done"] = teilnahmen_done
-        context["teilnahmen_total"] = teilnahmen_open + teilnahmen_done
-        context["quantiles"] = []
+
+        teilnahmen_open = 0
+        teilnahmen_done = 0
+
+        gruppen = []
+        for gruppe, personen in gruppen_output.items():
+            quantiles = None
+
+            if "include_stats" in self.request.GET:
+                quantiles = []
+
+                for i, unterweisung in enumerate(unterweisungen):
+                    durations = []
+                    for teilnehmer, data in personen:
+                        if data["teilnahmen"][i][2] is None:
+                            durations.append(data["teilnahmen"][i][2])
+
+                        if data["teilnahmen"][i][1] is False:
+                            teilnahmen_open += 1
+                        else:
+                            teilnahmen_done += 1
+
+                    if len(durations) == 1:
+                        # avoid StatisticsWarning
+                        durations.append(durations[0])
+
+                    if durations:
+                        _quantiles = statistics.quantiles(durations, n=2)
+                        quantiles.append({"median": _quantiles[0]})
+                    else:
+                        quantiles.append(None)
+
+                context["teilnahmen_total"] = teilnahmen_open + teilnahmen_done
+
+            gruppen.append(gruppe, personen, quantiles)
+
+        context["gruppen"] = sorted(gruppen, key=lambda item: item[0])
+
         if "include_stats" in self.request.GET:
-            for i, unterweisung in enumerate(unterweisungen):
-                unterweisung_durations = durations[i]
-                quantiles = None
-
-                if len(unterweisung_durations) == 1:
-                    # avoid StatisticsWarning
-                    unterweisung_durations.append(unterweisung_durations[0])
-
-                if unterweisung_durations:
-                    _quantiles = statistics.quantiles(unterweisung_durations, n=2)
-                    quantiles = {"median": _quantiles[0]}
-
-                context["quantiles"].append(quantiles)
-        context["gruppen"] = sorted(gruppen_output.items(), key=lambda item: item[0])
+            context["teilnahmen_open"] = teilnahmen_open
+            context["teilnahmen_done"] = teilnahmen_done
 
         return context
 
