@@ -95,9 +95,7 @@ class Command(BaseCommand):
         if filter_gruppe is not None:
             search_filter &= Q(gruppe=filter_gruppe)
 
-        delinquents = models.Teilnehmer.objects.filter(search_filter)
-
-        for teilnehmer in delinquents:
+        for teilnehmer in models.Teilnehmer.objects.filter(search_filter).distinct():
             open_unterweisungen = models.Unterweisung.objects.filter(
                 teilnahmen__abgeschlossen_at__isnull=True,
                 active=True,
