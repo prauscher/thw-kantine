@@ -114,7 +114,14 @@
  <tr>
   <th scope="row">Median</th>
   {% for q in total_quantiles %}
-   <td>{{ q.median }}</td>
+   <td>
+   {% if q is None %}
+    <em>-</em>
+   {% else %}
+    {% widthratio q.median 60 1 as median_minutes %}
+    {{ median_minutes|floatformat:1 }}min
+   {% endif %}
+   </td>
   {% endfor %}
  </tr>
 </tbody>

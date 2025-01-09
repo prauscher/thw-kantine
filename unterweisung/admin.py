@@ -175,6 +175,7 @@ class TeilnahmeExportView(TemplateView):
             context["teilnahmen_open"] = teilnahmen_open
             context["teilnahmen_done"] = teilnahmen_done
 
+            quantiles = []
             for i, _ in enumerate(unterweisungen):
                 if len(durations_combined[i]) == 1:
                     durations_combined[i].append(durations_combined[i][0])
