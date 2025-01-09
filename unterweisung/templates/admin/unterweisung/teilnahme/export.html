@@ -45,12 +45,12 @@
 </thead>
 {% for gruppe, personen in gruppen %}
 {% if personen %}
-<tbody>
+<tbody style="border-top:.75rem solid white;">
  <tr>
   {% if quantiles %}
-   <th colspan="{{ unterweisungen|length|add:1 }}">{{ gruppe }}</th>
+   <th colspan="{{ unterweisungen|length|add:1 }}">{{ gruppe|default:"Ohne Gruppe" }}</th>
   {% else %}
-   <th colspan="{{ unterweisungen|length|add:2 }}">{{ gruppe }}</th>
+   <th colspan="{{ unterweisungen|length|add:2 }}">{{ gruppe|default:"Ohne Gruppe" }}</th>
   {% endif %}
  </tr>
  {% for teilnehmer, data in personen %}
