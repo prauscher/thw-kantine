@@ -23,10 +23,14 @@
 <p>Teilnahmen erledigt: <strong>{{ teilnahmen_done }}</strong>, Teilnahmen offen: <strong>{{ teilnahmen_open }}</strong>, Teilnahmen insgesamt: <strong>{{ teilnahmen_total }}</strong>.</p>
 {% endif %}
 
-{% for gruppe, personen, quantiles in gruppen %}
+{% for gruppe, personen, quantiles, teilnehmer_open, teilnehmer_done, teilnehmer_total in gruppen %}
 {% if personen %}
 <div style="break-after:page;">
 <h3>{{ gruppe|default:"Ohne Gruppe" }}</h3>
+
+<div class="progress mb-1">
+  <div class="progress-bar" role="progressbar" style="width: {% widthratio teilnehmer_done teilnehmer_total 100 %}%" aria-valuenow="{{ teilnehmer_done }}" aria-valuemin="0" aria-valuemax="{{ teilnehmer_total }}"></div>
+</div>
 
 <table class="table table-striped">
 <thead>
