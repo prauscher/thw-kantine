@@ -164,7 +164,7 @@ class TeilnahmeExportView(TemplateView):
 
                 context["teilnahmen_total"] = teilnahmen_open + teilnahmen_done
 
-            gruppen.append(gruppe, personen, quantiles)
+            gruppen.append((gruppe, personen, quantiles))
 
         context["gruppen"] = sorted(gruppen, key=lambda item: item[0])
 
