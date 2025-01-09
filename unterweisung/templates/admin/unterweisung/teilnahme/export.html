@@ -6,13 +6,13 @@
 {% block content %}
 <ul class="nav nav-tabs mb-2">
  <li class="nav-item">
-  <a class="nav-link {% if quantiles %}active{% endif %}" href="?include_stats">Statistiken</a>
+  <a class="nav-link {% if "include_stats" in request.GET %}active{% endif %}" href="?include_stats">Statistiken</a>
  </li>
  <li class="nav-item">
   <a class="nav-link {% if "only_open" in request.GET %}active{% endif %}" href="?only_open">Fehlende</a>
  </li>
  <li class="nav-item">
-  <a class="nav-link {% if not quantiles and "only_open" not in request.GET %}active{% endif %}" href="?">Ausdruck</a>
+  <a class="nav-link {% if "include_stats" not in request.GET and "only_open" not in request.GET %}active{% endif %}" href="?">Ausdruck</a>
  </li>
 </ul>
 
@@ -25,7 +25,7 @@
 
 {% for gruppe, personen, quantiles in gruppen %}
 {% if personen %}
-<div style="break-inside:avoid;">
+<div style="break-before:page;">
 <h3>{{ gruppe|default:"Ohne Gruppe" }}</h3>
 
 <table class="table table-striped">
