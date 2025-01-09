@@ -170,7 +170,7 @@ class TeilnahmeExportView(TemplateView):
                         # avoid StatisticsWarning
                         durations[i].append(durations[i][0])
 
-                    if durations:
+                    if durations[i]:
                         _quantiles = statistics.quantiles(durations[i], n=2)
                         quantiles.append({"median": _quantiles[0]})
                     else:
@@ -198,7 +198,7 @@ class TeilnahmeExportView(TemplateView):
                 if len(durations_combined[i]) == 1:
                     durations_combined[i].append(durations_combined[i][0])
 
-                if durations_combined:
+                if durations_combined[i]:
                     _quantiles = statistics.quantiles(durations_combined[i])
                     quantiles.append({"median": _quantiles[0]})
                 else:
