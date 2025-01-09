@@ -169,7 +169,12 @@ class TeilnahmeExportView(TemplateView):
 
             gruppen.append((gruppe, personen, quantiles))
 
-        context["gruppen"] = sorted(gruppen, key=lambda item: item[0])
+        context["gruppen"] = []
+        for gruppe, personen, quantiles in sorted(gruppen, key=lambda item: item[0]):
+            _prefix, _, _suffix = gruppe.partition(" ")
+            if _prefix.isnumeric():
+                gruppe = _suffix
+            context["gruppen"].append((gruppe, personen, quantiles))
 
         if "include_stats" in self.request.GET:
             context["teilnahmen_open"] = teilnahmen_open
