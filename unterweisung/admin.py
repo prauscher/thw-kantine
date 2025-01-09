@@ -137,6 +137,10 @@ class TeilnahmeExportView(TemplateView):
             personen_output,
             key=lambda item: (1, item[0].fullname) if item[0].fullname else (2, item[0].username))
 
+        gruppen_output = defaultdict(list)
+        for teilnehmer, data in personen_output:
+            gruppen_output[teilnehmer.gruppe].append(data)
+
         context["unterweisungen"] = unterweisungen
         context["teilnahmen_open"] = teilnahmen_open
         context["teilnahmen_done"] = teilnahmen_done
@@ -156,7 +160,7 @@ class TeilnahmeExportView(TemplateView):
                     quantiles = {"median": _quantiles[0]}
 
                 context["quantiles"].append(quantiles)
-        context["personen"] = personen_output
+        context["gruppen"] = sorted(gruppen_output.items(), key=lambda item: item[0])
 
         return context
 

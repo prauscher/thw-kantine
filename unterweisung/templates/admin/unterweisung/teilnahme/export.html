@@ -43,7 +43,15 @@
   {% endif %}
  </tr>
 </thead>
+{% for gruppe, personen in gruppen %}
 <tbody>
+ <tr>
+  {% if quantiles %}
+   <th colspan="{{ unterweisungen|length|add:1 }}">{{ gruppe }}</th>
+  {% else %}
+   <th colspan="{{ unterweisungen|length|add:2 }}">{{ gruppe }}</th>
+  {% endif %}
+ </tr>
  {% for teilnehmer, data in personen %}
  <tr>
   <th scope="row">
@@ -71,6 +79,7 @@
  </tr>
  {% endfor %}
 </tbody>
+{% endfor %}
 {% if quantiles %}
 <tfoot>
  <tr>
