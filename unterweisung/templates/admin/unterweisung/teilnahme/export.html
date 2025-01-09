@@ -44,6 +44,7 @@
  </tr>
 </thead>
 {% for gruppe, personen in gruppen %}
+{% if personen %}
 <tbody>
  <tr>
   {% if quantiles %}
@@ -79,6 +80,7 @@
  </tr>
  {% endfor %}
 </tbody>
+{% endif %}
 {% endfor %}
 {% if quantiles %}
 <tfoot>

@@ -139,7 +139,7 @@ class TeilnahmeExportView(TemplateView):
 
         gruppen_output = defaultdict(list)
         for teilnehmer, data in personen_output:
-            gruppen_output[teilnehmer.gruppe].append(data)
+            gruppen_output[teilnehmer.gruppe].append((teilnehmer, data))
 
         context["unterweisungen"] = unterweisungen
         context["teilnahmen_open"] = teilnahmen_open
