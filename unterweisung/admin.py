@@ -58,7 +58,7 @@ class SeiteInline(StackedPolymorphicInline):
 
 
 class UnterweisungExportView(TemplateView):
-    template_name = "unterweisung/export_unterweisungen.html"
+    template_name = "admin/unterweisung/unterweisung/export.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -72,29 +72,26 @@ class UnterweisungExportView(TemplateView):
         return context
 
 
-class UnterweisungExportTeilnahmeView(TemplateView):
-    template_name = "unterweisung/export_teilnahme.html"
+class TeilnahmeExportView(TemplateView):
+    template_name = "admin/unterweisung/teilnahme/export.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         unterweisungen = list(models.Unterweisung.objects.filter(active=True))
-        personen = defaultdict(lambda: {"namen": set(),
-                                        "last_abgeschlossen": None,
-                                        "teilnahmen": [(unterweisung, None, None)
-                                                       for unterweisung in unterweisungen]})
+        personen_teilnahmen = defaultdict(
+            lambda: {"last_abgeschlossen": None,
+                     "teilnahmen": [(unterweisung, None, None)
+                                    for unterweisung in unterweisungen]})
         durations = [[] for _ in unterweisungen]
 
         teilnahmen_open = 0
         teilnahmen_done = 0
 
         for teilnahme in models.Teilnahme.objects.filter(unterweisung__in=unterweisungen):
-            if teilnahme.fullname:
-                personen[teilnahme.username]["namen"].add(teilnahme.fullname)
-
-            personen[teilnahme.username]["last_abgeschlossen"] = max(
+            personen_teilnahmen[teilnahme.teilnehmer]["last_abgeschlossen"] = max(
                 filter(lambda i: i is not None,
-                       [personen[teilnahme.username]["last_abgeschlossen"],
+                       [personen_teilnahmen[teilnahme.teilnehmer]["last_abgeschlossen"],
                         teilnahme.abgeschlossen_at]),
                 default=None)
 
@@ -108,12 +105,16 @@ class UnterweisungExportTeilnahmeView(TemplateView):
             else:
                 teilnahmen_done += 1
 
-            personen[teilnahme.username]["teilnahmen"][unterweisung_index] = (
+            personen_teilnahmen[teilnahme.teilnehmer]["teilnahmen"][unterweisung_index] = (
                 teilnahme.unterweisung,
                 False if teilnahme.abgeschlossen_at is None else teilnahme.ergebnis,
                 teilnahme.duration)
 
-        personen_output = personen.items()
+        personen_output = personen_teilnahmen.items()
+
+        if "gruppe" in self.request.GET:
+            personen_output = filter(lambda item: item[0].gruppe == self.request.GET["gruppe"],
+                                     personen_output)
 
         if "only_open" in self.request.GET:
             # ergebnis can be
@@ -134,7 +135,7 @@ class UnterweisungExportTeilnahmeView(TemplateView):
 
         personen_output = sorted(
             personen_output,
-            key=lambda item: (1, "".join(item[1]["namen"])) if item[1]["namen"] else (2, item[0]))
+            key=lambda item: (1, item[0].fullname) if item[0].fullname else (2, item[0].username))
 
         context["unterweisungen"] = unterweisungen
         context["teilnahmen_open"] = teilnahmen_open
@@ -189,12 +190,9 @@ class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admi
     def get_urls(self):
         urls = super().get_urls()
         urls = [
-            path("export/unterweisung",
+            path("export/",
                  self.admin_site.admin_view(UnterweisungExportView.as_view()),
-                 name="unterweisung_export"),
-            path("export/teilnahme",
-                 self.admin_site.admin_view(UnterweisungExportTeilnahmeView.as_view()),
-                 name="unterweisung_teilnahme_export"),
+                 name="unterweisung_unterweisung_export"),
         ] + urls
         return urls
 
@@ -222,9 +220,11 @@ class ImportTeilnahmeView(FormView):
             username = username.strip()
             if not username:
                 continue
+            teilnehmer, _ = models.Teilnehmer.objects.get_or_create(
+                username=username)
             _, obj_created = models.Teilnahme.objects.get_or_create(
                 unterweisung=unterweisung,
-                username=username,
+                teilnehmer=teilnehmer,
                 defaults={"abgeschlossen_at": None},
             )
             if obj_created:
@@ -241,7 +241,7 @@ class ImportTeilnahmeView(FormView):
 
 @admin.register(models.Teilnahme)
 class TeilnahmeAdmin(admin.ModelAdmin):
-    list_filter = ("unterweisung", "username", ("abgeschlossen_at", admin.EmptyFieldListFilter))
+    list_filter = ("unterweisung", "teilnehmer", ("abgeschlossen_at", admin.EmptyFieldListFilter))
 
     def get_urls(self):
         urls = super().get_urls()
@@ -249,5 +249,13 @@ class TeilnahmeAdmin(admin.ModelAdmin):
             path("import/",
                  self.admin_site.admin_view(ImportTeilnahmeView.as_view(model_admin=self)),
                  name="unterweisung_teilnahme_import"),
+            path("export/",
+                 self.admin_site.admin_view(TeilnahmeExportView.as_view()),
+                 name="unterweisung_teilnahme_export"),
         ] + urls
         return urls
+
+
+@admin.register(models.Teilnehmer)
+class TeilnehmerAdmin(admin.ModelAdmin):
+    list_filter = ("gruppe",)

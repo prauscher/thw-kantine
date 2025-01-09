@@ -2,5 +2,6 @@
 
 {% block object-tools-items %}
  <li><a href="{% url "admin:unterweisung_teilnahme_import" %}">Teilnahmen festlegen</a></li>
+ <li><a href="{% url "admin:unterweisung_teilnahme_export" %}" target="_blank">Export</a></li>
  {{ block.super }}
 {% endblock %}

@@ -44,7 +44,7 @@ class Unterweisung(models.Model):
 
     def get_teilnahme(self, username: str) -> "Teilnahme | None":
         try:
-            return Teilnahme.objects.get(username=username, unterweisung=self)
+            return Teilnahme.objects.get(teilnehmer__username=username, unterweisung=self)
         except Teilnahme.DoesNotExist:
             return None
 
@@ -403,23 +403,40 @@ class MultipleChoiceOption(models.Model):
         verbose_name_plural = "Multiple-Choice Antworten"
 
 
+class Teilnehmer(models.Model):
+    username = models.CharField(
+        max_length=50, unique=True,
+        verbose_name="Benutzername in NextCloud")
+    fullname = models.CharField(
+        max_length=70, blank=True,
+        verbose_name="Bürgerliche Name wie in THWin")
+    gruppe = models.CharField(
+        max_length=20, blank=True,
+        verbose_name="Gruppenkürzel zur Gruppierung von Teilnehmern")
+
+    def __str__(self) -> str:
+        return self.fullname if self.fullname else self.username
+
+    class Meta:
+        verbose_name = "Teilnehmer"
+        verbose_name_plural = "Teilnehmer"
+        ordering = ["fullname", "username"]
+
+
 class Teilnahme(models.Model):
-    username = models.CharField(max_length=50)
-    fullname = models.CharField(max_length=70, blank=True)
-    unterweisung = models.ForeignKey("Unterweisung", on_delete=models.CASCADE,
+    teilnehmer = models.ForeignKey(Teilnehmer, on_delete=models.CASCADE,
+                                   related_name="teilnahmen")
+    unterweisung = models.ForeignKey(Unterweisung, on_delete=models.CASCADE,
                                      related_name="teilnahmen")
     abgeschlossen_at = models.DateTimeField(null=True, blank=True)
     duration = models.FloatField(null=True, blank=True)
     ergebnis = models.TextField(blank=True)
 
     def __str__(self) -> str:
-        return (f'{self.unterweisung}: {self.fullname or self.username} ('
+        return (f'{self.unterweisung}: {self.teilnehmer} ('
                 f'{"Offen" if self.abgeschlossen_at is None else "Abgeschlossen"})')
 
     class Meta:
         verbose_name = "Teilnahme"
         verbose_name_plural = "Teilnahmen"
-        ordering = ["unterweisung", "username"]
-        constraints = [
-            models.UniqueConstraint(fields=["username", "unterweisung"], name="teilnahme_unique"),
-        ]
+        ordering = ["unterweisung", "teilnehmer"]

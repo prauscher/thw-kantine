@@ -44,10 +44,10 @@
  </tr>
 </thead>
 <tbody>
- {% for username, data in personen %}
+ {% for teilnehmer, data in personen %}
  <tr>
   <th scope="row">
-   {% if data.namen|length > 0 %}{{ data.namen|join:" / " }}{% else %}{{ username }}{% endif %}
+   {% if teilnehmer.fullname %}{{ teilnehmer.fullname }}{% else %}{{ teilnehmer.username }}{% endif %}
   </th>
   {% for teilnahme in data.teilnahmen %}
   <td>

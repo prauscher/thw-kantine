@@ -124,11 +124,14 @@ class SeiteDetailView(DetailView):
             duration = None if start is None else time.time() - start
 
             # store results (but only store first success)
-            teilnahme, _ = models.Teilnahme.objects.get_or_create(
+            teilnehmer, _ = models.Teilnehmer.objects.update_or_create(
                 username=request.jwt_user_id,
+                defaults={"fullname": request.jwt_user_display},
+            )
+            teilnahme, _ = models.Teilnahme.objects.get_or_create(
+                teilnehmer=teilnehmer,
                 unterweisung=current_seite.unterweisung,
             )
-            teilnahme.fullname = request.jwt_user_display
             if teilnahme.abgeschlossen_at is None:
                 teilnahme.abgeschlossen_at = timezone.now()
                 teilnahme.duration = duration
