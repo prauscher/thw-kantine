@@ -25,6 +25,9 @@
 
 {% for gruppe, personen, quantiles in gruppen %}
 {% if personen %}
+<div style="break-inside:avoid;">
+<h3>{{ gruppe|default:"Ohne Gruppe" }}</h3>
+
 <table class="table table-striped">
 <thead>
 {% if not quantiles %}
@@ -46,13 +49,6 @@
  </tr>
 </thead>
 <tbody>
- <tr>
-  {% if quantiles %}
-   <th colspan="{{ unterweisungen|length|add:1 }}">{{ gruppe|default:"Ohne Gruppe" }}</th>
-  {% else %}
-   <th colspan="{{ unterweisungen|length|add:2 }}">{{ gruppe|default:"Ohne Gruppe" }}</th>
-  {% endif %}
- </tr>
  {% for teilnehmer, data in personen %}
  <tr>
   <th scope="row">
@@ -98,8 +94,32 @@
 </tfoot>
 {% endif %}
 </table>
+</div>
 {% endif %}
 {% endfor %}
+
+{% if total_quantiles %}
+<h3>Gesamtstatistik</h3>
+
+<table class="table table-striped">
+<thead>
+ <tr>
+  <th scope="col">&nbsp;</th>
+  {% for unterweisung in unterweisungen %}
+  <th scope="col">{{ unterweisung.short_label }}</th>
+  {% endfor %}
+ </tr>
+</thead>
+<tbody>
+ <tr>
+  <th scope="row">Median</th>
+  {% for q in total_quantiles %}
+   <td>{{ q.median }}</td>
+  {% endfor %}
+ </tr>
+</tbody>
+</table>
+{% endif %}
 
 <style type="text/css">
 @media print {

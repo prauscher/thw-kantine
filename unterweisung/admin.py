@@ -134,6 +134,8 @@ class TeilnahmeExportView(TemplateView):
         teilnahmen_open = 0
         teilnahmen_done = 0
 
+        durations_combined = [[] for _ in unterweisungen]
+
         gruppen = []
         for gruppe, personen in gruppen_output.items():
             quantiles = None
@@ -146,6 +148,7 @@ class TeilnahmeExportView(TemplateView):
                     for teilnehmer, data in personen:
                         if data["teilnahmen"][i][2] is not None:
                             durations.append(data["teilnahmen"][i][2])
+                            durations_combined[i].append(data["teilnahmen"][i][2])
 
                         if data["teilnahmen"][i][1] is False:
                             teilnahmen_open += 1
@@ -171,6 +174,18 @@ class TeilnahmeExportView(TemplateView):
         if "include_stats" in self.request.GET:
             context["teilnahmen_open"] = teilnahmen_open
             context["teilnahmen_done"] = teilnahmen_done
+
+            for i, _ in enumerate(unterweisungen):
+                if len(durations_combined[i]) == 1:
+                    durations_combined[i].append(durations_combined[i][0])
+
+                if durations_combined:
+                    _quantiles = statistics.quantiles(durations_combined[i])
+                    quantiles.append({"median": _quantiles[0]})
+                else:
+                    quantiles.append(None)
+
+            context["total_quantiles"] = quantiles
 
         return context
 
