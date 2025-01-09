@@ -137,12 +137,13 @@ class TeilnahmeExportView(TemplateView):
 
         gruppen = []
         for gruppe, personen in gruppen_output.items():
-            durations = []
-            teilnehmer_open = 0
-            teilnehmer_done = 0
+            teilnehmer_open = None
+            teilnehmer_done = None
             quantiles = None
 
             if "include_stats" in self.request.GET:
+                teilnehmer_open = 0
+                teilnehmer_done = 0
                 durations = [[] for _ in unterweisungen]
 
                 for teilnehmer, data in personen:

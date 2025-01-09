@@ -28,9 +28,12 @@
 <div style="break-after:page;">
 <h3>{{ gruppe|default:"Ohne Gruppe" }}</h3>
 
-<div class="progress mb-1">
+{% if teilnehmer_open is not None and teilnehmer_done is not None and teilnehmer_total is not None %}
+<div class="progress">
   <div class="progress-bar" role="progressbar" style="width: {% widthratio teilnehmer_done teilnehmer_total 100 %}%" aria-valuenow="{{ teilnehmer_done }}" aria-valuemin="0" aria-valuemax="{{ teilnehmer_total }}"></div>
 </div>
+<p>Von <strong>{{ teilnehmer_total }}</strong> Helfer*innen in der Gruppe haben <strong>{{ teilnehmer_done }}</strong> alle Unterweisungen abgeschlossen.</p>
+{% endif %}
 
 <table class="table table-striped">
 <thead>
