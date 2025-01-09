@@ -179,7 +179,7 @@ class TeilnahmeExportView(TemplateView):
 
             gruppen.append((gruppe, personen, quantiles,
                             teilnehmer_open, teilnehmer_done,
-                            teilnehmer_open + teilnehmer_done))
+                            None if teilnehmer_open is None or teilnehmer_done is None else teilnehmer_open + teilnehmer_done))
 
         context["gruppen"] = []
         # ignore numeric prefix in gruppe (used for sorting only)
