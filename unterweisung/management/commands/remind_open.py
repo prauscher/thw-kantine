@@ -57,6 +57,9 @@ class Command(BaseCommand):
                                                              for unterweisung in unterweisungen))
             )
 
+            self.stdout.write(self.style.SUCCESS(
+                f"Nachricht an {fullname} ({'\n'.join(f'{user["first_name"]} {user["last_name"]}' for user in users)}) verschickt."))
+
         return _action
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
