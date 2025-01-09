@@ -144,7 +144,7 @@ class TeilnahmeExportView(TemplateView):
                 for i, unterweisung in enumerate(unterweisungen):
                     durations = []
                     for teilnehmer, data in personen:
-                        if data["teilnahmen"][i][2] is None:
+                        if data["teilnahmen"][i][2] is not None:
                             durations.append(data["teilnahmen"][i][2])
 
                         if data["teilnahmen"][i][1] is False:
