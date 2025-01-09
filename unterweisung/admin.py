@@ -81,7 +81,7 @@ class TeilnahmeExportView(TemplateView):
         unterweisungen = list(models.Unterweisung.objects.filter(active=True))
         personen_teilnahmen = defaultdict(
             lambda: {"last_abgeschlossen": None,
-                     "teilnahmen": [(unterweisung, None, None)
+                     "teilnahmen": [(None, None)
                                     for unterweisung in unterweisungen]})
 
         for teilnahme in models.Teilnahme.objects.filter(unterweisung__in=unterweisungen):
@@ -94,14 +94,13 @@ class TeilnahmeExportView(TemplateView):
             unterweisung_index = unterweisungen.index(teilnahme.unterweisung)
 
             personen_teilnahmen[teilnahme.teilnehmer]["teilnahmen"][unterweisung_index] = (
-                teilnahme.unterweisung,
                 False if teilnahme.abgeschlossen_at is None else teilnahme.ergebnis,
                 teilnahme.duration)
 
         personen_output = personen_teilnahmen.items()
 
         if "gruppe" in self.request.GET:
-            personen_output = filter(lambda item: item[0].gruppe == self.request.GET["gruppe"],
+            personen_output = filter(lambda item: item[0].gruppe.endswith(self.request.GET["gruppe"]),
                                      personen_output)
 
         if "only_open" in self.request.GET:
@@ -111,7 +110,7 @@ class TeilnahmeExportView(TemplateView):
             # - a str (complete Teilnahme-object)
             # We only want rows where at least one Teilnahme-object is incomplete
             personen_output = filter(lambda item: any(ergebnis is False
-                                                      for _, ergebnis, _ in item[1]["teilnahmen"]),
+                                                      for ergebnis, _ in item[1]["teilnahmen"]),
                                      personen_output)
 
         with suppress(ValueError):
@@ -146,14 +145,14 @@ class TeilnahmeExportView(TemplateView):
                 for i, _ in enumerate(unterweisungen):
                     durations = []
                     for teilnehmer, data in personen:
-                        if data["teilnahmen"][i][2] is not None:
-                            durations.append(data["teilnahmen"][i][2])
-                            durations_combined[i].append(data["teilnahmen"][i][2])
-
-                        if data["teilnahmen"][i][1] is False:
+                        if data["teilnahmen"][i][0] is False:
                             teilnahmen_open += 1
-                        else:
+                        elif data["teilnahmen"][i][0] is not None:
                             teilnahmen_done += 1
+
+                        if data["teilnahmen"][i][1] is not None:
+                            durations.append(data["teilnahmen"][i][1])
+                            durations_combined[i].append(data["teilnahmen"][i][1])
 
                     if len(durations) == 1:
                         # avoid StatisticsWarning
@@ -168,10 +167,11 @@ class TeilnahmeExportView(TemplateView):
             gruppen.append((gruppe, personen, quantiles))
 
         context["gruppen"] = []
+        # ignore numeric prefix in gruppe (used for sorting only)
         for gruppe, personen, quantiles in sorted(gruppen, key=lambda item: item[0]):
-            _prefix, _, _suffix = gruppe.partition(" ")
-            if _prefix.isnumeric():
-                gruppe = _suffix
+            prefix, _, suffix = gruppe.partition(" ")
+            if prefix.isnumeric():
+                gruppe = suffix
             context["gruppen"].append((gruppe, personen, quantiles))
 
         if "include_stats" in self.request.GET:

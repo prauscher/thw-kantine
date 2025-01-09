@@ -56,16 +56,16 @@
   </th>
   {% for teilnahme in data.teilnahmen %}
   <td>
-   {% if teilnahme.1 is False %}
+   {% if teilnahme.0 is False %}
     <span class="badge bg-danger">Offen</span>
-   {% elif teilnahme.1 is None %}
+   {% elif teilnahme.0 is None %}
     <em>-</em>
    {% else %}
-    {{ teilnahme.1|linebreaksbr }}
+    {{ teilnahme.0|linebreaksbr }}
    {% endif %}
-   {% if quantiles and teilnahme.2 %}
+   {% if quantiles and teilnahme.1 %}
     <br />
-    {% widthratio teilnahme.2 60 1 as duration_minutes %}
+    {% widthratio teilnahme.1 60 1 as duration_minutes %}
     <em>{{ duration_minutes|floatformat:1 }}min</em>
    {% endif %}
   </td>
