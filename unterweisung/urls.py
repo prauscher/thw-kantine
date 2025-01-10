@@ -13,7 +13,7 @@ urlpatterns = [
     path("seite/<int:pk>",
          views.SeiteDetailView.as_view(),
          name="seite_detail"),
-    re_path(r'^gruppe/(?P<token>[a-zA-Z0-9\+/]+={0,3})$',
+    re_path(r'^gruppe/(?P<token>[a-zA-Z0-9\+/:=]+)$',
          views.GruppenUebersichtView.as_view(),
          name="ansicht_gruppe"),
 ]
