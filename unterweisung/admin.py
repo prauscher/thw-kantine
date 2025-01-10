@@ -130,13 +130,7 @@ class TeilnahmeExportView(TemplateView):
                                                   item[1]["last_abgeschlossen"] >= filter_after,
                                      personen_output)
 
-        def _sort_key(item):
-            if item[0].fullname:
-                firstname, _, surname = item[0].fullname.rpartition(" ")
-                return (1, _strxfrm(surname), _strxfrm(firstname))
-            return (2, item[0].username)
-
-        personen_output = sorted(personen_output, key=_sort_key)
+        personen_output = sorted(personen_output, key=lambda item: _strxfrm(str(item[0])))
 
         gruppen_output = defaultdict(list)
         for teilnehmer, data in personen_output:

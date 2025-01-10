@@ -415,7 +415,10 @@ class Teilnehmer(models.Model):
         verbose_name="Gruppenkürzel zur Gruppierung von Teilnehmern")
 
     def __str__(self) -> str:
-        return self.fullname if self.fullname else self.username
+        if self.fullname:
+            first_name, _, sur_name = self.fullname.rpartition(" ")
+            return f"{sur_name}, {first_name}"
+        return self.username
 
     class Meta:
         verbose_name = "Teilnehmer"

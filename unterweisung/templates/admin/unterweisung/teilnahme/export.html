@@ -61,7 +61,7 @@
  {% for teilnehmer, data in personen %}
  <tr>
   <th scope="row">
-   {% if teilnehmer.fullname %}{{ teilnehmer.fullname }}{% else %}{{ teilnehmer.username }}{% endif %}
+   {{ teilnehmer }}
   </th>
   {% for teilnahme in data.teilnahmen %}
   <td>
