@@ -1,7 +1,7 @@
+import base64
 import os
 import time
 from datetime import timedelta
-from base64 import b64decode, b64encode
 from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.views.generic import DetailView, ListView, TemplateView
@@ -204,14 +204,14 @@ class GruppenUebersichtView(TemplateView):
     @classmethod
     def get_token(cls, gruppe):
         signer = TimestampSigner(salt=cls.signer_salt)
-        return b64encode(signer.sign(gruppe).encode()).decode("ascii")
+        return base64.urlsafe_b64encode(signer.sign(gruppe).encode()).decode("ascii").rstrip("=")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         signer = TimestampSigner(salt=self.signer_salt)
         try:
-            gruppe = signer.unsign(b64decode(self.kwargs.get("token", "")).decode(),
+            gruppe = signer.unsign(base64.urlsafe_b64decode(self.kwargs.get("token", "") + "==").decode(),
                                    max_age=timedelta(days=30))
         except SignatureExpired:
             context["error"] = "Der Token ist abgelaufen, bitte lass dir einen neuen geben"
