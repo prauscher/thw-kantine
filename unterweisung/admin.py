@@ -21,9 +21,11 @@ from . import models
 
 def _strxfrm(text):
     # yes, locale.strxfmt exists, but alpine (or musl) does not support LC_COLLATE
-    text = text.replace("ä", "a\x00")
-    text = text.replace("ö", "o\x00")
-    text = text.replace("ü", "u\x00")
+    # use DIN 5007 variant 2 here
+    text = text.replace("ä", "ae")
+    text = text.replace("ö", "oe")
+    text = text.replace("ü", "ue")
+    text = text.replace("ß", "ss")
     return text
 
 
