@@ -417,6 +417,8 @@ class Teilnehmer(models.Model):
     def __str__(self) -> str:
         if self.fullname:
             first_name, _, sur_name = self.fullname.rpartition(" ")
+            # required to distinguish surname from first name(s)
+            sur_name = sur_name.replace("_", " ")
             return f"{sur_name}, {first_name}"
         return self.username
 
