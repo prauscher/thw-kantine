@@ -5,7 +5,7 @@ from datetime import datetime
 from django import forms
 from django.contrib import admin, messages
 from django.db import models as db_models
-from django.urls import path, reverse_lazy
+from django.urls import path, reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.views.generic import FormView, TemplateView
@@ -16,6 +16,7 @@ from polymorphic.admin import (
 )
 from markdownx.admin import MarkdownxModelAdmin
 from django_object_actions import DjangoObjectActions, action
+from kantine.utils import find_login_url
 from . import models, views
 
 
@@ -339,8 +340,13 @@ class GruppenLinkView(TemplateView):
             gruppe_display = suffix if prefix.isnumeric() else gruppe
 
             token = views.GruppenUebersichtView.get_token(gruppe)
+            path = reverse("unterweisung:ansicht_gruppe", kwargs={"token": token})
+            try:
+                url = find_login_url(path)
+            except ValueError:
+                url = path
 
-            context["gruppen"].append((gruppe_display, token))
+            context["gruppen"].append((gruppe_display, url))
 
         return context
 

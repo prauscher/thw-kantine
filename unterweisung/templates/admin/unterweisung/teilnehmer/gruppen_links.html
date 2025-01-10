@@ -14,8 +14,8 @@
 <p>Die hier gezeigten Links können per Rechtsklick mit "Link kopieren" kopiert werden. Sie sind 30 Tage gültig, anschließend müssen neue Links ausgegeben werden.</p>
 
 <ul>
-{% for gruppe, token in gruppen %}
-<li><a href="{% url 'unterweisung:ansicht_gruppe' token %}">{{ gruppe|default:"(Ohne Gruppenzuordnung)" }}</a></li>
+{% for gruppe, url in gruppen %}
+<li><a href="{{ url }}">{{ gruppe|default:"(Ohne Gruppenzuordnung)" }}</a></li>
 {% endfor %}
 </ul>
 {% endblock %}
