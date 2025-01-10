@@ -1,8 +1,12 @@
 import os
 import time
+from datetime import timedelta
+from base64 import b64decode, b64encode
 from django.core.exceptions import ValidationError
-from django.views.generic import DetailView, ListView
+from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
+from django.views.generic import DetailView, ListView, TemplateView
 from django.shortcuts import redirect
+from django.http import Http404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
@@ -191,3 +195,60 @@ class SeiteDetailView(DetailView):
             return self.get(request, *args, **kwargs)
 
         return redirect(next_seite.get_absolute_url())
+
+
+class GruppenUebersichtView(TemplateView):
+    template_name = "unterweisung/gruppen_fehlend.html"
+    signer_salt = "587612c0-bbc1-4333-85fc-4b6f585b813c"  # generated
+
+    @classmethod
+    def get_token(cls, gruppe):
+        signer = TimestampSigner(salt=cls.signer_salt)
+        return b64encode(signer.sign(gruppe).encode()).decode("ascii")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        signer = TimestampSigner(salt=self.signer_salt)
+        try:
+            gruppe = signer.unsign(b64decode(self.kwargs.get("token", "")).decode(),
+                                   max_age=timedelta(days=30))
+        except SignatureExpired:
+            context["error"] = "Der Token ist abgelaufen, bitte lass dir einen neuen geben"
+            return context
+        except (ValueError, BadSignature):
+            raise Http404
+
+        # strip numeric prefix
+        prefix, _, suffix = gruppe.partition(" ")
+        context["gruppe"] = suffix if prefix.isnumeric() else gruppe
+
+        unterweisungen = list(models.Unterweisung.objects.filter(active=True))
+        context["unterweisungen"] = unterweisungen
+
+        counter = {"open": 0, "done": 0, "started": 0}
+
+        context["teilnehmer"] = []
+
+        for teilnehmer in models.Teilnehmer.objects.filter(gruppe=gruppe):
+            # List iff teilnahme was successful (or None if no teilnahme is recorded)
+            teilnahmen = [None for _ in unterweisungen]
+            for teilnahme in teilnehmer.teilnahmen.filter(unterweisung__active=True):
+                teilnahmen[unterweisungen.index(teilnahme.unterweisung)] = \
+                    teilnahme.abgeschlossen_at is not None
+
+            grade = "open"
+            if all(teilnahme is not False for teilnahme in teilnahmen):
+                grade = "done"
+            elif any(teilnahme is True for teilnahme in teilnahmen):
+                grade = "started"
+
+            counter[grade] += 1
+            context["teilnehmer"].append((
+                teilnehmer, grade, teilnahmen
+            ))
+
+        counter["total"] = sum(counter.values())
+        context["counter"] = counter
+
+        return context

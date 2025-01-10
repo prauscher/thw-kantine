@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
@@ -13,4 +13,7 @@ urlpatterns = [
     path("seite/<int:pk>",
          views.SeiteDetailView.as_view(),
          name="seite_detail"),
+    re_path(r'^gruppe/(?P<token>[a-zA-Z0-9\+/]+={0,3})$',
+         views.GruppenUebersichtView.as_view(),
+         name="ansicht_gruppe"),
 ]

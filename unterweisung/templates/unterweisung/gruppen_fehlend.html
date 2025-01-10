@@ -1,0 +1,51 @@
+{% extends "abfrage/base.html" %}
+
+{% block title %}Gruppenübersicht {{ gruppe }}{% endblock %}
+
+{% block content %}
+{% if error %}
+<p class="alert alert-danger">{{ error }}</p>
+{% else %}
+
+<div class="progress mb-1">
+  <div class="progress-bar" role="progressbar" style="width: {% widthratio counter.done counter.total 100 %}%" aria-valuenow="{{ counter.done }}" aria-valuemin="0" aria-valuemax="{{ counter.total }}"></div>
+  <div class="progress-bar bg-info" role="progressbar" style="width: {% widthratio counter.started counter.total 100 %}%" aria-valuenow="{{ counter.started }}" aria-valuemin="0" aria-valuemax="{{ counter.total }}"></div>
+</div>
+
+<p>In der Gruppe <strong>{{ gruppe }}</strong> sind insgesamt
+ <strong>{{ counter.total }}</strong> Helfer*innen erfasst. Davon haben
+ <strong>{{ counter.done }}</strong> alle für sie erforderlichen Unterweisungen
+ abgeschlossen, <strong>{{ counter.started }}</strong> haben zumindest eine
+ Unterweisung abgeschlossen und <strong>{{ counter.open }}</strong> haben noch
+ gar keine Unterweisung abgeschlossen.</p>
+
+<table class="table table-striped">
+<thead>
+<tr>
+ <th scope="col">Helfer*in</th>
+ {% for unterweisung in unterweisungen %}
+ <th scope="col">{{ unterweisung.short_label }}</th>
+ {% endfor %}
+</tr>
+</thead>
+<tbody>
+{% for teilnehmer, grade, teilnahmen in teilnehmer %}
+<tr>
+ <th>{{ teilnehmer }}</th>
+ {% for teilnahme in teilnahmen %}
+ <td>
+  {% if teilnahme is True %}
+  <span class="badge bg-success">Abgeschlossen</span>
+  {% elif teilnahme is False %}
+  <span class="badge bg-danger">Offen</span>
+  {% else %}
+  <span class="badge bg-secondary">Weitere</span>
+  {% endif %}
+ </td>
+ {% endfor %}
+</tr>
+{% endfor %} 
+</tbody>
+</table>
+{% endif %}
+{% endblock %}
