@@ -1,4 +1,3 @@
-import locale
 import statistics
 from collections import defaultdict
 from contextlib import suppress
@@ -18,6 +17,13 @@ from polymorphic.admin import (
 from markdownx.admin import MarkdownxModelAdmin
 from django_object_actions import DjangoObjectActions, action
 from . import models
+
+
+def _strxfmt(text):
+    # yes, locale.strxfmt exists, but alpine (or musl) does not support LC_COLLATE
+    for i in "äöü":
+        text = text.replace(i, i + "\x00")
+    return text
 
 
 class MultipleChoiceOptionInline(admin.StackedInline):
@@ -124,7 +130,7 @@ class TeilnahmeExportView(TemplateView):
         def _sort_key(item):
             if item[0].fullname:
                 firstname, _, surname = item[0].fullname.rpartition(" ")
-                return (1, locale.strxfrm(surname), locale.strxfrm(firstname))
+                return (1, _strxfrm(surname), _strxfrm(firstname))
             return (2, item[0].username)
 
         personen_output = sorted(personen_output, key=_sort_key)
