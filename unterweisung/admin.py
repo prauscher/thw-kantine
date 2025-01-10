@@ -150,6 +150,7 @@ class TeilnahmeExportView(TemplateView):
         for gruppe, personen in gruppen_output.items():
             teilnehmer_open = None
             teilnehmer_done = None
+            teilnehmer_part = None
             quantiles = None
 
             if "include_stats" in self.request.GET:
