@@ -39,7 +39,7 @@
 
 <table class="table table-striped">
 <thead>
-{% if not quantiles %}
+{% if "include_stats" not in request.GET and "only_open" not in request.GET %}
  <tr>
   <td colspan="{{ unterweisungen|length|add:2 }}">
    Mit der Unterschrift bestätige ich, die Unterweisung alleine bearbeitet und vollständig
@@ -52,7 +52,7 @@
   {% for unterweisung in unterweisungen %}
   <th scope="col">{{ unterweisung.short_label }}</th>
   {% endfor %}
-  {% if not quantiles %}
+  {% if "include_stats" not in request.GET and "only_open" not in request.GET %}
   <th scope="col" style="min-width:10em;">Unterschrift</th>
   {% endif %}
  </tr>
@@ -79,7 +79,7 @@
    {% endif %}
   </td>
   {% endfor %}
-  {% if not quantiles %}
+  {% if "include_stats" not in request.GET and "only_open" not in request.GET %}
   <td>&nbsp;</td>
   {% endif %}
  </tr>
