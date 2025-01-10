@@ -204,15 +204,22 @@ class GruppenUebersichtView(TemplateView):
     @classmethod
     def get_token(cls, gruppe):
         signer = TimestampSigner(salt=cls.signer_salt)
-        return base64.urlsafe_b64encode(signer.sign(gruppe).encode()).decode("ascii").rstrip("=")
+        return signer.sign(base64.urlsafe_b64encode(gruppe.encode()).decode("ascii")).rstrip("=")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         signer = TimestampSigner(salt=self.signer_salt)
+        token = self.kwargs.get("token", "")
+        max_age = timedelta(days=30)
+
         try:
-            gruppe = signer.unsign(base64.urlsafe_b64decode(self.kwargs.get("token", "") + "==").decode(),
-                                   max_age=timedelta(days=30))
+            # support old and new tokens
+            if ":" in token:
+                gruppe = base64.urlsafe_b64decode(signer.unsign(token, max_age=max_age) + "==").decode()
+            else:
+                gruppe = signer.unsign(signer.unsign(base64.urlsafe_b64decode(token + "==").decode(),
+                                       max_age=max_age)
         except SignatureExpired:
             context["error"] = "Der Token ist abgelaufen, bitte lass dir einen neuen geben"
             return context
