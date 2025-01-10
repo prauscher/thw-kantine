@@ -155,15 +155,18 @@ class TeilnahmeExportView(TemplateView):
             if "include_stats" in self.request.GET:
                 teilnehmer_open = 0
                 teilnehmer_done = 0
+                teilnehmer_part = 0
                 durations = [[] for _ in unterweisungen]
 
                 for teilnehmer, data in personen:
                     teilnahmen_open = 0
+                    teilnahmen_done = 0
                     for i, _ in enumerate(unterweisungen):
                         if data["teilnahmen"][i][0] is False:
                             teilnahmen_open += 1
                             teilnahmen_open_total += 1
                         elif data["teilnahmen"][i][0] is not None:
+                            teilnahmen_done += 1
                             teilnahmen_done_total += 1
 
                         if data["teilnahmen"][i][1] is not None:
@@ -172,6 +175,8 @@ class TeilnahmeExportView(TemplateView):
 
                     if teilnahmen_open == 0:
                         teilnehmer_done += 1
+                    elif teilnahmen_done > 0:
+                        teilnehmer_part += 1
                     else:
                         teilnehmer_open += 1
 
@@ -189,8 +194,8 @@ class TeilnahmeExportView(TemplateView):
                         quantiles.append(None)
 
             gruppen.append((gruppe, personen, quantiles,
-                            teilnehmer_open, teilnehmer_done,
-                            None if teilnehmer_open is None or teilnehmer_done is None else teilnehmer_open + teilnehmer_done))
+                            teilnehmer_open, teilnehmer_part, teilnehmer_done,
+                            None if teilnehmer_open is None or teilnehmer_part is None or teilnehmer_done is None else teilnehmer_open + teilnehmer_part + teilnehmer_done))
 
         context["gruppen"] = []
         # ignore numeric prefix in gruppe (used for sorting only)
