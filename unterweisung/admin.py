@@ -1,3 +1,4 @@
+import locale
 import statistics
 from collections import defaultdict
 from contextlib import suppress
@@ -123,7 +124,7 @@ class TeilnahmeExportView(TemplateView):
         def _sort_key(item):
             if item[0].fullname:
                 firstname, _, surname = item[0].fullname.rpartition(" ")
-                return (1, surname, firstname)
+                return (1, locale.strxfrm(surname), locale.strxfrm(firstname))
             return (2, item[0].username)
 
         personen_output = sorted(personen_output, key=_sort_key)
