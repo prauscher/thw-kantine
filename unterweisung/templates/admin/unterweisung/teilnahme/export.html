@@ -26,7 +26,7 @@
 {% for gruppe, personen, quantiles, teilnehmer_open, teilnehmer_done, teilnehmer_total in gruppen %}
 {% if personen %}
 <div style="break-after:page;">
-{% if gruppe or gruppen|len > 1 %}
+{% if gruppe or gruppen|length > 1 %}
 <h3>{{ gruppe|default:"Ohne Gruppe" }}</h3>
 {% endif %}
 
