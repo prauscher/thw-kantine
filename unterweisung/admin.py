@@ -16,7 +16,7 @@ from polymorphic.admin import (
 )
 from markdownx.admin import MarkdownxModelAdmin
 from django_object_actions import DjangoObjectActions, action
-from . import models
+from . import models, views
 
 
 def _strxfrm(text):
@@ -322,6 +322,38 @@ class TeilnahmeAdmin(admin.ModelAdmin):
         return urls
 
 
+class GruppenLinkView(TemplateView):
+    template_name = "admin/unterweisung/teilnehmer/gruppen_links.html"
+    admin_site = None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context.update(self.admin_site.each_context(self.request))
+        context["title"] = "Links für Unterführer*innen"
+
+        context["gruppen"] = []
+        gruppen = models.Teilnehmer.objects.all().values("gruppe").annotate(count=db_models.Count("username")).order_by("gruppe").values_list("gruppe")
+        for gruppe, in gruppen:
+            prefix, _, suffix = gruppe.rpartition(" ")
+            gruppe_display = suffix if prefix.isnumeric() else gruppe
+
+            token = views.GruppenUebersichtView.get_token(gruppe)
+
+            context["gruppen"].append((gruppe_display, token))
+
+        return context
+
+
 @admin.register(models.Teilnehmer)
 class TeilnehmerAdmin(admin.ModelAdmin):
     list_filter = ("gruppe",)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        urls = [
+            path("gruppen_links/",
+                 self.admin_site.admin_view(GruppenLinkView.as_view(admin_site=self.admin_site)),
+                 name="unterweisung_teilnehmer_gruppen_links"),
+        ] + urls
+        return urls
