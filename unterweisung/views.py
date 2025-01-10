@@ -204,7 +204,7 @@ class GruppenUebersichtView(TemplateView):
     @classmethod
     def get_token(cls, gruppe):
         signer = TimestampSigner(salt=cls.signer_salt)
-        return signer.sign(base64.urlsafe_b64encode(gruppe.encode()).decode("ascii")).rstrip("=")
+        return signer.sign(base64.urlsafe_b64encode(gruppe.encode()).decode("ascii").rstrip("="))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
