@@ -19,7 +19,7 @@ from django_object_actions import DjangoObjectActions, action
 from . import models
 
 
-def _strxfmt(text):
+def _strxfrm(text):
     # yes, locale.strxfmt exists, but alpine (or musl) does not support LC_COLLATE
     for i in "äöü":
         text = text.replace(i, i + "\x00")
