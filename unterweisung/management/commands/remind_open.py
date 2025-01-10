@@ -35,39 +35,39 @@ class Command(BaseCommand):
 
         def _action(teilnehmer: models.Teilnehmer,
                     unterweisungen: QuerySet[models.Unterweisung]) -> None:
-            if not teilnehmer.fullname:
+            if not teilnehmer.firstname or not teilnehmer.surname:
                 self.stderr.write(self.style.WARNING(
                     f"Konnte keinen vollen Namen für {teilnehmer.username} finden."))
                 return
 
-            # surname may not contain spaces in our NextCloud
-            fullname = teilnehmer.fullname.replace("_", " ")
-
-            users = hermine_client.search_user(f"{fullname} (OV Darmstadt)")
+            users = hermine_client.search_user(f"{teilnehmer.firstname} {teilnehmer.surname} (OV Darmstadt)")
             if not users:
                 self.stderr.write(self.style.WARNING(
-                    f"Konnte {fullname} nicht in Hermine finden."))
+                    f"Konnte {teilnehmer.firstname} {teilnehmer.surname} nicht in Hermine finden."))
                 return
 
             conversation = hermine_client.open_conversation(users)
             hermine_client.send_msg_to_user(
                 conversation["id"],
-                hermine_text.format(fullname=fullname,
+                hermine_text.format(firstname=teilnehmer.firstname,
+                                    surname=teilnehmer.surname,
                                     unterweisungen=", ".join(str(unterweisung)
                                                              for unterweisung in unterweisungen))
             )
 
             self.stdout.write(self.style.SUCCESS(
-                f"Nachricht an {fullname} ({'\n'.join(f'{user["first_name"]} {user["last_name"]}' for user in users)}) verschickt."))
+                f"Nachricht an {teilnehmer.firstname} {teilnehmer.surname} ("
+                f"{'\n'.join(f'{user["first_name"]} {user["last_name"]}' for user in users)}) verschickt."))
 
         return _action
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "--hermine-text", type=str, default="",
-            help="Vorlage der Hermine-Nachricht. {fullname} wird durch den Nam"
-                 "en, {unterweisungen} durch eine Kommaseparierte Liste der of"
-                 "fenen Unterweisungen ersetzt.")
+            help="Vorlage der Hermine-Nachricht. {firstname} wird durch den Vo"
+                 "rnamen, {surname} durch den Nachnamen und {unterweisungen} d"
+                 "urch eine Kommaseparierte Liste der offenen Unterweisungen e"
+                 "rsetzt.")
         parser.add_argument(
             "--filter-username", type=str, default=None,
             help="Nutze nur Teilnehmende mit diesem Benutzername")

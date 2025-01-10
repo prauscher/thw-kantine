@@ -407,25 +407,25 @@ class Teilnehmer(models.Model):
     username = models.CharField(
         max_length=50, unique=True,
         verbose_name="Benutzername in NextCloud")
-    fullname = models.CharField(
-        max_length=70, blank=True,
-        verbose_name="Bürgerliche Name wie in THWin")
+    firstname = models.CharField(
+        max_length=40, blank=True,
+        verbose_name="Vorname wie in THWin")
+    surname = models.CharField(
+        max_length=40, blank=True,
+        verbose_name="Nachname wie in THWin")
     gruppe = models.CharField(
         max_length=20, blank=True,
         verbose_name="Gruppenkürzel zur Gruppierung von Teilnehmern")
 
     def __str__(self) -> str:
-        if self.fullname:
-            first_name, _, sur_name = self.fullname.rpartition(" ")
-            # required to distinguish surname from first name(s)
-            sur_name = sur_name.replace("_", " ")
-            return f"{sur_name}, {first_name}"
+        if self.firstname and self.surname:
+            return f"{self.surname}, {self.firstname}"
         return self.username
 
     class Meta:
         verbose_name = "Teilnehmer"
         verbose_name_plural = "Teilnehmer"
-        ordering = ["fullname", "username"]
+        ordering = ["surname", "firstname", "username"]
 
 
 class Teilnahme(models.Model):

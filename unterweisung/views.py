@@ -123,10 +123,14 @@ class SeiteDetailView(DetailView):
             start = request.session.get(f"unterweisung_{current_seite.unterweisung.pk}_start")
             duration = None if start is None else time.time() - start
 
+            # format from nextcloud
+            firstname, _, surname = request.jwt_user_display.rpartition(" ")
+            surname = surname.replace("_", " ")
+
             # store results (but only store first success)
             teilnehmer, _ = models.Teilnehmer.objects.update_or_create(
                 username=request.jwt_user_id,
-                defaults={"fullname": request.jwt_user_display},
+                defaults={"firstname": firstname, "surname": surname},
             )
             teilnahme, _ = models.Teilnahme.objects.get_or_create(
                 teilnehmer=teilnehmer,
