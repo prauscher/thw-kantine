@@ -335,7 +335,7 @@ class GruppenLinkView(TemplateView):
         context["gruppen"] = []
         gruppen = models.Teilnehmer.objects.all().values("gruppe").annotate(count=db_models.Count("username")).order_by("gruppe").values_list("gruppe")
         for gruppe, in gruppen:
-            prefix, _, suffix = gruppe.rpartition(" ")
+            prefix, _, suffix = gruppe.partition(" ")
             gruppe_display = suffix if prefix.isnumeric() else gruppe
 
             token = views.GruppenUebersichtView.get_token(gruppe)
