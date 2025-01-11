@@ -114,16 +114,6 @@ class TeilnahmeExportView(TemplateView):
             personen_output = filter(lambda item: item[0].gruppe.endswith(self.request.GET["gruppe"]),
                                      personen_output)
 
-        if "only_open" in self.request.GET:
-            # ergebnis can be
-            # - None (no Teilnahme-object)
-            # - False (incomplete Teilnahme-object)
-            # - a str (complete Teilnahme-object)
-            # We only want rows where at least one Teilnahme-object is incomplete
-            personen_output = filter(lambda item: any(ergebnis is False
-                                                      for ergebnis, _ in item[1]["teilnahmen"]),
-                                     personen_output)
-
         with suppress(ValueError):
             filter_after = timezone.make_aware(
                 datetime.strptime(self.request.GET.get("after", ""), "%Y-%m-%d"))
@@ -136,7 +126,7 @@ class TeilnahmeExportView(TemplateView):
         gruppen_output = defaultdict(list)
         for teilnehmer, data in personen_output:
             gruppe = ""
-            if "include_stats" in self.request.GET or "only_open" in self.request.GET:
+            if "include_stats" in self.request.GET:
                 gruppe = teilnehmer.gruppe
             gruppen_output[gruppe].append((teilnehmer, data))
 
