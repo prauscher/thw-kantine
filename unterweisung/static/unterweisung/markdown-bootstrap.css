@@ -1,0 +1,12 @@
+/*
+ * Stylesheets to make markdownified html look more bootstrap-compatible
+ * As markdownify won't add bootstrap-classes, we got to emulate a bit
+ */
+
+blockquote {
+	background-color: #eeeeee;
+	padding: 0.5rem 1rem;
+}
+img {
+	max-width: 100%;
+}

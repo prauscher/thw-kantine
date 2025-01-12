@@ -1,7 +1,11 @@
 {% extends "abfrage/base.html" %}
-{% load mathfilters %}
+{% load mathfilters static %}
 
 {% block title %}{{ object.unterweisung.label }}{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="{% static 'unterweisung/markdown-bootstrap.css' %}">
+{% endblock %}
 
 {% block content %}
 <nav aria-label="breadcrumb">

@@ -358,7 +358,7 @@ class MultipleChoiceSeite(Seite):
 
 
 class MultipleChoiceFrage(models.Model):
-    text = models.TextField(
+    text = MarkdownxField(
         verbose_name="Fragetext",
         help_text="Überschrift der einzelnen Optionen",
     )
@@ -394,7 +394,7 @@ class MultipleChoiceOption(models.Model):
         help_text="Hinweis: Wird genau eine Antwort der Frage als richtig ausgewählt, werden diese"
                   " als Auswahlbox angezeigt, anderenfalls wird eine Mehrfachauswahl angeboten.",
     )
-    text = models.TextField(
+    text = MarkdownxField(
         verbose_name="Antworttext",
         help_text="Antwortmöglichkeit zur Frage, welche in zufälliger Reihenfolge angezeigt werden",
     )

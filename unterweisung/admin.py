@@ -16,6 +16,8 @@ from polymorphic.admin import (
 )
 from markdownx.admin import MarkdownxModelAdmin
 from django_object_actions import DjangoObjectActions, action
+from markdownx.models import MarkdownxField
+from markdownx.widgets import MarkdownxWidget
 from kantine.utils import find_login_url
 from . import models, views
 
@@ -35,7 +37,7 @@ class MultipleChoiceOptionInline(admin.StackedInline):
     extra = 3
 
     formfield_overrides = {
-        db_models.TextField: {'widget': forms.Textarea(attrs={"rows": 1, "cols": 60})},
+        MarkdownxField: {'widget': MarkdownxWidget(attrs={"rows": 1, "cols": 60})},
     }
 
 
@@ -44,7 +46,7 @@ class MultipleChoiceFrageAdmin(admin.ModelAdmin):
     inlines = (MultipleChoiceOptionInline,)
 
     formfield_overrides = {
-        db_models.TextField: {'widget': forms.Textarea(attrs={"rows": 2, "cols": 60})},
+        MarkdownxField: {'widget': MarkdownxWidget(attrs={"rows": 2, "cols": 60})},
     }
 
 
