@@ -320,10 +320,14 @@ class MultipleChoiceSeite(Seite):
 
     def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
         geloest, fragen = self._get_fragen(request, check_richtig=export)
+
+        anzahl_required = sum(1 for frage in fragen if not frage["optional"])
+
         return "unterweisung/seite_multiplechoice.html", {
             "geloest": geloest,
             "fragen": fragen,
             "min_richtig": self.min_richtig,
+            "anzahl_required": anzahl_required,
         }
 
     def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str:
