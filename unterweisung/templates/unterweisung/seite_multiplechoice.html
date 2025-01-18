@@ -8,11 +8,10 @@
 <p>Zum Bestehen müssen insgesamt <strong>{{ min_richtig }} Fragen</strong> richtig beantwortet werden.</p>
 {% endif %}
 {% for frage in fragen %}
-<h5 class="mt-3">
- {% if frage.korrekt %}<span class="badge text-bg-success">Richtig beantwortet</span>
- {% elif geloest %}<span class="badge text-bg-danger">Falsch beantwortet</span>{% endif %}
- {{ frage.frage|markdownify }}
-</h5>
+<div class="alert {% if frage.korrekt %}alert-success{% elif geloest %}alert-danger{% else %}alert-secondary{% endif %}">
+{% if frage.korrekt %}<span class="float-end badge text-bg-success">Richtig beantwortet</span>
+{% elif geloest %}<span class="float-end badge text-bg-danger">Falsch beantwortet</span>{% endif %}
+<h5>{{ frage.frage|markdownify }}</h5>
 {% if not frage.optional %}
 <p>Diese Frage muss zum bestehen <strong>zwingend</strong> richtig beantwortet werden.</p>
 {% endif %}
@@ -31,6 +30,7 @@
   </label>
 </div>
 {% endfor %}
+</div>
 {% endfor %}
 
 <style type="text/css">
