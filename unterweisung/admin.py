@@ -223,6 +223,9 @@ class TeilnahmeExportView(TemplateView):
 @admin.register(models.Unterweisung)
 class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admin.ModelAdmin):
     inlines = (SeiteInline,)
+    list_display = ["label", "active"]
+    list_filter = ["active"]
+    actions = ["activate", "deactivate"]
     change_actions = ["copy_recursive"]
     change_list_template = "admin/unterweisung/unterweisung/change_list.html"
 
@@ -245,6 +248,14 @@ class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admi
             seite = seite.clone()
             seite.unterweisung = obj
             seite.save()
+
+    @action(description="Ausgewählte aktivieren")
+    def activate(self, request, queryset):
+        queryset.update(active=True)
+
+    @action(description="Ausgewählte deaktivieren")
+    def deactivate(self, request, queryset):
+        queryset.update(active=False)
 
     def get_urls(self):
         urls = super().get_urls()
