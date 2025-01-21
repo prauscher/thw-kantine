@@ -13,26 +13,27 @@
  </li>
 </ul>
 
-{% if teilnahmen_done and teilnahmen_open and teilnahmen_total %}
+{% if teilnehmer_done and teilnehmer_part and teilnehmer_open and teilnehmer_total %}
 <div class="progress">
-  <div class="progress-bar" role="progressbar" style="width: {% widthratio teilnahmen_done teilnahmen_total 100 %}%" aria-valuenow="{{ teilnahmen_done }}" aria-valuemin="0" aria-valuemax="{{ teilnahmen_total }}"></div>
+  <div class="progress-bar" role="progressbar" style="width: {% widthratio teilnehmer_done teilnehmer_total 100 %}%" aria-valuenow="{{ teilnehmer_done }}" aria-valuemin="0" aria-valuemax="{{ teilnehmer_total }}"></div>
+  <div class="progress-bar bg-info" role="progressbar" style="width: {% widthratio teilnehmer_part teilnehmer_total 100 %}%" aria-valuenow="{{ teilnehmer_part }}" aria-valuemin="0" aria-valuemax="{{ teilnehmer_total }}"></div>
 </div>
-<p>Teilnahmen erledigt: <strong>{{ teilnahmen_done }}</strong>, Teilnahmen offen: <strong>{{ teilnahmen_open }}</strong>, Teilnahmen insgesamt: <strong>{{ teilnahmen_total }}</strong>.</p>
+<p>Von <strong>{{ teilnehmer_total }}</strong> Helfer*innen insgesamt haben <strong>{{ teilnehmer_done }}</strong> alle Unterweisungen abgeschlossen, <strong>{{ teilnehmer_part }}</strong> weitere haben zumindest eine Unterweisung abgeschlossen und <strong>{{ teilnehmer_open }}</strong> Helfer*innen haben noch keine Unterweisung begonnen.</p>
 {% endif %}
 
-{% for gruppe, personen, quantiles, teilnehmer_open, teilnehmer_part, teilnehmer_done, teilnehmer_total in gruppen %}
+{% for gruppe, personen, quantiles, gruppe_teilnehmer_open, gruppe_teilnehmer_part, gruppe_teilnehmer_done, gruppe_teilnehmer_total in gruppen %}
 {% if personen %}
 <div style="break-after:page;">
 {% if gruppe or gruppen|length > 1 %}
 <h3>{{ gruppe|default:"Ohne Gruppe" }}</h3>
 {% endif %}
 
-{% if teilnehmer_open is not None and teilnehmer_done is not None and teilnehmer_total is not None %}
+{% if gruppe_teilnehmer_open is not None and gruppe_teilnehmer_done is not None and gruppe_teilnehmer_total is not None %}
 <div class="progress">
-  <div class="progress-bar" role="progressbar" style="width: {% widthratio teilnehmer_done teilnehmer_total 100 %}%" aria-valuenow="{{ teilnehmer_done }}" aria-valuemin="0" aria-valuemax="{{ teilnehmer_total }}"></div>
-  <div class="progress-bar bg-info" role="progressbar" style="width: {% widthratio teilnehmer_part teilnehmer_total 100 %}%" aria-valuenow="{{ teilnehmer_part }}" aria-valuemin="0" aria-valuemax="{{ teilnehmer_total }}"></div>
+  <div class="progress-bar" role="progressbar" style="width: {% widthratio gruppe_teilnehmer_done gruppe_teilnehmer_total 100 %}%" aria-valuenow="{{ gruppe_teilnehmer_done }}" aria-valuemin="0" aria-valuemax="{{ gruppe_teilnehmer_total }}"></div>
+  <div class="progress-bar bg-info" role="progressbar" style="width: {% widthratio gruppe_teilnehmer_part gruppe_teilnehmer_total 100 %}%" aria-valuenow="{{ gruppe_teilnehmer_part }}" aria-valuemin="0" aria-valuemax="{{ gruppe_teilnehmer_total }}"></div>
 </div>
-<p>Von <strong>{{ teilnehmer_total }}</strong> Helfer*innen in der Gruppe haben <strong>{{ teilnehmer_done }}</strong> alle Unterweisungen abgeschlossen, <strong>{{ teilnehmer_part }}</strong> weitere haben zumindest eine Unterweisung abgeschlossen.</p>
+<p>Von <strong>{{ gruppe_teilnehmer_total }}</strong> Helfer*innen in der Gruppe haben <strong>{{ gruppe_teilnehmer_done }}</strong> alle Unterweisungen abgeschlossen, <strong>{{ gruppe_teilnehmer_part }}</strong> weitere haben zumindest eine Unterweisung abgeschlossen.</p>
 {% endif %}
 
 <table class="table table-striped">

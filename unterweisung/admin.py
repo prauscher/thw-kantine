@@ -134,9 +134,6 @@ class TeilnahmeExportView(TemplateView):
 
         context["unterweisungen"] = unterweisungen
 
-        teilnahmen_open_total = 0
-        teilnahmen_done_total = 0
-
         durations_combined = [[] for _ in unterweisungen]
 
         gruppen = []
@@ -158,10 +155,8 @@ class TeilnahmeExportView(TemplateView):
                     for i, _ in enumerate(unterweisungen):
                         if data["teilnahmen"][i][0] is False:
                             teilnahmen_open += 1
-                            teilnahmen_open_total += 1
                         elif data["teilnahmen"][i][0] is not None:
                             teilnahmen_done += 1
-                            teilnahmen_done_total += 1
 
                         if data["teilnahmen"][i][1] is not None:
                             durations[i].append(data["teilnahmen"][i][1])
@@ -200,9 +195,10 @@ class TeilnahmeExportView(TemplateView):
             context["gruppen"].append((gruppe, *args))
 
         if "include_stats" in self.request.GET:
-            context["teilnahmen_open"] = teilnahmen_open_total
-            context["teilnahmen_done"] = teilnahmen_done_total
-            context["teilnahmen_total"] = teilnahmen_open_total + teilnahmen_done_total
+            context["teilnehmer_open"] = sum(item[3] for item in gruppen)
+            context["teilnehmer_part"] = sum(item[4] for item in gruppen)
+            context["teilnehmer_done"] = sum(item[5] for item in gruppen)
+            context["teilnehmer_total"] = context["teilnehmer_open"] + context["teilnehmer_part"] + context["teilnehmer_done"]
 
             quantiles = []
             for i, _ in enumerate(unterweisungen):
