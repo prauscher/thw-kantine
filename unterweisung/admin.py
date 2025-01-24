@@ -1,7 +1,7 @@
 import statistics
 from collections import defaultdict
 from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, UTC
 from django import forms
 from django.contrib import admin, messages
 from django.db import models as db_models
