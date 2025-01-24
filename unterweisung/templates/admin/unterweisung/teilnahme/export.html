@@ -3,24 +3,8 @@
 
 {% block title %}Unterweisungsübersicht{% endblock %}
 
-{% block content %}
-<ul class="nav nav-tabs mb-2">
- <li class="nav-item">
-  <a class="nav-link {% if "include_stats" in request.GET %}active{% endif %}" href="?include_stats">Statistiken</a>
- </li>
- <li class="nav-item">
-  <a class="nav-link {% if "abgeschlossen_chart" in request.GET %}active{% endif %}" href="?abgeschlossen_chart">Verlaufgrafik</a>
- </li>
- <li class="nav-item">
-  <a class="nav-link {% if "include_stats" not in request.GET and "abgeschlossen_chart" not in request.GET %}active{% endif %}" href="?">Ausdruck</a>
- </li>
-</ul>
-
+{% block script %}
 {% if abgeschlossen_events %}
-
-<div id="container"></div>
-{{ abgeschlossen_events|json_script:"abgeschlossen_events" }}
-{{ total_teilnehmer|json_script:"total_teilnehmer" }}
 <script src="https://d3js.org/d3.v4.js"></script>
 <script type="text/javascript">
 
@@ -104,6 +88,27 @@ function redraw() {
 $(redraw);
 
 </script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<ul class="nav nav-tabs mb-2">
+ <li class="nav-item">
+  <a class="nav-link {% if "include_stats" in request.GET %}active{% endif %}" href="?include_stats">Statistiken</a>
+ </li>
+ <li class="nav-item">
+  <a class="nav-link {% if "abgeschlossen_chart" in request.GET %}active{% endif %}" href="?abgeschlossen_chart">Verlaufgrafik</a>
+ </li>
+ <li class="nav-item">
+  <a class="nav-link {% if "include_stats" not in request.GET and "abgeschlossen_chart" not in request.GET %}active{% endif %}" href="?">Ausdruck</a>
+ </li>
+</ul>
+
+{% if abgeschlossen_events %}
+
+<div id="container"></div>
+{{ abgeschlossen_events|json_script:"abgeschlossen_events" }}
+{{ total_teilnehmer|json_script:"total_teilnehmer" }}
 
 {% else %}
 
