@@ -37,9 +37,12 @@ function redraw() {
 	const marginBottom = 20;
 	const marginLeft = 30;
 
+	const start = values[0].timestamp;
+	const end = values[values.length - 1].timestamp;
+
 	// Declare the x (horizontal position) scale.
 	const x = d3.scaleUtc()
-	    .domain([values[0].timestamp, values[values.length - 1].timestamp])
+	    .domain([start, end])
 	    .range([marginLeft, width - marginRight]);
 
 	// Declare the y (vertical position) scale.
@@ -66,7 +69,8 @@ function redraw() {
 	svg.append("path")
 	    .attr("fill", "#0dcaf0")
 	    .attr("d", d3.area()
-	      .x(d => x(d.timestamp))
+	      .x(d => Math.min(x(start), x(d.timestamp)))
+	      .defined(d => d.timestamp < end)
 	      .y0(d => y(d.done))
 	      .y1(d => y(d.done + d.part))
 	      (values)
@@ -75,7 +79,8 @@ function redraw() {
 	svg.append("path")
 	    .attr("fill", "#0d6efd")
 	    .attr("d", d3.area()
-	      .x(d => x(d.timestamp))
+	      .x(d => Math.min(x(start), x(d.timestamp)))
+	      .defined(d => d.timestamp < end)
 	      .y0(y(0))
 	      .y1(d => y(d.done))
 	      (values)
