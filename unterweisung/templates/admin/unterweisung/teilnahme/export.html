@@ -39,7 +39,7 @@ for (const event of abgeschlossen_events) {
 	values.push({timestamp: event[0], part: current_part, done: current_done});
 }
 
-export function redraw() {
+function redraw() {
 	// Colors
 	const color = d3.scaleOrdinal()
 	    .domain(groups)
