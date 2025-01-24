@@ -20,7 +20,7 @@ var values = [];
 for (const event of abgeschlossen_events) {
 	current_part += event[1];
 	current_done += event[2];
-	values.push({timestamp: event[0], part: current_part, done: current_done});
+	values.push({timestamp: new Date(event[0]), part: current_part, done: current_done});
 }
 
 function redraw() {

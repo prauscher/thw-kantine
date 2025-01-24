@@ -135,10 +135,10 @@ class TeilnahmeExportView(TemplateView):
             for data in personen_teilnahmen.values():
                 if data["first_abgeschlossen"] is not None:
                     abgeschlossen_events.append(
-                        (data["first_abgeschlossen"].strftime("%Y-%m-%d %H:%M:%S"), 1, 0))
+                        (data["first_abgeschlossen"].astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"), 1, 0))
                 if data["last_abgeschlossen"] is not None:
                     abgeschlossen_events.append(
-                        (data["last_abgeschlossen"].strftime("%Y-%m-%d %H:%M:%S"), -1, 1))
+                        (data["last_abgeschlossen"].astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"), -1, 1))
             abgeschlossen_events.sort()
 
             context["total_teilnehmer"] = len(personen_teilnahmen)
