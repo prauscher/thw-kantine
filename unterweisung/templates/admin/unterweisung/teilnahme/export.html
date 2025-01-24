@@ -92,7 +92,7 @@ var areaGenerator = d3.area()
 
 // Add data
 area.selectAll("mylayers")
-    .data(values);
+    .data(values)
     .enter()
     .append("path")
       .style("fill", d => color(d.key - 1))
