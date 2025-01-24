@@ -15,17 +15,23 @@ var current_part = 0;
 var current_done = 0;
 
 const groups = ["part", "done"];
-var values = [];
+var times = [];
+var values = [[], []];
 
 for (const event of abgeschlossen_events) {
 	current_part += event[1];
 	current_done += event[2];
-	values.push({timestamp: new Date(event[0]), part: current_part, done: current_done});
+	times.push(new Date(event[0]));
+	values[0].push([current_done, current_part]);
+	values[1].push([0, current_done]);
 }
+
+console.log(times);
+console.log(values);
 
 // Colors
 const color = d3.scaleOrdinal()
-    .domain(groups)
+    .domain([0, 1])  // part, done
     .range(["#0dcaf0", "#0d6efd"])
 
 // Declare the chart dimensions and margins.
@@ -36,12 +42,9 @@ const marginRight = 20;
 const marginBottom = 20;
 const marginLeft = 30;
 
-const start = values[0].timestamp;
-const end = values[values.length - 1].timestamp;
-
 // Declare the x (horizontal position) scale.
 const x = d3.scaleUtc()
-    .domain(d3.extent(values, function(d) { return d.timestamp; }))
+    .domain(d3.extent(times))
     .range([marginLeft, width - marginRight]);
 
 // Declare the y (vertical position) scale.
@@ -78,20 +81,27 @@ var brush = d3.brushX()
     .extent( [ [0,0], [width,height] ] )
     .on("end", updateChart)
 
+// Create drawing area
 var area = svg.append("g")
     .attr("clip-path", "url(#clip)");
 
 var areaGenerator = d3.area()
-    .x(d => x(d.timestamp))
-    .y0(d => y(d.done))
-    .y1(d => y(d.done + d.part))
+    .x(d => x(d.data.key))
+    .y0(d => y(d[0]))
+    .y1(d => y(d[1]))
 
 // Add data
-svg.append("path")
-    .datum(values)
-    .attr("class", "myArea")
-    .attr("fill", "#0dcaf0")
-    .attr("d", areaGenerator);
+area.selectAll("mylayers")
+    .data(values);
+    .enter()
+    .append("path")
+      .style("fill", d => color(d.key - 1))
+      .attr("d", areaGenerator);
+
+// Add the brushing
+area.append("g")
+    .attr("class", "brush")
+    .call(brush);
 
 // A function that set idleTimeOut to null
 var idleTimeout
@@ -106,7 +116,7 @@ function updateChart() {
       	if (!extent) {
 		if (! idleTimeout)
 			return idleTimeout = setTimeout(idled, 350); // This allows to wait a little bit
-		x.domain([ 4,8])
+		x.domain(d3.extent(times));
 	} else {
 		x.domain([ x.invert(extent[0]), x.invert(extent[1]) ])
 		area.select(".brush").call(brush.move, null) // This remove the grey brush area as soon as the selection has been done
@@ -123,7 +133,7 @@ function updateChart() {
 
 // If user double click, reinitialize the chart
 svg.on("dblclick", function() {
-	x.domain(d3.extent(values, function(d) { return d.timestamp; }))
+	x.domain(d3.extent(times));
 	xAxis.transition().call(d3.axisBottom(x))
 	area
 	    .select('.myArea')
