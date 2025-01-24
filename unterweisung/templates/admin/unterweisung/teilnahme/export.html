@@ -41,7 +41,7 @@ const end = values[values.length - 1].timestamp;
 
 // Declare the x (horizontal position) scale.
 const x = d3.scaleUtc()
-    .domain(d3.extent(data, function(d) { return d.timestamp; }))
+    .domain(d3.extent(values, function(d) { return d.timestamp; }))
     .range([marginLeft, width - marginRight]);
 
 // Declare the y (vertical position) scale.
@@ -88,7 +88,7 @@ var areaGenerator = d3.area()
 
 // Add data
 svg.append("path")
-    .datum(data)
+    .datum(values)
     .attr("class", "myArea")
     .attr("fill", "#0dcaf0")
     .attr("d", areaGenerator);
@@ -123,7 +123,7 @@ function updateChart() {
 
 // If user double click, reinitialize the chart
 svg.on("dblclick", function() {
-	x.domain(d3.extent(data, function(d) { return d.timestamp; }))
+	x.domain(d3.extent(values, function(d) { return d.timestamp; }))
 	xAxis.transition().call(d3.axisBottom(x))
 	area
 	    .select('.myArea')
