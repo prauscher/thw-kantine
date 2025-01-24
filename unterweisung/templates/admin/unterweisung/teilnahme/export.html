@@ -40,8 +40,6 @@ for (const event of abgeschlossen_events) {
 	values.push({timestamp: event[0], part: current_part, done: current_done});
 }
 
-console.log(values);
-
 // Colors
 const color = d3.scaleOrdinal()
     .domain(groups)
@@ -57,7 +55,7 @@ const marginLeft = 20;
 
 // Declare the x (horizontal position) scale.
 const x = d3.scaleUtc()
-    .domain([values[0].timestamp, values[-1].timestamp])
+    .domain([values[0].timestamp, values[values.length - 1].timestamp])
     .range([marginLeft, width - marginRight]);
 
 // Declare the y (vertical position) scale.
