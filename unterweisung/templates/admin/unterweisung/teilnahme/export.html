@@ -23,74 +23,116 @@ for (const event of abgeschlossen_events) {
 	values.push({timestamp: new Date(event[0]), part: current_part, done: current_done});
 }
 
-function redraw() {
-	// Colors
-	const color = d3.scaleOrdinal()
-	    .domain(groups)
-	    .range(["#0dcaf0", "#0d6efd"])
+// Colors
+const color = d3.scaleOrdinal()
+    .domain(groups)
+    .range(["#0dcaf0", "#0d6efd"])
 
-	// Declare the chart dimensions and margins.
-	const width = 800;
-	const height = 600;
-	const marginTop = 20;
-	const marginRight = 20;
-	const marginBottom = 20;
-	const marginLeft = 30;
+// Declare the chart dimensions and margins.
+const width = 800;
+const height = 600;
+const marginTop = 20;
+const marginRight = 20;
+const marginBottom = 20;
+const marginLeft = 30;
 
-	const start = values[0].timestamp;
-	const end = values[values.length - 1].timestamp;
+const start = values[0].timestamp;
+const end = values[values.length - 1].timestamp;
 
-	// Declare the x (horizontal position) scale.
-	const x = d3.scaleUtc()
-	    .domain([start, end])
-	    .range([marginLeft, width - marginRight]);
+// Declare the x (horizontal position) scale.
+const x = d3.scaleUtc()
+    .domain(d3.extent(data, function(d) { return d.timestamp; }))
+    .range([marginLeft, width - marginRight]);
 
-	// Declare the y (vertical position) scale.
-	const y = d3.scaleLinear()
-	    .domain([0, total_teilnehmer])
-	    .range([height - marginBottom, marginTop]);
+// Declare the y (vertical position) scale.
+const y = d3.scaleLinear()
+    .domain([0, total_teilnehmer])
+    .range([height - marginBottom, marginTop]);
 
-	// Create the SVG container.
-	const svg = d3.create("svg")
-	    .attr("width", width)
-	    .attr("height", height);
+// Create the SVG container.
+const svg = d3.create("svg")
+    .attr("width", width)
+    .attr("height", height);
 
-	// Add the x-axis.
-	svg.append("g")
-	    .attr("transform", `translate(0,${height - marginBottom})`)
-	    .call(d3.axisBottom(x));
+// Add the x-axis.
+var xAxis = svg.append("g")
+    .attr("transform", `translate(0,${height - marginBottom})`)
+    .call(d3.axisBottom(x));
 
-	// Add the y-axis.
-	svg.append("g")
-	    .attr("transform", `translate(${marginLeft},0)`)
-	    .call(d3.axisLeft(y));
+// Add the y-axis.
+svg.append("g")
+    .attr("transform", `translate(${marginLeft},0)`)
+    .call(d3.axisLeft(y));
 
-	// Add data
-	svg.append("path")
-	    .attr("fill", "#0dcaf0")
-	    .attr("d", d3.area()
-	      .defined(d => (d.timestamp <= end))
-	      .x(d => Math.max(x(start), x(d.timestamp)))
-	      .y0(d => y(d.done))
-	      .y1(d => y(d.done + d.part))
-	      (values)
-	    )
+// Add a clipPath: everything out of this area won't be drawn.
+var clip = svg.append("defs").append("svg:clipPath")
+    .attr("id", "clip")
+    .append("svg:rect")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("x", 0)
+    .attr("y", 0);
 
-	svg.append("path")
-	    .attr("fill", "#0d6efd")
-	    .attr("d", d3.area()
-	      .defined(d => (d.timestamp <= end))
-	      .x(d => Math.max(x(start), x(d.timestamp)))
-	      .y0(y(0))
-	      .y1(d => y(d.done))
-	      (values)
-	    )
+// Add brushing
+var brush = d3.brushX()
+    .extent( [ [0,0], [width,height] ] )
+    .on("end", updateChart)
 
-	// Append the SVG element.
-	$("#container").empty().append(svg.node());
+var area = svg.append("g")
+    .attr("clip-path", "url(#clip)");
+
+var areaGenerator = d3.area()
+    .x(d => x(d.timestamp))
+    .y0(d => y(d.done))
+    .y1(d => y(d.done + d.part))
+
+// Add data
+svg.append("path")
+    .datum(data)
+    .attr("class", "myArea")
+    .attr("fill", "#0dcaf0")
+    .attr("d", areaGenerator);
+
+// A function that set idleTimeOut to null
+var idleTimeout
+function idled() { idleTimeout = null; }
+
+// A function that update the chart for given boundaries
+function updateChart() {
+	// What are the selected boundaries?
+	extent = d3.event.selection
+
+	// If no selection, back to initial coordinate. Otherwise, update X axis domain
+      	if (!extent) {
+		if (! idleTimeout)
+			return idleTimeout = setTimeout(idled, 350); // This allows to wait a little bit
+		x.domain([ 4,8])
+	} else {
+		x.domain([ x.invert(extent[0]), x.invert(extent[1]) ])
+		area.select(".brush").call(brush.move, null) // This remove the grey brush area as soon as the selection has been done
+	}
+
+	// Update axis and area position
+	xAxis.transition().duration(1000).call(d3.axisBottom(x))
+	area
+		.select('.myArea')
+		.transition()
+		.duration(1000)
+		.attr("d", areaGenerator)
 }
 
-$(redraw);
+// If user double click, reinitialize the chart
+svg.on("dblclick", function() {
+	x.domain(d3.extent(data, function(d) { return d.timestamp; }))
+	xAxis.transition().call(d3.axisBottom(x))
+	area
+	    .select('.myArea')
+	    .transition()
+	    .attr("d", areaGenerator)
+});
+
+// Append the SVG element.
+$("#container").empty().append(svg.node());
 
 </script>
 {% endif %}
