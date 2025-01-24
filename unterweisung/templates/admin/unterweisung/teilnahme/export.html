@@ -9,9 +9,102 @@
   <a class="nav-link {% if "include_stats" in request.GET %}active{% endif %}" href="?include_stats">Statistiken</a>
  </li>
  <li class="nav-item">
-  <a class="nav-link {% if "include_stats" not in request.GET %}active{% endif %}" href="?">Ausdruck</a>
+  <a class="nav-link {% if "abgeschlossen_chart" in request.GET %}active{% endif %}" href="?abgeschlossen_chart">Verlaufgrafik</a>
+ </li>
+ <li class="nav-item">
+  <a class="nav-link {% if "include_stats" not in request.GET and "abgeschlossen_chart" not in request.GET %}active{% endif %}" href="?">Ausdruck</a>
  </li>
 </ul>
+
+{% if abgeschlossen_events %}
+
+<div id="container"></div>
+{{ abgeschlossen_events|json_script:"abgeschlossen_events" }}
+{{ total_teilnehmer|json_script:"total_teilnehmer" }}
+<script type="module">
+
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+const abgeschlossen_events = JSON.parse(document.getElementById('abgeschlossen_events').textContent);
+const total_teilnehmer = JSON.parse(document.getElementById('total_teilnehmer').textContent);
+
+var current_part = 0;
+var current_done = 0;
+
+const groups = ["part", "done"];
+var values = [];
+
+for (const event of abgeschlossen_events) {
+	current_part += event[1];
+	current_done += event[2];
+	values.push({timestamp: event[0], part: current_part, done: current_done});
+}
+
+console.log(values);
+
+// Colors
+const color = d3.scaleOrdinal()
+    .domain(groups)
+    .range(["#0dcaf0", "#0d6efd"])
+
+// Declare the chart dimensions and margins.
+const width = 640;
+const height = 400;
+const marginTop = 20;
+const marginRight = 20;
+const marginBottom = 20;
+const marginLeft = 20;
+
+// Declare the x (horizontal position) scale.
+const x = d3.scaleUtc()
+    .domain([values[0].timestamp, values[-1].timestamp])
+    .range([marginLeft, width - marginRight]);
+
+// Declare the y (vertical position) scale.
+const y = d3.scaleLinear()
+    .domain([0, total_teilnehmer])
+    .range([height - marginBottom, marginTop]);
+
+// Create the SVG container.
+const svg = d3.create("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+// Add the x-axis.
+svg.append("g")
+    .attr("transform", `translate(0,${height - marginBottom})`)
+    .call(d3.axisBottom(x));
+
+// Add the y-axis.
+svg.append("g")
+    .attr("transform", `translate(${marginLeft},0)`)
+    .call(d3.axisLeft(y));
+
+// Add data
+svg.append("path")
+    .attr("fill", "#0dcaf0")
+    .attr("d", d3.area()
+      .x(d => x(d.timestamp))
+      .y0(d => y(d.done))
+      .y1(d => y(d.done + d.part))
+      (values)
+    )
+
+svg.append("path")
+    .attr("fill", "#0d6efd")
+    .attr("d", d3.area()
+      .x(d => x(d.timestamp))
+      .y0(y(0))
+      .y1(d => y(d.done))
+      (values)
+    )
+
+// Append the SVG element.
+container.append(svg.node());
+
+</script>
+
+{% else %}
 
 {% if teilnehmer_done and teilnehmer_part and teilnehmer_open and teilnehmer_total %}
 <div class="progress">
@@ -141,4 +234,5 @@
 	h1, nav, .nav {display:none;}
 }
 </style>
+{% endif %}
 {% endblock %}

@@ -94,10 +94,16 @@ class TeilnahmeExportView(TemplateView):
         unterweisungen = list(models.Unterweisung.objects.filter(active=True))
         personen_teilnahmen = defaultdict(
             lambda: {"last_abgeschlossen": None,
+                     "first_abgeschlossen": None,
                      "teilnahmen": [(None, None)
                                     for unterweisung in unterweisungen]})
 
         for teilnahme in models.Teilnahme.objects.filter(unterweisung__in=unterweisungen):
+            personen_teilnahmen[teilnahme.teilnehmer]["first_abgeschlossen"] = min(
+                filter(lambda i: i is not None,
+                       [personen_teilnahmen[teilnahme.teilnehmer]["first_abgeschlossen"],
+                        teilnahme.abgeschlossen_at]),
+                default=None)
             personen_teilnahmen[teilnahme.teilnehmer]["last_abgeschlossen"] = max(
                 filter(lambda i: i is not None,
                        [personen_teilnahmen[teilnahme.teilnehmer]["last_abgeschlossen"],
@@ -123,95 +129,109 @@ class TeilnahmeExportView(TemplateView):
                                                   item[1]["last_abgeschlossen"] >= filter_after,
                                      personen_output)
 
-        personen_output = sorted(personen_output, key=lambda item: _strxfrm(str(item[0])))
+        if "abgeschlossen_chart" in self.request.GET:
+            # list of tuple with timestamp, relative change of part, relative change of done
+            abgeschlossen_events = []
+            for data in personen_teilnahmen.values():
+                if data["first_abgeschlossen"] is not None:
+                    abgeschlossen_events.append((data["first_abgeschlossen"].strftime("%Y-%m-%d %H:%M:%S"), 1, 0)
+                if data["last_abgeschlossen"] is not None:
+                    abgeschlossen_events.append((data["last_abgeschlossen"].strftime("%Y-%m-%d %H:%M:%S"), -1, 1)
+            abgeschlossen_events.sort()
 
-        gruppen_output = defaultdict(list)
-        for teilnehmer, data in personen_output:
-            gruppe = ""
-            if "include_stats" in self.request.GET:
-                gruppe = teilnehmer.gruppe
-            gruppen_output[gruppe].append((teilnehmer, data))
+            context["total_teilnehmer"] = len(personen_teilnahmen)
+            context["abgeschlossen_events"] = abgeschlossen_events
 
-        context["unterweisungen"] = unterweisungen
+        else:
+            personen_output = sorted(personen_output, key=lambda item: _strxfrm(str(item[0])))
 
-        durations_combined = [[] for _ in unterweisungen]
+            gruppen_output = defaultdict(list)
+            for teilnehmer, data in personen_output:
+                gruppe = ""
+                if "include_stats" in self.request.GET:
+                    gruppe = teilnehmer.gruppe
+                gruppen_output[gruppe].append((teilnehmer, data))
 
-        gruppen = []
-        for gruppe, personen in gruppen_output.items():
-            teilnehmer_open = None
-            teilnehmer_done = None
-            teilnehmer_part = None
-            quantiles = None
+            context["unterweisungen"] = unterweisungen
 
-            if "include_stats" in self.request.GET:
-                teilnehmer_open = 0
-                teilnehmer_done = 0
-                teilnehmer_part = 0
-                durations = [[] for _ in unterweisungen]
+            durations_combined = [[] for _ in unterweisungen]
 
-                for teilnehmer, data in personen:
-                    teilnahmen_open = 0
-                    teilnahmen_done = 0
+            gruppen = []
+            for gruppe, personen in gruppen_output.items():
+                teilnehmer_open = None
+                teilnehmer_done = None
+                teilnehmer_part = None
+                quantiles = None
+
+                if "include_stats" in self.request.GET:
+                    teilnehmer_open = 0
+                    teilnehmer_done = 0
+                    teilnehmer_part = 0
+                    durations = [[] for _ in unterweisungen]
+
+                    for teilnehmer, data in personen:
+                        teilnahmen_open = 0
+                        teilnahmen_done = 0
+                        for i, _ in enumerate(unterweisungen):
+                            if data["teilnahmen"][i][0] is False:
+                                teilnahmen_open += 1
+                            elif data["teilnahmen"][i][0] is not None:
+                                teilnahmen_done += 1
+
+                            if data["teilnahmen"][i][1] is not None:
+                                durations[i].append(data["teilnahmen"][i][1])
+                                durations_combined[i].append(data["teilnahmen"][i][1])
+
+                        if teilnahmen_open == 0:
+                            teilnehmer_done += 1
+                        elif teilnahmen_done > 0:
+                            teilnehmer_part += 1
+                        else:
+                            teilnehmer_open += 1
+
+                    quantiles = []
+
                     for i, _ in enumerate(unterweisungen):
-                        if data["teilnahmen"][i][0] is False:
-                            teilnahmen_open += 1
-                        elif data["teilnahmen"][i][0] is not None:
-                            teilnahmen_done += 1
+                        if len(durations[i]) == 1:
+                            # avoid StatisticsWarning
+                            durations[i].append(durations[i][0])
 
-                        if data["teilnahmen"][i][1] is not None:
-                            durations[i].append(data["teilnahmen"][i][1])
-                            durations_combined[i].append(data["teilnahmen"][i][1])
+                        if durations[i]:
+                            _quantiles = statistics.quantiles(durations[i], n=2)
+                            quantiles.append({"median": _quantiles[0]})
+                        else:
+                            quantiles.append(None)
 
-                    if teilnahmen_open == 0:
-                        teilnehmer_done += 1
-                    elif teilnahmen_done > 0:
-                        teilnehmer_part += 1
-                    else:
-                        teilnehmer_open += 1
+                gruppen.append((gruppe, personen, quantiles,
+                                teilnehmer_open, teilnehmer_part, teilnehmer_done,
+                                None if teilnehmer_open is None or teilnehmer_part is None or teilnehmer_done is None else teilnehmer_open + teilnehmer_part + teilnehmer_done))
+
+            context["gruppen"] = []
+            # ignore numeric prefix in gruppe (used for sorting only)
+            for gruppe, *args in sorted(gruppen, key=lambda item: item[0]):
+                prefix, _, suffix = gruppe.partition(" ")
+                if prefix.isnumeric():
+                    gruppe = suffix
+                context["gruppen"].append((gruppe, *args))
+
+            if "include_stats" in self.request.GET:
+                context["teilnehmer_open"] = sum(item[3] for item in gruppen)
+                context["teilnehmer_part"] = sum(item[4] for item in gruppen)
+                context["teilnehmer_done"] = sum(item[5] for item in gruppen)
+                context["teilnehmer_total"] = context["teilnehmer_open"] + context["teilnehmer_part"] + context["teilnehmer_done"]
 
                 quantiles = []
-
                 for i, _ in enumerate(unterweisungen):
-                    if len(durations[i]) == 1:
-                        # avoid StatisticsWarning
-                        durations[i].append(durations[i][0])
+                    if len(durations_combined[i]) == 1:
+                        durations_combined[i].append(durations_combined[i][0])
 
-                    if durations[i]:
-                        _quantiles = statistics.quantiles(durations[i], n=2)
+                    if durations_combined[i]:
+                        _quantiles = statistics.quantiles(durations_combined[i])
                         quantiles.append({"median": _quantiles[0]})
                     else:
                         quantiles.append(None)
 
-            gruppen.append((gruppe, personen, quantiles,
-                            teilnehmer_open, teilnehmer_part, teilnehmer_done,
-                            None if teilnehmer_open is None or teilnehmer_part is None or teilnehmer_done is None else teilnehmer_open + teilnehmer_part + teilnehmer_done))
-
-        context["gruppen"] = []
-        # ignore numeric prefix in gruppe (used for sorting only)
-        for gruppe, *args in sorted(gruppen, key=lambda item: item[0]):
-            prefix, _, suffix = gruppe.partition(" ")
-            if prefix.isnumeric():
-                gruppe = suffix
-            context["gruppen"].append((gruppe, *args))
-
-        if "include_stats" in self.request.GET:
-            context["teilnehmer_open"] = sum(item[3] for item in gruppen)
-            context["teilnehmer_part"] = sum(item[4] for item in gruppen)
-            context["teilnehmer_done"] = sum(item[5] for item in gruppen)
-            context["teilnehmer_total"] = context["teilnehmer_open"] + context["teilnehmer_part"] + context["teilnehmer_done"]
-
-            quantiles = []
-            for i, _ in enumerate(unterweisungen):
-                if len(durations_combined[i]) == 1:
-                    durations_combined[i].append(durations_combined[i][0])
-
-                if durations_combined[i]:
-                    _quantiles = statistics.quantiles(durations_combined[i])
-                    quantiles.append({"median": _quantiles[0]})
-                else:
-                    quantiles.append(None)
-
-            context["total_quantiles"] = quantiles
+                context["total_quantiles"] = quantiles
 
         return context
 
