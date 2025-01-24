@@ -40,7 +40,7 @@ for (const event of abgeschlossen_events) {
 	values.push({timestamp: event[0], part: current_part, done: current_done});
 }
 
-function redraw() {
+export function redraw() {
 	// Colors
 	const color = d3.scaleOrdinal()
 	    .domain(groups)
@@ -99,7 +99,7 @@ function redraw() {
 	    )
 
 	// Append the SVG element.
-	container.empty().append(svg.node());
+	$("#container").empty().append(svg.node());
 }
 
 $(redraw);
