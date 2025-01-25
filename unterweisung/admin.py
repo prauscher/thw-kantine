@@ -136,7 +136,8 @@ class TeilnahmeExportView(TemplateView):
                 if data["first_abgeschlossen"] is not None:
                     abgeschlossen_events.append(
                         (data["first_abgeschlossen"].astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"), 1, 0))
-                if data["last_abgeschlossen"] is not None:
+                if data["last_abgeschlossen"] is not None and \
+                   all(teilnahme is not False for teilnahme, _ in data["teilnahmen"]):
                     abgeschlossen_events.append(
                         (data["last_abgeschlossen"].astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"), -1, 1))
             abgeschlossen_events.sort()
