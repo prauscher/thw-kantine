@@ -19,9 +19,17 @@ var times = [];
 var values = [[], []];
 
 for (const event of abgeschlossen_events) {
+	// Enable "stepping" by pushing events multiple times
+	var timestamp = new Date(event[0]);
+
+	times.push(timestamp);
+	values[0].push([current_done, current_done + current_part]);
+	values[1].push([0, current_done]);
+
 	current_part += event[1];
 	current_done += event[2];
-	times.push(new Date(event[0]));
+
+	times.push(timestamp);
 	values[0].push([current_done, current_done + current_part]);
 	values[1].push([0, current_done]);
 }
