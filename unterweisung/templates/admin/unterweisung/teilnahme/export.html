@@ -22,12 +22,9 @@ for (const event of abgeschlossen_events) {
 	current_part += event[1];
 	current_done += event[2];
 	times.push(new Date(event[0]));
-	values[0].push([current_done, current_part]);
+	values[0].push([current_done, current_done + current_part]);
 	values[1].push([0, current_done]);
 }
-
-console.log(times);
-console.log(values);
 
 // Colors
 const color = d3.scaleOrdinal()
@@ -71,10 +68,10 @@ svg.append("g")
 var clip = svg.append("defs").append("svg:clipPath")
     .attr("id", "clip")
     .append("svg:rect")
-    .attr("width", width)
-    .attr("height", height)
-    .attr("x", 0)
-    .attr("y", 0);
+    .attr("width", width - 1 - marginLeft - marginRight)
+    .attr("height", height - marginTop - marginBottom)
+    .attr("x", marginLeft + 1)
+    .attr("y", marginTop);
 
 // Add brushing
 var brush = d3.brushX()
@@ -86,7 +83,7 @@ var area = svg.append("g")
     .attr("clip-path", "url(#clip)");
 
 var areaGenerator = d3.area()
-    .x(d => x(d.data.key))
+    .x((d, i) => x(times[i]))
     .y0(d => y(d[0]))
     .y1(d => y(d[1]))
 
@@ -95,8 +92,10 @@ area.selectAll("mylayers")
     .data(values)
     .enter()
     .append("path")
-      .style("fill", d => color(d.key - 1))
+      .style("fill", (d, i) => color(i))
       .attr("d", areaGenerator);
+
+redraw();
 
 // Add the brushing
 area.append("g")
@@ -109,11 +108,9 @@ function idled() { idleTimeout = null; }
 
 // A function that update the chart for given boundaries
 function updateChart() {
-	// What are the selected boundaries?
 	extent = d3.event.selection
 
-	// If no selection, back to initial coordinate. Otherwise, update X axis domain
-      	if (!extent) {
+      	if (! extent) {
 		if (! idleTimeout)
 			return idleTimeout = setTimeout(idled, 350); // This allows to wait a little bit
 		x.domain(d3.extent(times));
@@ -123,22 +120,40 @@ function updateChart() {
 	}
 
 	// Update axis and area position
-	xAxis.transition().duration(1000).call(d3.axisBottom(x))
-	area
-		.select('.myArea')
-		.transition()
-		.duration(1000)
-		.attr("d", areaGenerator)
+	redraw();
 }
 
 // If user double click, reinitialize the chart
 svg.on("dblclick", function() {
 	x.domain(d3.extent(times));
-	xAxis.transition().call(d3.axisBottom(x))
-	area
-	    .select('.myArea')
+	redraw();
+});
+
+function date_js2html(date) {
+	const year = date.getFullYear();
+	const month = (date.getMonth() + 1).toString().padStart(2, "0");
+	const day = date.getDate().toString().padStart(2, "0");
+	const hours = date.getHours().toString().padStart(2, "0");
+	const minutes = date.getMinutes().toString().padStart(2, "0");
+	return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function redraw() {
+	var domain = x.domain();
+	$("#start").val(date_js2html(domain[0]));
+	$("#end").val(date_js2html(domain[1]));
+	xAxis.transition().duration(1000).call(d3.axisBottom(x))
+	area.selectAll("path")
 	    .transition()
-	    .attr("d", areaGenerator)
+	    .duration(1000)
+	    .attr("d", areaGenerator);
+}
+
+$("#slice_x").click(function () {
+	var start = new Date($("#start").val());
+	var end = new Date($("#end").val());
+	x.domain([start, end]);
+	redraw();
 });
 
 // Append the SVG element.
@@ -166,6 +181,15 @@ $("#container").empty().append(svg.node());
 <div id="container"></div>
 {{ abgeschlossen_events|json_script:"abgeschlossen_events" }}
 {{ total_teilnehmer|json_script:"total_teilnehmer" }}
+
+<div style="width:800px;">
+<div class="input-group">
+ <input type="datetime-local" class="form-control" id="start" />
+ <span class="input-group-text"> - </span>
+ <input type="datetime-local" class="form-control" id="end" />
+ <button type="submit" id="slice_x" class="btn btn-primary">Setzen</button>
+</div>
+</div>
 
 {% else %}
 
