@@ -41,8 +41,21 @@ const marginLeft = 30;
 
 // Declare the x (horizontal position) scale.
 const x = d3.scaleUtc()
-    .domain(d3.extent(times))
     .range([marginLeft, width - marginRight]);
+
+function read_x_scale() {
+	var start = new Date($("#start").val());
+	if (isNaN(start)) {
+		start = d3.min(times);
+	}
+	var end = new Date($("#end").val());
+	if (isNaN(end)) {
+		end = d3.max(times);
+	}
+	x.domain([start, end]);
+}
+
+read_x_scale();
 
 // Declare the y (vertical position) scale.
 const y = d3.scaleLinear()
@@ -150,9 +163,7 @@ function redraw() {
 }
 
 $("#slice_x").click(function () {
-	var start = new Date($("#start").val());
-	var end = new Date($("#end").val());
-	x.domain([start, end]);
+	read_x_scale();
 	redraw();
 });
 
@@ -184,9 +195,9 @@ $("#container").empty().append(svg.node());
 
 <div style="width:800px;">
 <div class="input-group">
- <input type="datetime-local" class="form-control" id="start" />
+ <input type="datetime-local" class="form-control" id="start" value="{{ request.GET.start }}" />
  <span class="input-group-text"> - </span>
- <input type="datetime-local" class="form-control" id="end" />
+ <input type="datetime-local" class="form-control" id="end" value="{{ request.GET.end }}" />
  <button type="submit" id="slice_x" class="btn btn-primary">Setzen</button>
 </div>
 </div>
