@@ -232,7 +232,7 @@ class GruppenUebersichtView(TemplateView):
             raise Http404
 
         if gruppe is None:
-            content["gruppe"] = "Alle Teilnehmenden"
+            context["gruppe"] = "Alle Teilnehmenden"
             teilnehmer_query = models.Teilnehmer.objects.all()
         else:
             # strip numeric prefix
