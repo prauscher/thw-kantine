@@ -347,6 +347,15 @@ class TeilnahmeAdmin(admin.ModelAdmin):
         return urls
 
 
+def get_gruppen_link(gruppe):
+    token = views.GruppenUebersichtView.get_token(gruppe)
+    path = reverse("unterweisung:ansicht_gruppe", kwargs={"token": token})
+    try:
+        return find_login_url(path)
+    except ValueError:
+        return path
+
+
 class GruppenLinkView(TemplateView):
     template_name = "admin/unterweisung/teilnehmer/gruppen_links.html"
     admin_site = None
@@ -357,20 +366,15 @@ class GruppenLinkView(TemplateView):
         context.update(self.admin_site.each_context(self.request))
         context["title"] = "Links für Unterführer*innen"
 
-        context["gruppen"] = []
+        context["gruppen"] = [
+            (("Alle Teilnehmenden", get_gruppen_link(None)))
+        ]
         gruppen = models.Teilnehmer.objects.all().values("gruppe").annotate(count=db_models.Count("username")).order_by("gruppe").values_list("gruppe")
         for gruppe, in gruppen:
             prefix, _, suffix = gruppe.partition(" ")
             gruppe_display = suffix if prefix.isnumeric() else gruppe
 
-            token = views.GruppenUebersichtView.get_token(gruppe)
-            path = reverse("unterweisung:ansicht_gruppe", kwargs={"token": token})
-            try:
-                url = find_login_url(path)
-            except ValueError:
-                url = path
-
-            context["gruppen"].append((gruppe_display, url))
+            context["gruppen"].append((gruppe_display, get_gruppen_link(gruppe)))
 
         return context
 

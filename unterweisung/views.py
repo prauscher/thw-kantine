@@ -204,6 +204,8 @@ class GruppenUebersichtView(TemplateView):
     @classmethod
     def get_token(cls, gruppe):
         signer = TimestampSigner(salt=cls.signer_salt)
+        if gruppe is None:
+            return signer.sign("$all")
         return signer.sign(base64.urlsafe_b64encode(gruppe.encode()).decode("ascii").rstrip("="))
 
     def get_context_data(self, **kwargs):
@@ -216,7 +218,11 @@ class GruppenUebersichtView(TemplateView):
         try:
             # support old and new tokens
             if ":" in token:
-                gruppe = base64.urlsafe_b64decode(signer.unsign(token, max_age=max_age) + "==").decode()
+                content = signer.unsign(token, max_age=max_age)
+                if content == "$all":
+                    gruppe = None
+                else:
+                    gruppe = base64.urlsafe_b64decode(content + "==").decode()
             else:
                 gruppe = signer.unsign(base64.urlsafe_b64decode(token + "==").decode(), max_age=max_age)
         except SignatureExpired:
@@ -225,18 +231,21 @@ class GruppenUebersichtView(TemplateView):
         except (ValueError, BadSignature):
             raise Http404
 
-        # strip numeric prefix
-        prefix, _, suffix = gruppe.partition(" ")
-        context["gruppe"] = suffix if prefix.isnumeric() else gruppe
-
-        unterweisungen = list(models.Unterweisung.objects.filter(active=True))
-        context["unterweisungen"] = unterweisungen
-
-        counter = {"open": 0, "done": 0, "started": 0}
+        if gruppe is None:
+            content["gruppe"] = "Alle Teilnehmenden"
+            teilnehmer_query = models.Teilnehmer.objects.all()
+        else:
+            # strip numeric prefix
+            prefix, _, suffix = gruppe.partition(" ")
+            context["gruppe"] = suffix if prefix.isnumeric() else gruppe
+            teilnehmer_query = models.Teilnehmer.objects.filter(gruppe=gruppe)
 
         context["teilnehmer"] = []
+        unterweisungen = list(models.Unterweisung.objects.filter(active=True))
+        context["unterweisungen"] = unterweisungen
+        counter = {"open": 0, "done": 0, "started": 0}
 
-        for teilnehmer in models.Teilnehmer.objects.filter(gruppe=gruppe):
+        for teilnehmer in teilnehmer_query:
             # List iff teilnahme was successful (or None if no teilnahme is recorded)
             teilnahmen = [None for _ in unterweisungen]
             for teilnahme in teilnehmer.teilnahmen.filter(unterweisung__active=True):
