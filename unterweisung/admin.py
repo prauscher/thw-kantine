@@ -140,6 +140,8 @@ class TeilnahmeExportView(TemplateView):
                    all(teilnahme is not False for teilnahme, _ in data["teilnahmen"]):
                     abgeschlossen_events.append(
                         (data["last_abgeschlossen"].astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"), -1, 1))
+            abgeschlossen_events.append(
+                (timezone.now().astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"), 0, 0))
             abgeschlossen_events.sort()
 
             context["total_teilnehmer"] = len(personen_teilnahmen)
