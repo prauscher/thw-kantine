@@ -108,7 +108,7 @@ area.selectAll("mylayers")
       .style("fill", (d, i) => color(i))
       .attr("d", areaGenerator);
 
-redraw();
+redraw(false);
 
 // Add the brushing
 area.append("g")
@@ -151,16 +151,35 @@ function date_js2html(date) {
 	return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-function redraw() {
+function redraw(update_history) {
+	if (typeof update_history === "undefined") { update_history = true; }
+
 	var domain = x.domain();
 	$("#start").val(date_js2html(domain[0]));
 	$("#end").val(date_js2html(domain[1]));
+
+	if (update_history) {
+		var url = new URL(location.href);
+		url.searchParams.set("start", $("#start").val());
+		url.searchParams.set("end", $("#end").val());
+		window.history.pushState({"start": $("#start").val(), "end": $("#end").val()}, null, url.toString());
+	}
+
 	xAxis.transition().duration(1000).call(d3.axisBottom(x))
 	area.selectAll("path")
 	    .transition()
 	    .duration(1000)
 	    .attr("d", areaGenerator);
 }
+
+window.addEventListener("popstate", (e) => {
+	if (e.state) {
+		$("#start").val(e.state.start);
+		$("#end").val(e.state.end);
+		read_x_scale();
+		redraw(false);
+	}
+});
 
 $("#slice_x").click(function () {
 	read_x_scale();
