@@ -13,7 +13,8 @@ ARG TZDATA_VERSION=2024b-r1
 ARG CURL_VERSION=8.11.1-r0
 
 RUN apk add --no-cache "tini=${TINI_VERSION}" "tzdata=${TZDATA_VERSION}" "python3=${PYTHON_VERSION}" "unit=${UNIT_VERSION}" "unit-python3=${UNIT_VERSION}" "postgresql17-client=${POSTGRESQL_VERSION}" "curl=${CURL_VERSION}" \
-    && adduser -S -D -H worker
+    && addgroup -g 1000 worker \
+    && adduser -S -D -H -u 1000 -G worker worker
 
 # needs to contain url-part /static
 ENV STATIC_ROOT=/opt/static/static
