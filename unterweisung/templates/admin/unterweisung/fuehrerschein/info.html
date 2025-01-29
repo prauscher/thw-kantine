@@ -30,9 +30,9 @@
 {% if abweichungen %}
 <div class="errornote">
 <ul>
-{% for teilnehmer, teilnehmer_abweichungen in abweichungen %}
+{% for fuehrerschein, teilnehmer_abweichungen in abweichungen %}
 {% for abweichung in teilnehmer_abweichungen %}
- <li>{{ teilnehmer }}: {{ abweichung }}</li>
+ <li>{{ fuehrerschein }}: {{ abweichung }}</li>
 {% endfor %}
 {% endfor %}
 </ul>
