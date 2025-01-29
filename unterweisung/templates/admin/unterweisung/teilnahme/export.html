@@ -292,7 +292,7 @@ $("#container").empty().append(svg.node());
    {% if quantiles and teilnahme.1 %}
     <br />
     {% widthratio teilnahme.1 60 1 as duration_minutes %}
-    <em>{{ duration_minutes|floatformat:1 }}min</em>
+    <em>{{ duration_minutes }}min</em>
    {% endif %}
   </td>
   {% endfor %}
@@ -312,7 +312,7 @@ $("#container").empty().append(svg.node());
     <em>-</em>
    {% else %}
     {% widthratio quantile.median 60 1 as median_minutes %}
-    {{ median_minutes|floatformat:1 }}min
+    {{ median_minutes }}min
    {% endif %}
   </td>
   {% endfor %}
@@ -345,7 +345,7 @@ $("#container").empty().append(svg.node());
     <em>-</em>
    {% else %}
     {% widthratio q.median 60 1 as median_minutes %}
-    {{ median_minutes|floatformat:1 }}min
+    {{ median_minutes }}min
    {% endif %}
    </td>
   {% endfor %}
