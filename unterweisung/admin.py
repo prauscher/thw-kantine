@@ -1,3 +1,4 @@
+import csv
 import statistics
 from collections import defaultdict
 from contextlib import suppress
@@ -393,6 +394,114 @@ class TeilnehmerAdmin(admin.ModelAdmin):
         return urls
 
 
+class FuehrerscheinInfoView(TemplateView):
+    template_name = "admin/unterweisung/fuehrerschein/info.html"
+    admin_site = None
+
+    def get_context_data(self, thwin=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context.update(self.admin_site.each_context(self.request))
+        context["title"] = "Eingegebene Führerscheindaten"
+
+        context["error"] = kwargs.get("error", None)
+
+        context["klassen"] = list(models.Fahrerlaubnis.KLASSEN.keys())
+
+        fuehrerscheine = {}
+        abweichungen = []
+        for fuehrerschein in models.Fuehrerschein.objects.all():
+            thwin_eintrag = thwin.get((fuehrerschein.teilnehmer.surname,
+                                       fuehrerschein.teilnehmer.firstname)) if thwin else None
+            abweichungen_eintrag = []
+
+            fahrerlaubnisse = [(None, None) for klasse in context["klassen"]]
+            for fahrerlaubnis in fuehrerschein.fahrerlaubnisse.all():
+                thwin_fahrerlaubnis = (thwin_eintrag["klassen"][fahrerlaubnis.klasse]
+                                       if thwin_eintrag else None)
+                if thwin_fahrerlaubnis:
+                    thwin_gueltig_ab, thwin_gueltig_bis = thwin_fahrerlaubnis
+                    if thwin_gueltig_ab < fahrerlaubnis.gueltig_ab:
+                        abweichungen_eintrag.append(
+                            f"Erteilungsdatum für Klasse {fahrerlaubnis.klasse} in THWin auf "
+                            f"{fahrerlaubnis.gueltig_ab:%d.%m.%Y} korrigieren")
+
+                    if thwin_gueltig_bis == fahrerlaubnis.gueltig_bis:
+                        pass  # everything is fine
+                    elif fahrerlaubnis.gueltig_bis is not None:
+                        abweichungen_eintrag.append(
+                            f"Gültigkeitsdatum für Klasse {fahrerlaubnis.klasse} in THWin auf "
+                            f"{fahrerlaubnis.gueltig_bis:%d.%m.%Y} korrigieren")
+                    else:
+                        abweichungen_eintrag.append(
+                            f"Gültigkeitsdatum für Klasse {fahrerlaubnis.klasse} aus THWin entfernen")
+
+                fahrerlaubnisse[context["klassen"].index(fahrerlaubnis.klasse)] = \
+                    (fahrerlaubnis.gueltig_ab, fahrerlaubnis.gueltig_bis)
+
+            for nummer in thwin_eintrag["nummern"] if thwin_eintrag else []:
+                if nummer[:10] != fuehrerschein.nummer[:10]:
+                    abweichungen_eintrag.append(
+                        f"Führerschein-Nummer abweichend: {nummer} != {fuehrerschein.nummer}")
+
+            fuehrerscheine[fuehrerschein.teilnehmer] = (fuehrerschein.nummer, fahrerlaubnisse)
+            if abweichungen_eintrag:
+                abweichungen.append((fuehrerschein.teilnehmer, abweichungen_eintrag))
+
+        context["fuehrerscheine"] = [
+            (teilnehmer, nummer, fahrerlaubnisse)
+            for teilnehmer, (nummer, fahrerlaubnisse) in fuehrerscheine.items()]
+        context["abweichungen"] = abweichungen
+
+        return context
+
+    def post(self, *args, **kwargs):
+        thwin = None
+        error = None
+        if "thwin_export" in self.request.FILES:
+            try:
+                export = self._read_thwin_export(self.request.FILES["thwin_export"])
+                thwin = {}
+                for name, vorname, klasse, nummer, gueltig_ab, gueltig_bis in export:
+                    thwin.setdefault(
+                        (name, vorname),
+                        {"nummern": set(),
+                         "klassen": {_klasse: None for _klasse in models.Fahrerlaubnis.KLASSEN}})
+                    thwin[(name, vorname)]["nummern"].add(nummer)
+                    thwin[(name, vorname)]["klassen"][klasse] = (gueltig_ab, gueltig_bis)
+
+                if not thwin:
+                    raise ValueError("Keine Daten für Import gefunden - falschen Export gewählt?")
+            except ValueError as exception:
+                error = str(exception)
+        return self.get(*args, thwin=thwin, error=error, **kwargs)
+
+    def _read_thwin_export(self, file):
+        for row in csv.DictReader((line.decode("iso-8859-1")
+                                   for line in self.request.FILES["thwin_export"]),
+                                  delimiter=";"):
+            if not row:
+                continue
+
+            if any(field not in row for field in ["Name", "Vorname", "Qualifikation",
+                                                  "Nr. / Bem.", "Gültig ab", "Gültig bis"]):
+                msg = "Export enthält nicht die benötigten Spalten - wurde der richtige Export gewählt?"
+                raise ValueError(msg)
+
+            _, _, klasse = row["Qualifikation"].partition("KFZ-Fahrerlaubnis Klasse ")
+            if klasse not in models.Fahrerlaubnis.KLASSEN:
+                continue
+
+            gueltig_ab = datetime.strptime(row["Gültig ab"], "%d.%m.%Y").date()
+            gueltig_bis = None
+            if row["Gültig bis"]:
+                gueltig_bis = datetime.strptime(row["Gültig bis"], "%d.%m.%Y").date()
+                if gueltig_bis < datetime.now().date():
+                    continue
+
+            yield row["Name"], row["Vorname"], klasse, row["Nr. / Bem."], gueltig_ab, gueltig_bis
+
+
 class FahrerlaubnisInline(admin.StackedInline):
     model = models.Fahrerlaubnis
     extra = 3
@@ -401,3 +510,12 @@ class FahrerlaubnisInline(admin.StackedInline):
 @admin.register(models.Fuehrerschein)
 class FuehrerscheinAdmin(admin.ModelAdmin):
     inlines = (FahrerlaubnisInline,)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        urls = [
+            path("info/",
+                 self.admin_site.admin_view(FuehrerscheinInfoView.as_view(admin_site=self.admin_site)),
+                 name="unterweisung_fuehrerschein_info"),
+        ] + urls
+        return urls

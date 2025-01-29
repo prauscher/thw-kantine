@@ -1,0 +1,6 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+ <li><a href="{% url "admin:unterweisung_fuehrerschein_info" %}">Übersicht</a></li>
+ {{ block.super }}
+{% endblock %}
