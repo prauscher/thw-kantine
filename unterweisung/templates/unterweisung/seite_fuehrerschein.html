@@ -1,76 +1,78 @@
+{% load static %}
+
 <p>Bitte gib zum Abgleich der Daten die Nummer und Fahrerlaubnisklassen deines <em>aktuellen</em>
- Führerscheins an. Wähle hierfür zunächst aus, ob es sich um einen "alten" Führerschein oder
- um einen "neuen" EU-Führerschein im Scheckkartenformat handelt. Anschließend kannst du die
- Nummer sowie die Fahrerlaubnisklassen auswählen.</p>
+ Führerscheins an.</p>
 
-<nav>
-  <div class="nav nav-tabs" id="nav-tab" role="tablist">
-    <button class="nav-link" id="nav-papier-tab" data-bs-toggle="tab" data-bs-target="#nav-papier" type="button" role="tab" aria-controls="nav-home" aria-selected="false">Papierführerschein</button>
-    <button class="nav-link active" id="nav-karte-tab" data-bs-toggle="tab" data-bs-target="#nav-karte" type="button" role="tab" aria-controls="nav-karte" aria-selected="true">EU-Kartenführerschein</button>
-  </div>
-</nav>
-<div class="tab-content">
- <div class="tab-pane fade" id="nav-papier" role="tabpanel" aria-labelledby="nav-papier-tab" tabindex="0">
-  <p><strong>Wichtig:</strong> In Abhängigkeit zu deinem Geburtsjahr müssen alle
-   Papierführerscheine durch EU-Kartenführerscheine ersetzt werden. Die genauen Fristen findest
-   du beim <a href="https://bmdv.bund.de/SharedDocs/DE/Artikel/StV/Strassenverkehr/faq-fuehrerschein-umtausch.html" target="_blank">BMDV</a>.</p>
+<p><strong>Wichtig:</strong> Wähle nur die Fahrerlaubnisklassen aus, die auf dich ohne
+ Einschränkung (Schlüsselzahlen 78 oder 79) zutreffen: Wurde dein alter Führerschein der Klasse 3
+ auf einen Kartenführerschein mit Klasse CE und Schlüsselzahl "79 (C1E>12000kg,L=&lt;3)"
+ umgeschrieben, kreuze <strong>nicht</strong> die Klasse CE an.</em>
+<p>Beachte außerdem die Ablauffristen des Kartenführerscheins (Ziffer 4b) sowie der
+ Führerscheinklassen (Ziffer 11) und bemühe dich rechtzeitig um einen Austausch. Enthält
+ dein Führerschein unter Ziffer 4b kein Datum, gelten
+ <a href="https://bmdv.bund.de/SharedDocs/DE/Artikel/StV/Strassenverkehr/faq-fuehrerschein-umtausch.html" target="_blank">Umtauschfristen</a>.</p>
+<p>Die Eingabemaske orientiert sich an der Rückseite deines Führerscheins und fragt neben der
+ Nummer des Führerscheins (Feld <code>5</code>) die Gültigkeitszeiträume der Führerscheinklassen
+ ab. Für Klassen deren Fahrerlaubnis du nicht besitzt, lass beide Datumsangaben leer. Ansonsten
+ trägst du im ersten Feld das Erteilungsdatum (Feld <code>10</code> bzw. falls dort <code>*)</code>
+ angegeben ist Feld <code>14</code>) und (sofern vorhanden) im zweiten Feld das Gültigkeitsdatum
+ (Feld <code>11</code>) ein.</p>
 
+{% if abgelaufen %}
+<p class="alert alert-info">Die Führerscheinklassen <strong>{{ abgelaufen|join:", " }}</strong> sind im vergangenen Jahr abgelaufen.
+ Bitte vervollständige deine neue Führerscheinnummer und erfasse die neuen Gültigkeitsdaten dieser Klassen.</p>
+{% endif %}
 
-  <div class="mb-3">
-   <label for="nummer_papier">Führerscheinnummer</label>
-   <input type="text" class="form-control" id="nummer_papier" name="nummer_papier" placeholder="E12115941" />
-  </div>
+<p id="warning-ablauf" class="alert alert-warning d-none">Laut deinen Angaben laufen in den
+ nächsten 400 Tagen Führerscheinklassen ab. Bitte denk daran, dich rechtzeitig um eine Verlängerung
+ zu kümmern und zeige den neuen Führerschein mit Erhalt in der Verwaltung vor. Bestätige deine
+ Angaben indem du die Daten erneut abschickst.</p>
 
-  <div class="mb-3">
-   <label>Fahrerlaubnisklassen</label>
-   <div class="form-control">
-   {% for klasse, einschluesse in klassen_papier %}
-   <div class="form-check form-check-inline">
-    <input class="form-check-input" type="checkbox" id="klassen_papier_{{ klasse }}" name="klassen_papier" data-einschluesse="{{ einschluesse|join:"," }}" value="{{ klasse }}" />
-    <label class="form-check-label" for="klassen_papier_{{ klasse }}">{{ klasse }}</label>
-   </div>
-   {% endfor %}
-   </div>
-  </div>
+<div class="mb-3 row">
+ <label for="nummer" class="col-6 col-md-4 col-lg-2">Führerscheinnummer</label>
+ <div class="col-6 col-md-8 col-lg-4">
+  <input type="text" class="form-control {% if abgelaufen %}is-invalid{% endif %}" id="nummer" name="nummer" value="{{ nummer|default:'' }}" aria-describedby="nummer_help" placeholder="B072RRE2I55" pattern="[A-P][0-9]{2}[0-9A-Z]{6}[0-9X][1-9A-Z]" />
  </div>
- <div class="tab-pane fade show active" id="nav-karte" role="tabpanel" aria-labelledby="nav-karte-tab" tabindex="0">
-  <p><strong>Wichtig:</strong> Wähle nur die Fahrerlaubnisklassen aus, die auf dich ohne
-   Einschränkung (Schlüsselzahlen 78 oder 79) zutreffen: Wurde dein alter Führerschein der Klasse 3
-   auf einen Kartenführerschein mit Klasse CE und Schlüsselzahl "79 (C1E>12000kg,L=&lt;3)"
-   umgeschrieben, kreuze <strong>nicht</strong> die Klasse CE an.</em>
-  <p>Beachte außerdem die Ablauffristen des Kartenführerscheins (Ziffer 4b) sowie der
-   Führerscheinklassen (Ziffer 11) und bemühe dich rechtzeitig um einen Austausch. Enthält
-   dein Führerschein unter Ziffer 4b kein Datum, gelten
-   <a href="https://bmdv.bund.de/SharedDocs/DE/Artikel/StV/Strassenverkehr/faq-fuehrerschein-umtausch.html" target="_blank">Umtauschfristen</a>.</p>
-
-  <div class="mb-3">
-   <label for="nummer_karte">Führerscheinnummer</label>
-   <input type="text" class="form-control" id="nummer_karte" name="nummer_karte" placeholder="B072RRE2I55" pattern="[A-P][0-9]{2}[0-9A-Z]{6}[0-9X][1-9A-Z]" />
-  </div>
-
-  <div class="mb-3">
-   <label>Fahrerlaubnisklassen</label>
-   <div class="form-control">
-   {% for klasse, einschluesse in klassen_karte %}
-   <div class="form-check form-check-inline">
-    <input class="form-check-input" type="checkbox" id="klassen_karte_{{ klasse }}" name="klassen_karte" data-einschluesse="{{ einschluesse|join:"," }}" value="{{ klasse }}" />
-    <label class="form-check-label" for="klassen_karte_{{ klasse }}">{{ klasse }}</label>
-   </div>
-   {% endfor %}
-   </div>
-  </div>
+ <div id="nummer_help" class="col-12 col-lg-6 form-text">
+  Deine Führerscheinnummer steht unter Ziffer <code>5</code> auf deinem Führerschein und besteht aus insgesamt 11 Ziffern bzw. Buchstaben und beginnt mit einem der Buchstaben A bis P, gefolgt von zwei Ziffern. Anschließend folgen sechs Buchstaben oder Ziffern, bevor eine Prüfziffer (oder der Buchstabe "X") und anschließend eine fortlaufende Nummer bzw. Buchstabe die Führerscheinnummer abschließt.
  </div>
 </div>
 
+{% for klasse, gueltig_ab, gueltig_bis in klassen %}
+<div class="mb-3 row">
+ <label for="klasse_{{ klasse }}_gueltig_ab" class="col-12 col-md-4 col-lg-2">
+  Klasse <strong>{{ klasse }}</strong>
+  <img src="{% with 'unterweisung/klasse_'|add:klasse|add:'.jpg'|lower as klasse_img %}{% static klasse_img %}{% endwith %}" class="float-end mt-2" style="height:1em;" />
+ </label>
+ <div class="col-12 col-sm-6 col-md-4">
+  <div class="input-group">
+   <span class="input-group-text" style="width:30%; min-width:6em;">Erteilt</span>
+   <input type="date" class="form-control" name="klasse_{{ klasse }}_gueltig_ab" value="{% if gueltig_ab %}{{ gueltig_ab|date:'Y-m-d' }}{% endif %}" max="{% now 'Y-m-d' %}" />
+  </div>
+ </div>
+ {% if klasse|slice:1 == "C" %}
+ <div class="col-12 col-sm-6 col-md-4">
+  <div class="input-group">
+   <span class="input-group-text" style="width:30%; min-width:6em;">Gültig bis</span>
+   <input type="date" class="gueltig-bis form-control {% if klasse in abgelaufen %}is-invalid{% endif %}" name="klasse_{{ klasse }}_gueltig_bis" value="{% if gueltig_bis %}{{ gueltig_bis|date:'Y-m-d' }}{% endif %}" min="{% now 'Y-m-d' %}" />
+  </div>
+ </div>
+ {% endif %}
+</div>
+{% endfor %}
+
 <script type="text/javascript">
-document.addEventListener("DOMContentLoaded", function () {
-	$("input[name=klassen_karte], input[name=klassen_papier]").on("change", function () {
-		const checkbox = this;
-		if (checkbox.checked) {
-			$(checkbox).data("einschluesse").split(",").forEach(function (einschluss) {
-				$(checkbox).parents(".form-control").find("[value=" + einschluss + "]").prop("checked", true);
-			});
-		}
-	});
+document.forms[0].addEventListener("submit", (event) => {
+	// Allow submission if no gueltig bis is in the next 400 days
+	if ($(".gueltig-bis").filter((i, elem) => elem.value != "" && (new Date(elem.valueAsNumber) - Date.now()) < 400*24*60*60*1000).length == 0) {
+		return;
+	}
+
+	// Force alert, but allow continuation
+	if ($("#warning-ablauf").hasClass("d-none")) {
+		$("#warning-ablauf").removeClass("d-none");
+		document.activeElement.blur();
+		event.preventDefault();
+	}
 });
 </script>

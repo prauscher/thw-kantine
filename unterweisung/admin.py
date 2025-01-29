@@ -391,3 +391,13 @@ class TeilnehmerAdmin(admin.ModelAdmin):
                  name="unterweisung_teilnehmer_gruppen_links"),
         ] + urls
         return urls
+
+
+class FahrerlaubnisInline(admin.StackedInline):
+    model = models.Fahrerlaubnis
+    extra = 3
+
+
+@admin.register(models.Fuehrerschein)
+class FuehrerscheinAdmin(admin.ModelAdmin):
+    inlines = (FahrerlaubnisInline,)

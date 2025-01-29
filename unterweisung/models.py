@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.dateparse import parse_date
 from polymorphic.models import PolymorphicModel
 from markdownx.models import MarkdownxField
 from login_hermine.utils import send_hermine_channel
@@ -107,42 +109,86 @@ class Seite(PolymorphicModel):
         verbose_name_plural = "Seiten"
 
 
-class FuehrerscheinDatenSeite(Seite):
-    EINSCHLUESSE_KLASSE_PAPIER = {"2": {"3"},
-                                  "3": set()}
-    EINSCHLUESSE_KLASSE_KARTE = {"B": set(),
-                                 "BE": {"B"},
-                                 "C": {"B"},
-                                 "C1E": {"B", "BE", "C1E"},
-                                 "CE": {"C", "C1E", "BE"}}
+def _parse_date_or_none(input: str):
+    return parse_date(input) if input else None
 
+
+class FuehrerscheinDatenSeite(Seite):
     def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
-        context = {"klassen_papier": sorted(self.EINSCHLUESSE_KLASSE_PAPIER.items()),
-                   "klassen_karte": sorted(self.EINSCHLUESSE_KLASSE_KARTE.items())}
         if export:
             return "unterweisung/seite_fuehrerschein_export.html", context
+
+        context = {}
+        context["nummer"] = None
+
+        klassen = {klasse: (None, None) for klasse in Fahrerlaubnis.KLASSEN.keys()}
+        try:
+            fuehrerschein = Fuehrerschein.objects.get(teilnehmer=Teilnehmer.get(request))
+        except Fuehrerschein.DoesNotExist:
+            pass
+        else:
+            context["nummer"] = fuehrerschein.nummer
+            context["abgelaufen"] = []
+            for fahrerlaubnis in fuehrerschein.fahrerlaubnisse.all():
+                if fahrerlaubnis.gueltig_bis is not None and fahrerlaubnis.gueltig_bis <= timezone.now().date():
+                    context["nummer"] = context["nummer"][:10]
+                    context["abgelaufen"].append(fahrerlaubnis.klasse)
+
+                klassen[fahrerlaubnis.klasse] = (fahrerlaubnis.gueltig_ab,
+                                                 fahrerlaubnis.gueltig_bis)
+
+        if "nummer" in request.POST:
+            context["nummer"] = request.POST["nummer"]
+            context["abgelaufen"] = []
+
+        for klasse in Fahrerlaubnis.KLASSEN.keys():
+            if f"klasse_{klasse}_gueltig_ab" in request.POST:
+                klassen[klasse] = (parse_date(request.POST[f"klasse_{klasse}_gueltig_ab"]), klassen[klasse][1])
+            if f"klasse_{klasse}_gueltig_bis" in request.POST:
+                klassen[klasse] = (klassen[klasse][0], parse_date(request.POST[f"klasse_{klasse}_gueltig_bis"]))
+
+        context["klassen"] = [(klasse, gueltig_ab, gueltig_bis) for
+                              klasse, (gueltig_ab, gueltig_bis) in klassen.items()]
+
         return "unterweisung/seite_fuehrerschein.html", context
 
     def parse_result(self, request, kwargs, teilnahme: "Teilnahme | None") -> str:
-        nummer_papier = kwargs.get("nummer_papier", "")
-        nummer_karte = kwargs.get("nummer_karte", "")
+        nummer = utils.validate_kartenfuehrerschein_nummer(kwargs.get("nummer", ""))
 
-        if nummer_papier and nummer_karte:
-            raise ValidationError("Entweder Papier- oder EU-Kartenführerscheinnummer angeben")
-        elif nummer_papier:
-            nummer = nummer_papier
-            klassen_list = kwargs.getlist("klassen_papier")
-        elif nummer_karte:
-            nummer = utils.validate_kartenfuehrerschein_nummer(nummer_karte)
-            klassen_list = kwargs.getlist("klassen_karte")
-        else:
-            raise ValidationError("Keine Führerscheinnummer angegeben")
+        klassen = {}
+        for klasse in Fahrerlaubnis.KLASSEN.keys():
+            gueltig_ab = _parse_date_or_none(kwargs.get(f"klasse_{klasse}_gueltig_ab"))
+            gueltig_bis = _parse_date_or_none(kwargs.get(f"klasse_{klasse}_gueltig_bis"))
 
-        if not klassen_list:
-            raise ValidationError("Keine Führerscheinklassen angegeben")
+            if not gueltig_ab:
+                continue
 
-        klassen = ",".join(sorted(klassen_list))
-        return f"{nummer} ({klassen})"
+            if gueltig_ab > timezone.now().date():
+                raise ValidationError(f"Erteilungsdatum für Klasse {klasse} liegt in der Zukunft")
+
+            if gueltig_bis and gueltig_bis < timezone.now().date():
+                raise ValidationError(f"Gültigkeitsdatum für Klasse {klasse} liegt in der Vergangenheit")
+
+            if klasse.startswith("C") and not gueltig_bis:
+                raise ValidationError(f"Bitte gib das Gültigkeitsdatum für Klasse {klasse} an")
+
+            klassen[klasse] = (gueltig_ab, gueltig_bis)
+
+        for einschliessend, einschluss in [("CE", "C1E"), ("CE", "C"),
+                                           ("C1E", "BE"), ("C", "B"), ("BE", "B")]:
+            if einschliessend in klassen and einschluss not in klassen:
+                raise ValidationError(f"Klasse {einschliessend} schließt {einschluss} mit ein, bitte gib alle abgefragten Führerscheindaten ein.")
+
+        fuehrerschein, _ = Fuehrerschein.objects.update_or_create(
+            teilnehmer=Teilnehmer.get(request),
+            defaults={"nummer": nummer})
+        fuehrerschein.fahrerlaubnisse.exclude(klasse__in=klassen.keys()).delete()
+        for klasse, (gueltig_ab, gueltig_bis) in klassen.items():
+            fuehrerschein.fahrerlaubnisse.update_or_create(
+                klasse=klasse,
+                defaults={"gueltig_ab": gueltig_ab, "gueltig_bis": gueltig_bis})
+
+        return f"{nummer} ({','.join(klassen.keys())})"
 
     class Meta:
         verbose_name = "Führerscheindaten-Eingabemaske"
@@ -428,10 +474,70 @@ class Teilnehmer(models.Model):
             return f"{self.surname}, {self.firstname}"
         return self.username
 
+    @classmethod
+    def get(cls, request):
+        # format from nextcloud
+        firstname, _, surname = request.jwt_user_display.rpartition(" ")
+        surname = surname.replace("_", " ")
+
+        # store results (but only store first success)
+        teilnehmer, _ = cls.objects.update_or_create(
+            username=request.jwt_user_id,
+            defaults={"firstname": firstname, "surname": surname},
+        )
+        return teilnehmer
+
     class Meta:
         verbose_name = "Teilnehmer"
         verbose_name_plural = "Teilnehmer"
         ordering = ["surname", "firstname", "username"]
+
+
+class Fuehrerschein(models.Model):
+    teilnehmer = models.OneToOneField(
+        Teilnehmer, on_delete=models.CASCADE, related_name="fuehrerschein",
+        verbose_name="Teilnehmer")
+    nummer = models.CharField(
+        max_length=11, verbose_name="Führerscheinnummer",
+        help_text="Nummer des Führerscheins (Ziffer 5)")
+
+    def __str__(self):
+        return f"{self.teilnehmer} [{self.nummer}]"
+
+    class Meta:
+        verbose_name = "Führerscheindaten"
+        verbose_name_plural = "Führerscheindaten"
+        ordering = ["teilnehmer"]
+
+
+class Fahrerlaubnis(models.Model):
+    KLASSEN = {i: i for i in ["B", "C", "BE", "C1E", "CE"]}
+
+    fuehrerschein = models.ForeignKey(
+        Fuehrerschein, on_delete=models.CASCADE, related_name="fahrerlaubnisse",
+        verbose_name="Führerschein")
+    klasse = models.CharField(
+        max_length=3, choices=KLASSEN, verbose_name="Fahrerlaubnisklasse")
+    gueltig_ab = models.DateField(
+        verbose_name="Erteilungsdatum",
+        help_text="Datum zu der die Fahrerlaubnis erteilt wurde (üblicherweise Datum der Prüfung, "
+                  "notiert in Ziffer 10)")
+    gueltig_bis = models.DateField(
+        null=True, blank=True, verbose_name="Gültigkeitsdatum",
+        help_text="Datum bis zu dem die Fahrerlaubnis befristet ist (sofern die Fahrerlaubnis befr"
+                  "istet erteilt wurde). Notiert in Ziffer 11.")
+
+    def __str__(self):
+        return f"{self.fuehrerschein} ({self.klasse})"
+
+    class Meta:
+        verbose_name = "Fahrerlaubnis"
+        verbose_name_plural = "Fahrerlaubnis"
+        ordering = ["fuehrerschein", "klasse"]
+        constraints = [
+            models.UniqueConstraint("fuehrerschein", "klasse",
+                                    name="unique_fuehrerschein_klasse"),
+        ]
 
 
 class Teilnahme(models.Model):
