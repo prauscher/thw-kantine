@@ -27,18 +27,6 @@
 <p class="errornote">{{ error }}</p>
 {% endif %}
 
-{% if abweichungen %}
-<div class="errornote">
-<ul>
-{% for fuehrerschein, teilnehmer_abweichungen in abweichungen %}
-{% for abweichung in teilnehmer_abweichungen %}
- <li>{{ fuehrerschein }}: {{ abweichung }}</li>
-{% endfor %}
-{% endfor %}
-</ul>
-</div>
-{% endif %}
-
 <form method="post" enctype="multipart/form-data">
  {% csrf_token %}
  <fieldset class="module aligned">
@@ -58,7 +46,8 @@
 
 <h2>Übersicht</h2>
 
-<p>Nachfolgend werden alle hinterlegten Führerscheine mit Nummer den Gültigkeitsdaten der Fahrerlaubnisse angezeigt.</p>
+<p>Nachfolgend werden alle hinterlegten Führerscheine mit Nummer den Gültigkeitsdaten der Fahrerlaubnisse angezeigt.
+ {% if abgleich %}Fehler im hochgeladenen THWin-Export werden hier <strong style="color:red;">rot</strong> markiert.{% endif %}</p>
 
 <table>
 <thead>
@@ -71,12 +60,17 @@
 </tr>
 </thead>
 <tbody>
-{% for teilnehmer, nummer, fahrerlaubnisse in fuehrerscheine %}
+{% for teilnehmer, nummer, nummer_error, fahrerlaubnisse in fuehrerscheine %}
 <tr>
  <th scope="row">{{ teilnehmer }}</th>
- <td>{{ nummer }}</td>
- {% for gueltig_ab, gueltig_bis in fahrerlaubnisse %}
- <td>{% if gueltig_ab %}{{ gueltig_ab|date:"d.m.Y" }}<br />{% if gueltig_bis %}{{ gueltig_bis|date:"d.m.Y" }}{% else %}-{% endif %}{% endif %}</td>
+ <td>{% if nummer_error %}<strong style="color:red;">{{ nummer }}</strong>{% else %}{{ nummer }}{% endif %}</td>
+ {% for gueltig_ab, gueltig_ab_error, gueltig_bis, gueltig_bis_error in fahrerlaubnisse %}
+ <td>
+  {% if gueltig_ab %}
+  {% if gueltig_ab_error %}<strong style="color:red;">{% endif %}{{ gueltig_ab|date:"d.m.Y" }}{% if gueltig_ab_error %}</strong>{% endif %}<br />
+  {% if gueltig_bis_error %}<strong style="color:red;">{% endif %}{% if gueltig_bis %}{{ gueltig_bis|date:"d.m.Y" }}{% else %}-{% endif %}{% if gueltig_bis_error %}</strong>{% endif %}
+  {% endif %}
+ </td>
  {% endfor %}
 </tr>
 {% endfor %}

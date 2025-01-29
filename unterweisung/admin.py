@@ -405,59 +405,47 @@ class FuehrerscheinInfoView(TemplateView):
         context["title"] = "Eingegebene Führerscheindaten"
 
         context["error"] = kwargs.get("error", None)
-
         context["klassen"] = list(models.Fahrerlaubnis.KLASSEN.keys())
+        context["abgleich"] = thwin is not None
 
         fuehrerscheine = {}
-        abweichungen = []
         for fuehrerschein in models.Fuehrerschein.objects.all():
             thwin_eintrag = thwin.get((fuehrerschein.teilnehmer.surname,
                                        fuehrerschein.teilnehmer.firstname)) if thwin else None
-            abweichungen_eintrag = []
+            thwin_klassen = thwin_eintrag["klassen"] if thwin_eintrag else None
 
-            fahrerlaubnisse = [(None, None) for klasse in context["klassen"]]
+            # initially mark all klassen written in thwin as error - valid ones will be overwritten
+            # soon
+            fahrerlaubnisse = [
+                (None,
+                 thwin_klassen[klasse][0] is not None if thwin_klassen else False,
+                 None,
+                 thwin_klassen[klasse][0] is not None if thwin_klassen else False,
+                 ) for klasse in context["klassen"]]
+
             for fahrerlaubnis in fuehrerschein.fahrerlaubnisse.all():
-                thwin_fahrerlaubnis = (thwin_eintrag["klassen"][fahrerlaubnis.klasse]
-                                       if thwin_eintrag else None)
-                if thwin_eintrag and not thwin_fahrerlaubnis:
-                    abweichungen_eintrag.append(
-                        f"Klasse {fahrerlaubnis.klasse} ab {fahrerlaubnis.gueltig_ab:%d.%m.%Y}"
-                        f"{f' bis {fahrerlaubnis.gueltig_bis:%d.%m.%Y}' if fahrerlaubnis.gueltig_bis else ''}"
-                        f" neu eintragen")
+                thwin_gueltig_ab, thwin_gueltig_bis = (
+                    thwin_klassen[fahrerlaubnis.klasse]
+                    if thwin_klassen else (None, None))
 
-                if thwin_fahrerlaubnis:
-                    thwin_gueltig_ab, thwin_gueltig_bis = thwin_fahrerlaubnis
-                    if thwin_gueltig_ab < fahrerlaubnis.gueltig_ab:
-                        abweichungen_eintrag.append(
-                            f"Erteilungsdatum für Klasse {fahrerlaubnis.klasse} in THWin auf "
-                            f"{fahrerlaubnis.gueltig_ab:%d.%m.%Y} korrigieren")
+                fahrerlaubnisse[context["klassen"].index(fahrerlaubnis.klasse)] = (
+                    fahrerlaubnis.gueltig_ab,
+                    # mark as error if klasse is not in thwin or thwin has early date
+                    # note that late dates are possible as thwin only accepts 01.01.2000 onwards
+                    thwin and (thwin_gueltig_ab is None or thwin_gueltig_ab < fahrerlaubnis.gueltig_ab),
+                    fahrerlaubnis.gueltig_bis,
+                    # any deviation from gueltig_bis shall be marked as an error
+                    thwin and (thwin_gueltig_bis != fahrerlaubnis.gueltig_bis))
 
-                    if thwin_gueltig_bis == fahrerlaubnis.gueltig_bis:
-                        pass  # everything is fine
-                    elif fahrerlaubnis.gueltig_bis is not None:
-                        abweichungen_eintrag.append(
-                            f"Gültigkeitsdatum für Klasse {fahrerlaubnis.klasse} in THWin auf "
-                            f"{fahrerlaubnis.gueltig_bis:%d.%m.%Y} korrigieren")
-                    else:
-                        abweichungen_eintrag.append(
-                            f"Gültigkeitsdatum für Klasse {fahrerlaubnis.klasse} aus THWin entfernen")
-
-                fahrerlaubnisse[context["klassen"].index(fahrerlaubnis.klasse)] = \
-                    (fahrerlaubnis.gueltig_ab, fahrerlaubnis.gueltig_bis)
-
-            for nummer in thwin_eintrag["nummern"] if thwin_eintrag else []:
-                if nummer[:10] != fuehrerschein.nummer[:10]:
-                    abweichungen_eintrag.append(
-                        f"Führerschein-Nummer abweichend: {nummer} != {fuehrerschein.nummer}")
-
-            fuehrerscheine[fuehrerschein.teilnehmer] = (fuehrerschein.nummer, fahrerlaubnisse)
-            if abweichungen_eintrag:
-                abweichungen.append((fuehrerschein, abweichungen_eintrag))
+            fuehrerscheine[fuehrerschein.teilnehmer] = (
+                fuehrerschein.nummer,
+                any(nummer[:10] != fuehrerschein.nummer[:10]
+                    for nummer in (thwin_eintrag["nummern"] if thwin_eintrag else [])),
+                fahrerlaubnisse)
 
         context["fuehrerscheine"] = [
-            (teilnehmer, nummer, fahrerlaubnisse)
-            for teilnehmer, (nummer, fahrerlaubnisse) in fuehrerscheine.items()]
-        context["abweichungen"] = abweichungen
+            (teilnehmer, nummer, nummer_error, fahrerlaubnisse)
+            for teilnehmer, (nummer, nummer_error, fahrerlaubnisse) in fuehrerscheine.items()]
 
         return context
 
@@ -472,7 +460,8 @@ class FuehrerscheinInfoView(TemplateView):
                     thwin.setdefault(
                         (name, vorname),
                         {"nummern": set(),
-                         "klassen": {_klasse: None for _klasse in models.Fahrerlaubnis.KLASSEN}})
+                         "klassen": {_klasse: (None, None)
+                                     for _klasse in models.Fahrerlaubnis.KLASSEN}})
                     thwin[(name, vorname)]["nummern"].add(nummer)
                     thwin[(name, vorname)]["klassen"][klasse] = (gueltig_ab, gueltig_bis)
 
