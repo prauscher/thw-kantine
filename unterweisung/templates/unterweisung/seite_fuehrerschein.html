@@ -23,11 +23,6 @@
  Bitte vervollständige deine neue Führerscheinnummer und erfasse die neuen Gültigkeitsdaten dieser Klassen.</p>
 {% endif %}
 
-<p id="warning-ablauf" class="alert alert-warning d-none">Laut deinen Angaben laufen in den
- nächsten 400 Tagen Führerscheinklassen ab. Bitte denk daran, dich rechtzeitig um eine Verlängerung
- zu kümmern und zeige den neuen Führerschein mit Erhalt in der Verwaltung vor. Bestätige deine
- Angaben indem du die Daten erneut abschickst.</p>
-
 <div class="mb-3 row">
  <label for="nummer" class="col-6 col-md-4 col-lg-2">Führerscheinnummer</label>
  <div class="col-6 col-md-8 col-lg-4">
@@ -60,6 +55,11 @@
  {% endif %}
 </div>
 {% endfor %}
+
+<p id="warning-ablauf" class="alert alert-warning d-none">Laut deinen Angaben laufen in den
+ nächsten 400 Tagen Führerscheinklassen ab. Bitte denk daran, dich rechtzeitig um eine Verlängerung
+ zu kümmern und zeige den neuen Führerschein mit Erhalt in der Verwaltung vor. Bestätige deine
+ Angaben indem du die Daten erneut abschickst.</p>
 
 <script type="text/javascript">
 document.forms[0].addEventListener("submit", (event) => {
