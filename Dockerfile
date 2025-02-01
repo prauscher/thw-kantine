@@ -62,8 +62,6 @@ ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["/prepare_db.sh", "/start_unit.sh"]
 WORKDIR /opt/app
 
-VOLUME /tmp
-
 ENV PORT=8080
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 ENV APP_WSGI=kantine.wsgi
