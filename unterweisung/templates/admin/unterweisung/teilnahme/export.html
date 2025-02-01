@@ -231,7 +231,7 @@ $("#container").empty().append(svg.node());
 
 {% else %}
 
-{% if teilnehmer_done and teilnehmer_part and teilnehmer_open and teilnehmer_total %}
+{% if teilnehmer_done is not None and teilnehmer_part is not None and teilnehmer_open is not None and teilnehmer_total is not None %}
 <div class="progress">
   <div class="progress-bar" role="progressbar" style="width: {% widthratio teilnehmer_done teilnehmer_total 100 %}%" aria-valuenow="{{ teilnehmer_done }}" aria-valuemin="0" aria-valuemax="{{ teilnehmer_total }}"></div>
   <div class="progress-bar bg-info" role="progressbar" style="width: {% widthratio teilnehmer_part teilnehmer_total 100 %}%" aria-valuenow="{{ teilnehmer_part }}" aria-valuemin="0" aria-valuemax="{{ teilnehmer_total }}"></div>
