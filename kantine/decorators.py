@@ -15,10 +15,8 @@ def require_jwt_login(view):
             }
 
         elif "jwt_userdata" not in request.session:
-            full_path = request.get_full_path()
-
             try:
-                return redirect(find_login_url(full_path))
+                return redirect(find_login_url(request.get_full_path()))
             except ValueError:
                 raise PermissionDenied
 
