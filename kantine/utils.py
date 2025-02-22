@@ -5,9 +5,6 @@ from django.utils.log import AdminEmailHandler
 class CustomEmailHandler(AdminEmailHandler):
     """Custom Handler that ignores 404 errors instead of sending them by email"""
 
-    def _check_ignore_url(self, path):
-        return True
-
     def handle(self, record):
         if record.__dict__.get("status_code", 200) == 404:
             message_args = record.args
