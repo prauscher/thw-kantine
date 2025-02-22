@@ -58,6 +58,9 @@ class MenuModelForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
+        if not self.instance.is_open:
+            raise ValidationError(f"Die Anmeldefrist ist abgelaufen, bitte melde dich direkt beim Abfragenden.")
+
         servings = defaultdict(dict)
         for field, value in self.data.items():
             if field.startswith("serving-") and "-" in field[8:]:
