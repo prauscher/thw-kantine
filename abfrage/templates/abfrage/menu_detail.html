@@ -25,9 +25,13 @@
 
 {% if object.is_open %}
 <p>
- Hier kannst du für das Menü bestellen. Deine Bestellung wird automatisch mit deinem Anmeldenamen verknüpft.
+ Hier kannst du {% if object.closed_at %}bis zur Meldefrist am <em>{{ object.closed_at|date:"d.m.Y" }}</em> um <em>{{ object.closed_at|date:"H:i" }} Uhr</em> {% endif %}für das Menü bestellen. Deine Bestellung wird automatisch mit deinem Anmeldenamen verknüpft.
  Bitte trage die gewünschte Anzahl an Essen ein. Über die Buttons <em>+</em> bzw. <em>-</em> kannst du die Zahl je um eins erhöhen bzw. verringern.
  Anschließend musst du deine Änderungen mit dem Button "Speichern" sichern.
+</p>
+{% else %}
+<p>
+ Da die Meldefrist abgelaufen ist, kann eine Meldung für dieses Menü nicht mehr geändert werden. Bitte rede direkt mit der Küche um zu prüfen, ob doch noch Änderungen möglich sind.
 </p>
 {% endif %}
 
