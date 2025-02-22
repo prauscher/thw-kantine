@@ -11,15 +11,16 @@ from .utils import find_login_url
 
 def jwt_login(request, token, next=""):
     pubkey = os.environ.get("JWT_PUBKEY", "")
+
+    if next.rstrip("/") == "" or not url_has_allowed_host_and_scheme(url=next, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        next = reverse("abfrage:start")
+
     try:
         decoded = jwt.decode(token, pubkey, algorithms=["ES256"])
     except jwt.exceptions.ExpiredSignatureError:
         # Signature expired, try relogin
-        next = find_login_url(request.get_full_path())
+        next = find_login_url(next)
     else:
         request.session["jwt_userdata"] = decoded.get("userdata")
-
-        if next.rstrip("/") == "" or not url_has_allowed_host_and_scheme(url=next, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
-            next = reverse("abfrage:start")
 
     return redirect(next)
