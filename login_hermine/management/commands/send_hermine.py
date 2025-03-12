@@ -22,9 +22,13 @@ class Command(BaseCommand):
                 self.stderr.write("Hermine Login failed\n")
                 break
 
-            channel_attrs = next(channel
-                                 for channel in channels
-                                 if channel["name"] == message.channel)
+            try:
+                channel_attrs = next(channel
+                                     for channel in channels
+                                     if channel["name"] == message.channel)
+            except StopIteration:
+                continue
+
             client.send_msg(("channel", channel_attrs["id"]), message.message)
 
             message.sent = timezone.now()
