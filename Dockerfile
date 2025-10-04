@@ -1,7 +1,8 @@
-ARG PYTHON_VERSION=3.12.10-r0
-ARG POSTGRESQL_VERSION=17.4-r0
+ARG PYTHON_VERSION=3.12.11-r0
+ARG POSTGRESQL_VERSION=17.6-r0
 ARG BUILD_BASE_VERSION=0.5-r3
 ARG PY3_PIP_VERSION=24.3.1-r0
+ARG PYPI_PIP_VERSIONS=25.2
 
 FROM alpine:3.21 AS base
 
@@ -10,7 +11,7 @@ ARG POSTGRESQL_VERSION
 ARG UNIT_VERSION=1.34.1-r0
 ARG TINI_VERSION=0.19.0-r3
 ARG TZDATA_VERSION=2025b-r0
-ARG CURL_VERSION=8.12.1-r1
+ARG CURL_VERSION=8.14.1-r2
 
 RUN apk add --no-cache "tini=${TINI_VERSION}" "tzdata=${TZDATA_VERSION}" "python3=${PYTHON_VERSION}" "unit=${UNIT_VERSION}" "unit-python3=${UNIT_VERSION}" "postgresql17-client=${POSTGRESQL_VERSION}" "curl=${CURL_VERSION}" \
     && addgroup -g 1000 worker \
@@ -35,13 +36,15 @@ ARG PYTHON_VERSION
 ARG POSTGRESQL_VERSION
 ARG BUILD_BASE_VERSION
 ARG PY3_PIP_VERSION
+ARG PYPI_PIP_VERSION
 
 RUN apk add --no-cache "build-base=${BUILD_BASE_VERSION}" "libpq-dev=${POSTGRESQL_VERSION}" "python3-dev=${PYTHON_VERSION}" "py3-pip=${PY3_PIP_VERSION}" && \
     python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt /tmp/requirements.txt
-RUN python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
+RUN python3 -m pip install "pip==${PYPI_PIP_VERSION}" && \
+    python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
 
 WORKDIR /opt/app
 COPY ./manage.py /opt/app/manage.py
