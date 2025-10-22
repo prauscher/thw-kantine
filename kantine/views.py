@@ -16,7 +16,7 @@ def jwt_login(request, token, next=""):
         next = reverse("abfrage:start")
 
     try:
-        decoded = jwt.decode(token, pubkey, algorithms=["ES256"])
+        decoded = jwt.decode(token, pubkey, algorithms=["ES256"], leeway=10)
     except jwt.exceptions.ExpiredSignatureError:
         # Signature expired, try relogin
         next = find_login_url(next)
