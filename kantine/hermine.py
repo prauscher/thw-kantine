@@ -402,10 +402,6 @@ def setup_logging(debug=False):
 
 
 _hermine_data = {}
-_hermine_device_id = None
-_hermine_client_key = None
-_hermine_user_id = None
-_hermine_hidden_id = None
 
 
 def get_hermine_client():
