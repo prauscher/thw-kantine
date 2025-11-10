@@ -14,7 +14,7 @@
   <li class="breadcrumb-item active" aria-current="page">Bearbeiten</li>
   {% else %}
   <li class="breadcrumb-item"><a href="{% url "reservierung:start" %}">Reservierungen</a></li>
-  <li class="breadcrumb-item">Termine</li>
+  <li class="breadcrumb-item"><a href="{% url "reservierung:termin_list" %}">Termine</a></li>
   <li class="breadcrumb-item active" aria-current="page">Anlegen</li>
   {% endif %}
  </ol>
