@@ -1,0 +1,99 @@
+{% extends "abfrage/base.html" %}
+
+{% load timerange %}
+{% load resource %}
+
+{% block title_head %}
+ {{ object.resource.label }} bei {{ object.termin.label }}
+{% endblock %}
+
+{% block title_h1 %}
+ {{ object.resource.label }} bei {{ object.termin.label }}
+ {% include "reservierung/_resourceusage_state_badge.html" with state=object.state %}
+{% endblock %}
+
+{% block buttons %}
+{% if may_revert_reject %}
+<a href="{{ object.get_absolute_reject_revert_url }}" class="btn btn-danger">Ablehnung zurückziehen</a>
+{% elif may_reject %}
+<a href="{{ object.get_absolute_reject_url }}" class="btn btn-danger">Ablehnen</a>
+{% endif %}
+
+{% if may_revoke %}
+<a href="{{ object.get_absolute_vote_revoke_url }}" class="btn btn-danger">Zustimmung zurückziehen</a>
+{% elif may_vote and object.state != "rejected" %}
+<a id="voteButton" href="{{ object.get_absolute_vote_url }}" class="btn btn-success">Zustimmen</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  {% include "reservierung/_breadcrumb_resourceusage.html" with object=object last=True %}
+ </ol>
+</nav>
+
+<div class="float-end">
+ <a href="{{ object.resource.get_absolute_url }}" class="btn btn-info">Zur Ressource</a>
+ <a href="{{ object.termin.get_absolute_url }}" class="btn btn-info">Zum Termin</a>
+</div>
+
+<p class="lead">
+ Angefragt von <strong>{{ object.termin.owner }}</strong> für <strong>{{ object.termin.start|timerange:object.termin.end }}</strong><br />
+ {{ object.termin.description|linebreaksbr }}
+</p>
+
+<p class="alert alert-info">
+{% if object.state == "requested" %}
+ {% if not voting_groups %}
+  Diese Buchung für eine selbstverwaltete Ressource steht noch im Konflikt mit anderen Buchungen.
+  Sobald diese Konflikte ausgeräumt wurden, wird diese Buchung "Bestätigt". Der Konflikt kann am
+  einfachsten durch im Gespräch zwischen den Terminbuchenden gelöst werden, indem einer der beiden
+  Termine eine andere Ressource verwendet, verschoben oder gelöscht wird.
+ {% elif may_revoke %}
+  Diese Buchung wartet aktuell noch auf Zustimmung durch Freigabeverantwortliche und ist deshalb noch
+  nicht "Bestätigt". Da du der Buchung bereits zugestimmt hast, kannst du nicht erneut zustimmen. Du
+  kannst deine Zustimmung jedoch mittels "Zustimmung zurückziehen" zurückziehen.
+ {% elif may_vote %}
+  Diese Buchung wartet aktuell noch auf Zustimmung durch Freigabeverantwortliche und ist deshalb noch
+  nicht "Bestätigt". Wenn du dieser Buchung zustimmst, kannst du über "Zustimmen" deine Freigabe
+  hierfür erteilen. Sobald für alle Abstimmungsgruppen eine Zustimmung erteilt wurde, gilt die Buchung
+  als "Bestätigt".
+ {% else %}
+  Diese Buchung wartet aktuell noch auf Zustimmung durch Freigabeverantwortliche und ist deshalb noch
+  nicht "Bestätigt". Freigabeberechtigte Personen können hier ihre Zustimmung erteilen.
+ {% endif %}
+{% elif object.state == "approved" %}
+ Diese Buchung ist "Bestätigt", somit steht diese Ressource für diesen Termin zur Verfügung.
+{% elif object.state == "rejected" %}
+ Diese Buchung wurde durch einen Administrator storniert.
+{% endif %}
+</p>
+
+{% for comment in comments %}
+<div class="alert alert-success" role="alert">
+ <h4 class="alert-heading">Freigabekommentar von <strong>{{ comment.approver }}</strong></h4>
+ <p>{{ comment.comment|linebreaksbr }}</p>
+</div>
+{% endfor %}
+
+{% if conflicts %}
+<div class="alert alert-warning" role="alert">
+ <h4 class="alert-heading">Konflikte</h4>
+ <p>Diese Buchung steht in Konflikt mit den folgenden Buchungen.</p>
+ <ul>
+ {% for usage, conflict_start, conflict_end in conflicts %}
+  <li>
+   <strong><a href="{{ usage.get_absolute_url }}">{{ usage.termin.label }}</a></strong> von <strong>{{ usage.termin.owner }}</strong> zwischen <strong>{{ conflict_start|timerange:conflict_end }}</strong> für <strong><a href="{{ usage.resource.get_absolute_url }}">{{ usage.resource }}</a></strong>
+   {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state %}
+  </li>
+ {% endfor %}
+ </ul>
+</div>
+{% endif %}
+
+{% include "reservierung/_log_messages.html" with log_messages=log_messages show_usage_col=False %}
+
+{{ object|resource_approval_scheme }}
+
+{% endblock %}

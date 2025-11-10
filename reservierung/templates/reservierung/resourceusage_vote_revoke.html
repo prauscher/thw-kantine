@@ -1,0 +1,34 @@
+{% extends "abfrage/base.html" %}
+
+{% load timerange %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ object.resource.label }} bei {{ object.termin.label }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  {% include "reservierung/_breadcrumb_resourceusage.html" with object=object last=False %}
+  <li class="breadcrumb-item active" aria-current="page">Zustimmung zurückziehen</li>
+ </ol>
+</nav>
+
+<p class="lead">
+ Angefragt von <strong>{{ object.termin.owner }}</strong> für <strong>{{ object.termin.start|timerange:object.termin.end }}</strong><br />
+ {{ object.termin.description|linebreaksbr }}
+</p>
+
+<div class="alert alert-info" role="alert">
+ <p>Du bist dabei, eine vorher von dir gegebene Zustimmung für eine Reservierung zurückzuziehen.</p>
+ <p>Beachte, dass die Buchung anschließend möglicherweise weiterhin "Bestätigt" bleibt, sofern andere
+  Personen in deiner Abstimmungsgruppe noch eine Zustimmung erteilt haben. Erst wenn für eine
+  Abstimmungsgruppe keine Zustimmung mehr vorliegt, wird die Buchung wieder als "Angefragt" angezeigt.</p>
+</div>
+
+<form method="post">
+ {% csrf_token %}
+ {{ form|crispy }}
+ <input type="submit" class="btn btn-success" value="Zustimmung zurückziehen" />
+</form>
+{% endblock %}
+

@@ -1,0 +1,48 @@
+{% extends "abfrage/base.html" %}
+
+{% load timerange %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ object.resource.label }} bei {{ object.termin.label }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  {% include "reservierung/_breadcrumb_resourceusage.html" with object=object last=False %}
+  <li class="breadcrumb-item active" aria-current="page">Zustimmen</li>
+ </ol>
+</nav>
+
+<p class="lead">
+ Angefragt von <strong>{{ object.termin.owner }}</strong> für <strong>{{ object.termin.start|timerange:object.termin.end }}</strong><br />
+ {{ object.termin.description|linebreaksbr }}
+</p>
+
+{% if conflicts %}
+<div class="alert alert-{% if conflict_confirmed %}danger{% else %}warning{% endif %}" role="alert">
+ <h4 class="alert-heading">Konflikte</h4>
+ <p>
+  Diese Buchung steht in Konflikt mit den folgenden Buchungen.
+  {% if conflict_confirmed %}
+   Wenn diese Buchung bestätigt wird, kann es zu einem Belegungskonflikt kommen. Fahre nur fort, wenn du das in Kauf nehmen möchtest.
+   Sprich hierzu mit dem Anfragenden und ggf. anderen Nutzenden.
+  {% endif %}
+ </p>
+ <ul>
+ {% for usage, conflict_start, conflict_end in conflicts %}
+  <li>
+   <strong><a href="{{ usage.get_absolute_url }}">{{ usage.termin.label }}</a></strong> von <strong>{{ usage.termin.owner }}</strong> zwischen <strong>{{ conflict_start|timerange:conflict_end }}</strong> für <strong><a href="{{ usage.resource.get_absolute_url }}">{{ usage.resource }}</a></strong>
+   {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state %}
+  </li>
+ {% endfor %}
+ </ul>
+</div>
+{% endif %}
+
+<form method="post">
+ {% csrf_token %}
+ {{ form|crispy }}
+ <input type="submit" class="btn btn-success" value="Zustimmen" />
+</form>
+{% endblock %}
+

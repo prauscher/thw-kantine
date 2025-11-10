@@ -1,0 +1,25 @@
+{% extends "abfrage/base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Termin löschen{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  {% include "reservierung/_breadcrumb_termin.html" with object=object last=False %}
+  <li class="breadcrumb-item active" aria-current="page">Löschen</li>
+ </ol>
+</nav>
+
+<div class="alert alert-danger">
+ Du bist dabei, einen Termin zu löschen. Dies kann nicht rückgängig gemacht werden. Bereits erteilte
+ Zustimmungen von Freigabeverantwortlichen werden dabei entfernt: Wenn der Termin neu angelegt wird,
+ müssen diese Zustimmungen erneut erteilt werden.
+</div>
+<form method="post">
+ {% csrf_token %}
+ {{ form|crispy }}
+ <button type="submit" class="btn-danger btn">Löschen</button>
+</form>
+{% endblock %}

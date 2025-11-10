@@ -1,0 +1,169 @@
+{% extends "abfrage/base.html" %}
+
+{% load timerange %}
+
+{% block title %}Reservierungen{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+
+$(function () {
+	var introContent = document.getElementById("introContent");
+	var show_intro = ((localStorage.getItem("reservierung:intro") || "show") == "show");
+
+	$(introContent).toggleClass("show", show_intro).toggleClass("collapse", !show_intro);
+
+	var introCollapse = new bootstrap.Collapse(introContent, {toggle: false});
+
+	introContent.addEventListener("show.bs.collapse", function () {
+		localStorage.setItem("reservierung:intro", "show");
+	});
+	introContent.addEventListener("hide.bs.collapse", function () {
+		localStorage.setItem("reservierung:intro", "hide");
+	});
+	$("#introAlertCollapse").click(function () {
+		introCollapse.toggle();
+	});
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+ <a href="{% url 'reservierung:calendar' %}" class="btn btn-secondary">Wochenkalender</a>
+ <a href="{% url 'reservierung:resource_list' %}" class="btn btn-secondary">Alle Ressourcen</a>
+ <a href="{% url 'reservierung:termin_list' %}" class="btn btn-secondary">Alle Termine</a>
+ <a href="{% url 'reservierung:termin_create' %}" class="btn btn-success">Neuen Termin anlegen</a>
+</div>
+
+<div class="accordion accordion-flush">
+ <div class="accordion-item">
+  <h2 class="accordion-header">
+   <button class="accordion-button" type="button" data-bs-target="#introContent" data-bs-toggle="collapse">
+    Einführung
+   </button>
+  </h2>
+  <div class="accordion-collapse collapse show" id="introContent">
+   <div class="accordion-body">
+    <p>
+     Mit Reservierungen steuern wir welche <strong>Ressourcen</strong> (Fahrzeuge, Unterrichtsräume
+     oder auch Teile der Liegenschaft) wann und von wem genutzt werden. Um Ressourcen zu reservieren
+     kannst du einen neuen <strong>Termin</strong> anlegen. Sobald du den Zeitraum angegeben hast
+     kannst du sehen, welche Ressourcen in dem Zeitraum bereits verplant sind.
+    </p>
+    <p>
+     Bitte stelle einen Termin immer nur für den Zeitraum ein, in dem du die Ressourcen auch
+     voraussichtlich benötigst (z.B. einen Unterrichtsraum nur in der ersten Hälfte eines Dienstes,
+     wenn ihr danach für die Praxis raus geht).
+    </p>
+    <p>
+     <strong>Ressourcen</strong> sind in einer Hierachie angeordnet: Zum Beispiel sind
+     Unterrichtsräume ein Teil des Hofes, der wiederrum ein Teil der Liegenschaft ist. Wird eine
+     übergeordnete Ressource (hier z.B. der Hof) reserviert, bezieht sich diese Reservierung
+     automatisch auf alle Teile des Hofes.
+    </p>
+    <p>
+     Eine <strong>Buchung</strong> ist die Verbindung zwischen einem Termin und einer Ressource:
+     Wird die Ressource "Langer Lui" z.B. für den Termin "Ausbildungsbesprechung" genutzt, spricht
+     man von der <strong>Buchung</strong>. Diese kann entweder <strong>Angefragt</strong> sein,
+     solange noch eine Freigabe aussteht, <strong>Bestätigt</strong>, wenn die Buchung freigegeben
+     wurde oder <strong>Abgelehnt</strong>, wenn ein Administrator die Buchung storniert hat.
+    </p>
+    <p>
+     Die Verwaltung von Ressourcen liegt bei den <strong>Freigabeverantwortlichen</strong>. Wird
+     z.B. ein Termin für den GKW eingetragen, so werden die Unterführenden der Bergungsgruppe
+     um Freigabe gebeten. Die Freigabeverantwortlichen sind in Abstimmungsgruppen sortiert: Sind
+     für eine Ressource mehrere Abstimmungsgruppen hinterlegt, so muss aus jeder Abstimmungsgruppe
+     mindestens ein Freigabeverantwortlicher zustimmen.
+    </p>
+    <p>
+     Bei selbstverwalteten Ressourcen (wie z.B. Unterrichtsräumen) sind keine
+     Freigabeverantwortlichen hinterlegt. Stattdessen werden Buchungen automatisch bestätigt,
+     sofern kein Konflikt vorliegt.
+    </p>
+    <p>
+     <strong>Administratoren</strong> einer Ressource können Buchungen dieser (und untergeordneter)
+     Ressourcen jederzeit stornieren. Das ist besonders wichtig bei selbstverwalteten Ressourcen:
+     Hat hier eine in den Augen des Administrators unwichtigere Buchung eine Ressource reserviert,
+     kann eine andere Buchung erst bestätigt werden wenn die bisher bestätigte Buchung durch den
+     Nutzenden entfernt oder den Administrator storniert wird.
+    </p>
+   </div>
+  </div>
+ </div>
+</div>
+
+<div class="row mt-2">
+{% if missing_approval %}
+ <div class="col-12 col-md-6 col-lg-4">
+  <div class="card">
+   <div class="card-header">Buchungen bei denen meine Zustimmung noch fehlt</div>
+   <ul class="list-group list-group-flush">
+    {% for usage in missing_approval %}
+    <li class="list-group-item">
+     <a href="{{ usage.get_absolute_url }}">{{ usage.resource.label }}</a>
+     von <strong>{{ usage.termin.start|timerange:usage.termin.end }}</strong>
+     für <strong>{{ usage.termin.label }}</strong>
+     von <strong>{{ usage.termin.owner }}</strong>
+    </li>
+    {% endfor %}
+   </ul>
+  </div>
+ </div>
+{% endif %}
+{% if admin_missing_approval %}
+ <div class="col-12 col-md-6 col-lg-4">
+  <div class="card">
+   <div class="card-header">Buchungen in von mir administrierten selbstverwalteten Ressourcen ohne Zustimmung</div>
+   <ul class="list-group list-group-flush">
+    {% for usage in admin_missing_approval %}
+    <li class="list-group-item">
+     <a href="{{ usage.get_absolute_url }}">{{ usage.resource.label }}</a>
+     von <strong>{{ usage.termin.start|timerange:usage.termin.end }}</strong>
+     für <strong>{{ usage.termin.label }}</strong>
+     von <strong>{{ usage.termin.owner }}</strong>
+    </li>
+    {% endfor %}
+   </ul>
+  </div>
+ </div>
+{% endif %}
+{% if next_own_termine %}
+ <div class="col-12 col-md-6 col-lg-4">
+  <div class="card">
+   <div class="card-header">Anstehende eigene Termine</div>
+   <ul class="list-group list-group-flush">
+    {% for termin, state in next_own_termine %}
+    <li class="list-group-item">
+     <a href="{{ termin.get_absolute_url }}">{{ termin.label }}</a>
+     {% include "reservierung/_resourceusage_state_badge.html" with state=state %}<br />
+     von <strong>{{ termin.start|timerange:termin.end }}</strong>
+    </li>
+    {% endfor %}
+   </ul>
+   <div class="card-footer">
+    <a href="{% url 'reservierung:termin_list' %}?filter_eigene-termine=1">Zeite vollständige Liste</a>
+   </div>
+  </div>
+ </div>
+{% endif %}
+{% if next_managed_resource_termine %}
+ <div class="col-12 col-md-6 col-lg-4">
+  <div class="card">
+   <div class="card-header">Anstehende Buchungen in von mir verantworteten Ressourcen</div>
+   <ul class="list-group list-group-flush">
+    {% for usage in next_managed_resource_termine %}
+    <li class="list-group-item">
+     <a href="{{ usage.get_absolute_url }}">{{ usage.resource.label }}</a>
+     von <strong>{{ usage.termin.start|timerange:usage.termin.end }}</strong>
+     für <strong>{{ usage.termin.label }}</strong>
+     von <strong>{{ usage.termin.owner }}</strong>
+    </li>
+    {% endfor %}
+   </ul>
+  </div>
+ </div>
+{% endif %}
+</div>
+{% endblock %}

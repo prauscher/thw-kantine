@@ -1,0 +1,33 @@
+{% extends "reservierung/base_list.html" %}
+
+{% load timerange %}
+{% load highlighter %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+ <li class="breadcrumb-item">Termine</li>
+ <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+{% endblock %}
+
+{% block buttons %}
+ <a href="{% url "reservierung:termin_create" %}" class="btn btn-success">Neuen Termin erstellen</a>
+{% endblock %}
+
+{% block thead %}
+ <th scope="col">Termin</th>
+ <th scope="col">Zeitraum</th>
+ <th scope="col">Ressource</th>
+ <th scope="col">Status</th>
+{% endblock %}
+
+{% block item %}
+ <th scope="row"><a href="{{ object.get_absolute_url }}">{{ object.termin.label }}</a></td>
+ <td>{{ object.termin.start|timerange:object.termin.end }}</td>
+ <td>{{ object.resource.label|highlight:search_words }}</td>
+ <td>{{ object.state }}</td>
+{% endblock %}
+
+{% block empty %}
+ <th colspan="4">(Keine Einträge)</th>
+{% endblock %}

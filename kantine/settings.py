@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'abfrage',
     'unterweisung',
     'login_hermine',
+    'reservierung',
     'polymorphic',
     'mathfilters',
     'markdownx',

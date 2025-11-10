@@ -26,6 +26,7 @@ urlpatterns = [
     path('', RedirectView.as_view(url="https://cloud.thw-darmstadt.de/")),
     path('abfrage/', include('abfrage.urls')),
     path('unterweisung/', include('unterweisung.urls')),
+    path('reservierung/', include('reservierung.urls')),
     path('admin/', admin.site.urls),
     path('markdownx/', include('markdownx.urls')),
 ]

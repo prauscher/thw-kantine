@@ -1,0 +1,41 @@
+{% extends "reservierung/base_list.html" %}
+
+{% load timerange %}
+{% load highlighter %}
+
+{% block title %}Termine{% endblock %}
+
+{% block breadcrumb %}
+ <li class="breadcrumb-item active" aria-current="page">Termine</li>
+{% endblock %}
+
+{% block buttons %}
+ <a href="{% url "reservierung:termin_create" %}" class="btn btn-success">Neuen Termin erstellen</a>
+{% endblock %}
+
+{% block intro %}
+<p class="alert alert-info" role="alert">
+ <strong>Tipp:</strong> Die Terminliste bietet diverse Filteroptionen, damit du nur passende Termine findest.
+ Du kannst den Zeitbereich einschränken, nach Freitext suchen (wobei mehrere Suchworte durch Leerzeichen
+ getrennt werden können) und vorgefertigte Filter aktivieren: Wenn der Filter grün hinterlegt ist, werden nur
+ auf ihn zutreffende Termine angezeigt. Ist der Filter rot hinterlegt, werden nur <strong>nicht</strong> auf
+ ihn zutreffende Termine angezeigt. Ist der Filter ausgegraut, wird er für die aktuelle Ansicht nicht
+ angewendet. Durch einen Klick auf den Filter wird durch die verschiedenen Auswahlmöglichkeiten rotiert.
+</p>
+{% endblock %}
+
+{% block thead %}
+ <th scope="col">Termin</th>
+ <th scope="col">Zeitraum</th>
+ <th scope="col">Person</th>
+{% endblock %}
+
+{% block item %}
+ <th scope="row"><a href="{{ object.get_absolute_url }}">{{ object.label|highlighter:search_words }}</a></td>
+ <td>{{ object.start|timerange:object.end }}</td>
+ <td>{{ object.owner|highlighter:search_words }}</td>
+{% endblock %}
+
+{% block empty %}
+ <th colspan="3">(Keine Einträge)</th>
+{% endblock %}

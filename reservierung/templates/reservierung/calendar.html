@@ -1,0 +1,64 @@
+{% extends "abfrage/base.html" %}
+
+{% load timerange %}
+
+{% block title %}Kalender{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  {% include "reservierung/_breadcrumb_root.html" %}
+  <li class="breadcrumb-item active">Kalender</li>
+ </ol>
+</nav>
+
+<p class="alert alert-info">
+ Die Kalenderansicht zeigt dir alle Buchungen für eine Woche in der Übersicht. Die anzuzeigende Woche
+ kannst du mit der Datumsauswahl ändern.
+</p>
+
+<form action="" method="get" id="dateForm">
+<div class="row">
+ <div class="ms-auto col-md-auto">
+  <div class="input-group mb-2">
+   <span class="input-group-text">Datumsauswahl:</span>
+   <input type="date" class="form-control" id="date" name="date" value="{{ date|date:"Y-m-d" }}" />
+   <button class="btn btn-primary" type="submit">Auswählen</button>
+  </div>
+ </div>
+</div>
+</form>
+
+<div class="row">
+{% for label, start, end, usages in items %}
+ <div class="col-12 col-md-6 col-lg-4 mb-2">
+  <div class="card">
+   <div class="card-header">{{ label }}</div>
+   <ul class="list-group list-group-flush">
+    {% for usage in usages %}
+    <li class="list-group-item">
+     <a href="{{ usage.get_absolute_url }}">{{ usage.resource.label }}</a> für <strong>{{ usage.termin.label }}</strong> <small>{{ usage.termin.owner }}</small><br />
+     zwischen {% format_time_relative start usage.termin.start %} und {% format_time_relative start usage.termin.end %}
+     {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state %}
+    </li>
+    {% empty %}
+    <li class="list-group-item text-muted">(Keine Einträge)</li>
+    {% endfor %}
+   </ul>
+  </div>
+ </div>
+{% endfor %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+
+$(function () {
+	$("#date").change(function () {
+		$("#dateForm").submit();
+	});
+});
+
+</script>
+{% endblock %}

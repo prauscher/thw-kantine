@@ -1,0 +1,71 @@
+{% extends "abfrage/base.html" %}
+
+{% load django_bootstrap5 %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url "reservierung:start" %}">Reservierungen</a></li>
+  {% block breadcrumb %}{% endblock %}
+ </ol>
+</nav>
+
+{% block intro %}{% endblock %}
+
+<form action="" method="get" class="form-inline">
+{% for name, value in filter_values %}
+<input type="hidden" name="{{ name }}" value="{{ value }}" />
+{% endfor %}
+<div class="row">
+{% if timerange_available %}
+ <div class="col-md-auto">
+  <div class="input-group mb-2">
+   <input type="datetime-local" class="form-control" name="start" value="{{ timerange_start|date:'Y-m-d\TH:i' }}" />
+   <span class="input-group-text"> bis </span>
+   <input type="datetime-local" class="form-control" name="end" value="{{ timerange_end|date:'Y-m-d\TH:i' }}" />
+   <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i></button>
+  </div>
+ </div>
+{% endif %}
+{% if search_available %}
+ <div class="col-md-auto ms-auto">
+  <div class="btn-group-toggle">
+   <div class="input-group mb-2">
+    <input class="form-control" type="search" name="search" value="{{ search_term }}" placeholder="Suchen">
+    <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+   </div>
+  </div>
+ </div>
+{% endif %}
+</div>
+</form>
+
+<div class="row">
+ <div class="col">
+{% for filter_label, next_link, active in filters %}
+  <a href="{{ next_link }}" class="btn mb-2 btn-{% if active is None %}outline-secondary{% elif active %}success{% else %}danger{% endif %}">{{ filter_label }}</a>
+{% endfor %}
+ </div>
+</div>
+
+<table class="table table-striped">
+<thead class="table-dark">
+<tr>
+ {% block thead %}{% endblock %}
+</tr>
+</thead>
+<tbody>
+{% for object in object_list %}
+<tr>
+ {% block item %}{% endblock %}
+</tr>
+{% empty %}
+<tr>
+ {% block empty %}{% endblock %}
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+{% if is_paginated %}{% bootstrap_pagination page_obj justify_content="center" %}{% endif %}
+{% endblock %}

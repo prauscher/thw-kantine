@@ -1,0 +1,7 @@
+{% include "reservierung/_breadcrumb_root.html" %}
+<li class="breadcrumb-item"><a href="{% url "reservierung:termin_list" %}">Termine</a></li>
+{% if last %}
+<li class="breadcrumb-item active">{{ object.label }}</li>
+{% else %}
+<li class="breadcrumb-item"><a href="{{ object.get_absolute_url }}">{{ object.label }}</a></li>
+{% endif %}

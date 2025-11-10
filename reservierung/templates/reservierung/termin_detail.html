@@ -1,0 +1,86 @@
+{% extends "abfrage/base.html" %}
+
+{% load timerange %}
+
+{% block title %}{{ object.label }}{% endblock %}
+
+{% block buttons %}
+ {% if may_edit %}
+  <a href="{{ object.get_absolute_edit_url }}" class="btn btn-warning">Bearbeiten</a>
+  <a href="{{ object.get_absolute_delete_url }}" class="btn btn-danger">Löschen</a>
+ {% endif %}
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  {% include "reservierung/_breadcrumb_termin.html" with object=object last=True %}
+ </ol>
+</nav>
+
+<p class="lead">
+ Angelegt von <strong>{{ object.owner }}</strong> für <strong>{{ object.start|timerange:object.end }}</strong><br />
+ {{ object.description|linebreaksbr }}
+</p>
+
+{% with state=object.state %}
+{% if state == "requested" %}
+<p class="alert alert-warning">
+ Mindestens eine Buchung wartet noch auf Bestätigung.
+</p>
+{% elif state == "rejected" %}
+<p class="alert alert-danger">
+ Mindestens eine Buchung wurde zurückgewiesen.
+</p>
+{% elif state == "approved" %}
+<p class="alert alert-success">
+ Alle Buchungen für diesen Termin wurden erfolgreich bestätigt.
+</p>
+{% endif %}
+{% endwith %}
+
+{% for comment in comments %}
+<div class="alert alert-success" role="alert">
+ <h4 class="alert-heading">Freigabekommentar von <strong>{{ comment.approver }}</strong> for <strong><a href="{{ comment.resource_usage.get_absolute_url }}">{{ comment.resource_usage.resource }}</a></strong></h4>
+ <p>{{ comment.comment|linebreaksbr }}</p>
+</div>
+{% endfor %}
+
+{% if conflicts %}
+<div class="alert alert-warning" role="alert">
+ <h4 class="alert-heading">Konflikte</h4>
+ <p>Diese Buchung steht in Konflikt mit den folgenden Buchungen.</p>
+ <ul>
+ {% for usage, conflict_start, conflict_end in conflicts %}
+  <li>
+   <strong><a href="{{ usage.get_absolute_url }}">{{ usage.termin.label }}</a></strong> von <strong>{{ usage.termin.owner }}</strong> zwischen <strong>{{ conflict_start|timerange:conflict_end }}</strong> für <strong><a href="{{ usage.resource.get_absolute_url }}">{{ usage.resource }}</a></strong>
+   {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state %}
+  </li>
+ {% endfor %}
+ </ul>
+</div>
+{% endif %}
+
+<table class="table table-striped">
+<thead>
+<tr>
+ <th scope="col">Ressource</th>
+ <th scope="col">Status</th>
+</tr>
+</thead>
+<tbody>
+{% for usage in usages %}
+<tr>
+ <th scope="row"><a href="{{ usage.get_absolute_url }}">{{ usage.resource }}</a></th>
+ <td>
+  {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state %}
+ </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<h3>Historie</h3>
+
+{% include "reservierung/_log_messages.html" with log_messages=log_messages show_usage_col=True %}
+{% endblock %}

@@ -1,0 +1,34 @@
+<table class="table table-striped">
+<thead>
+<tr>
+ <td style="width:2em;">&nbsp;</td>
+ <th style="width:10em;" scope="col">Zeitpunkt</th>
+ <th style="width:15em;" scope="col">Nutzender</th>
+ {% if show_usage_col %}<th style="width:13em;" scope="col">Ressource</th>{% endif %}
+ <th scope="col">Nachricht</th>
+</tr>
+</thead>
+<tbody>
+ {% for log_message in log_messages %}
+ <tr class="kind-{{ log_message.kind }}">
+  <td>
+   {% if log_message.kind == "meta" %}
+    <i class="bi bi-lightbulb"></i>
+   {% elif log_message.kind == "votes" %}
+    <i class="bi bi-check-square"></i>
+   {% elif log_message.kind == "rejects" %}
+    <i class="bi bi-exclamation-octagon"></i>
+   {% elif log_message.kind == "state" %}
+    <i class="bi bi-award"></i>
+   {% elif log_message.kind == "user" %}
+    <i class="bi bi-chat-right-dots"></i>
+   {% endif %}
+  </td>
+  <td>{{ log_message.timestamp|date:"d.m.Y H:i" }}</td>
+  <td>{% if log_message.user %}{{ log_message.user }}{% endif %}</td>
+  {% if show_usage_col %}<td><a href="{{ log_message.usage.get_absolute_url }}">{{ log_message.usage.resource.label }}</a></td>{% endif %}
+  <td>{{ log_message.message }}</td>
+ </tr>
+ {% endfor %}
+</tbody>
+</table>

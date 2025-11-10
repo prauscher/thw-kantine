@@ -1,0 +1,15 @@
+{% if object %}
+{% include "reservierung/_breadcrumb_resource.html" with object=object.part_of last=False %}
+{% if last %}
+<li class="breadcrumb-item active" aria-current="page">{{ object.label }}</li>
+{% else %}
+<li class="breadcrumb-item"><a href="{{ object.get_absolute_url }}">{{ object.label }}</a></li>
+{% endif %}
+{% else %}
+{% include "reservierung/_breadcrumb_root.html" %}
+{% if last %}
+<li class="breadcrumb-item active" aria-current="page">Ressourcen</li>
+{% else %}
+<li class="breadcrumb-item"><a href="{% url "reservierung:resource_list" %}">Ressourcen</a></li>
+{% endif %}
+{% endif %}

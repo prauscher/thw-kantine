@@ -1,0 +1,59 @@
+{% extends "abfrage/base.html" %}
+
+{% load timerange %}
+{% load resource %}
+
+{% block title %}{{ object.label }}{% endblock %}
+
+{% block buttons %}
+ <a class="btn btn-success" href="{% url "reservierung:termin_create" %}?resources={{ object.pk }}">Buchen</a>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  {% include "reservierung/_breadcrumb_resource.html" with object=object last=True %}
+ </ol>
+</nav>
+
+{% if usages %}
+<h3>Nächste Buchungen</h3>
+
+<table class="table table-striped">
+<thead>
+<tr>
+ <th scope="col">Ressource</th>
+ <th scope="col">Termin</th>
+ <th scope="col">Zeitraum</th>
+ <th scope="col">Status</th>
+</tr>
+</thead>
+<tbody>
+{% for usage in usages %}
+<tr>
+ <th scope="row"><a href="{{ usage.resource.get_absolute_url }}">{{ usage.resource }}</a></th>
+ <td><a href="{{ usage.termin.get_absolute_url }}">{{ usage.termin.label }}</a></td>
+ <td><a href="{{ usage.get_absolute_url }}">{{ usage.termin.start|timerange:usage.termin.end }}</a></td>
+ <td>
+  {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state %}
+ </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+
+{% if object.consists_of.exists %}
+<h3>Untergeordnete Ressourcen</h3>
+
+<div class="mb-2">
+{% for child in object.consists_of.all %}
+ <a class="btn btn-outline-secondary" href="{{ child.get_absolute_url }}">{{ child.label }}</a>
+{% endfor %}
+</div>
+{% endif %}
+
+<h3>Freigabe</h3>
+
+{{ object|resource_approval_scheme }}
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "abfrage/base.html" %}
+
+{% load static %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}Termin {% if object %}bearbeiten{% else %}anlegen{% endif %}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  {% if object %}
+  {% include "reservierung/_breadcrumb_termin.html" with object=object last=False %}
+  <li class="breadcrumb-item active" aria-current="page">Bearbeiten</li>
+  {% else %}
+  <li class="breadcrumb-item"><a href="{% url "reservierung:start" %}">Reservierungen</a></li>
+  <li class="breadcrumb-item">Termine</li>
+  <li class="breadcrumb-item active" aria-current="page">Anlegen</li>
+  {% endif %}
+ </ol>
+</nav>
+
+<div class="alert alert-info">
+ Hier kannst du einen {% if object %}Termin bearbeiten{% else %}neuen Termin erstellen{% endif %}.
+ Wenn du den Zeitbereich angegeben hast wird die Verfügbarkeit der Ressourcen als Balken neben der jeweiligen Ressource angezeigt.
+ Der Balken symbolisiert den angegebenen Zeitraum, die jeweiligen Farben zeigen die Verfügbarkeit an: Grün heißt die Ressource ist frei, Orange zeigt an dass nur ein Teil der Ressource belegt ist und rot zeigt an dass bereits eine Buchung für die Ressource eingetragen ist.
+ {% if object %}Blau zeigt an, dass die Ressource nur durch diesen Termin belegt ist.{% endif %}
+ Ein schraffierter Balken zeigt an, dass die entsprechenden Buchungen noch nicht bestätigt wurden.
+ Eine Buchung einer übergeordneten Ressource beinhaltet somit alle untergeordneten Ressourcen.
+</div>
+<form method="post">{% csrf_token %}
+ <div class="row">
+  <div class="col-md">
+   <h4>Einstellungen</h4>
+   {% if not form.confirm_warnings.is_hidden %}
+   <div class="alert alert-warning">
+    Einige Angaben wirken unüblich. Bitte prüfe die Warnungen gründlich - du kannst die Felder entweder noch einmal anpassen oder (wenn alle Angaben richtig sind) die Warnungen mit der unteren Auswahlbox quittieren.
+   </div>
+   {% endif %}
+   {{ form.label | as_crispy_field }}
+   {{ form.description | as_crispy_field }}
+   {{ form.start | as_crispy_field }}
+   {{ form.end | as_crispy_field }}
+   {{ form.confirm_warnings | as_crispy_field }}
+  </div>
+  <div class="col-md">
+   <h4>Ressourcen</h4>
+   {% if form.resources.errors %}
+   <!-- required for bootstrap, otherwise .invalid-feedback would be hidden -->
+   <div class="is-invalid"></div>
+   {% endif %}
+   {% for value in form.resources.errors %}
+   <p class="invalid-feedback"><strong>{{ value }}</strong></p>
+   {% endfor %}
+   <table id="resources" class="table table-striped">
+   <tbody>
+    {% for resource, depth, child_count in resources %}
+    <tr>
+     <td style="width:1em;">{% if resource.selectable %}<input type="checkbox" name="resources" id="resource_{{ resource.pk }}" {% if resource.pk in selected_resources %}checked="checked"{% endif %} value="{{ resource.pk }}" />{% endif %}</td>
+     <th scope="row"><label for="resource_{{ resource.pk }}" style="padding-left:{{ depth }}em;" id="resourceLabel_{{ resource.pk }}">{{ resource.label }}</label></th>
+     <td style="width:50%;">
+      <div class="progress usage_bar" id="usage_bar_{{ resource.pk }}">
+      </div>
+     </td>
+    </tr>
+    {% endfor %}
+   </tbody>
+   </table>
+  </div>
+ </div>
+ {% if object.is_repeated %}
+  <button type="submit" class="btn-success btn">Nur diese Instanz ändern</button>
+  <button type="submit" name="update_repeated" value="yes" class="btn-success btn">Alle Instanzen anpassen</button>
+ {% elif object %}
+  <button type="submit" class="btn-success btn">Änderungen speichern</button>
+ {% else %}
+  <button type="submit" class="btn-success btn">Erstellen</button>
+ {% endif %}
+</form>
+{% endblock %}
+
+{% block script %}
+{% if object %}{{ object.pk|json_script:"activeTermin" }}{% endif %}
+<script src="{% static 'reservierung/resource_availability.js' %}"></script>
+<script type="text/javascript">
+
+$(function () {
+	var updater = new ResourceAvailabilityUpdater({
+		usages_json: "{% url 'reservierung:usages_json' %}",
+		csrfmiddlewaretoken: "{{ csrf_token }}",
+	});
+
+	var activeTermin = null;
+	if (document.getElementById("activeTermin")) {
+		updater.active_termin = JSON.parse(document.getElementById("activeTermin").textContent);
+	}
+
+	var start_field = $("#id_start");
+	var end_field = $("#id_end");
+
+	function _check() {
+		updater.update(start_field.val(), end_field.val());
+	}
+
+	_check();
+	start_field.change(_check);
+	end_field.change(_check);
+});
+</script>
+{% endblock %}

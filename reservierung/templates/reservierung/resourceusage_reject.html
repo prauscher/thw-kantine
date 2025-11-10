@@ -1,0 +1,33 @@
+{% extends "abfrage/base.html" %}
+
+{% load timerange %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ object.resource.label }} bei {{ object.termin.label }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+ <ol class="breadcrumb">
+  {% include "reservierung/_breadcrumb_resourceusage.html" with object=object last=False %}
+  <li class="breadcrumb-item active" aria-current="page">Ablehnen</li>
+ </ol>
+</nav>
+
+<p class="lead">
+ Angefragt von <strong>{{ object.termin.owner }}</strong> für <strong>{{ object.termin.start|timerange:object.termin.end }}</strong><br />
+ {{ object.termin.description|linebreaksbr }}
+</p>
+
+<div class="alert alert-info" role="alert">
+ <p>Du bist dabei, eine Buchung als Administrator abzulehnen. Nur du kannst diesen Schritt
+  anschließend rückgängig machen. Stelle sicher, dass du mit den beteiligten Personen gesprochen
+  hast, bevor du diesen Schritt ausführst.</p>
+</div>
+
+<form method="post">
+ {% csrf_token %}
+ {{ form|crispy }}
+ <input type="submit" class="btn btn-danger" value="Ablehnen" />
+</form>
+{% endblock %}
+

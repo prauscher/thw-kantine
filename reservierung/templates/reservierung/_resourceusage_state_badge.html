@@ -1,0 +1,7 @@
+{% if state == "requested" %}
+ <span class="badge bg-info">Angefragt</span>
+{% elif state == "approved" %}
+ <span class="badge bg-success">Bestätigt</span>
+{% elif state == "rejected" %}
+ <span class="badge bg-danger">Abgelehnt</span>
+{% endif %}
