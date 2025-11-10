@@ -803,7 +803,8 @@ class ResourceListView(ListView):
             if manager.admin:
                 for resource in manager.resource.traverse_down():
                     admin_resources.add(resource)
-            managed_resources.add(manager.resource)
+            if manager.voting_group:
+                managed_resources.add(manager.resource)
 
         context = super().get_context_data(*args, **kwargs)
         context["resources"] = [(resource,
