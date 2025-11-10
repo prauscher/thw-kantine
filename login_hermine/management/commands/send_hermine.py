@@ -56,8 +56,8 @@ class Command(BaseCommand):
         try:
             for message in models.HermineChannelMessage.objects.filter(sent__isnull=True):
                 try:
-                    hermine_client().send(hermine_client().find_channel(message.channel),
-                                          message.message)
+                    hermine_client.send(hermine_client().find_channel(message.channel),
+                                        message.message)
                 except TargetNotFoundError:
                     continue
 
@@ -66,8 +66,8 @@ class Command(BaseCommand):
 
             for message in models.HermineUserMessage.objects.filter(sent__isnull=True):
                 try:
-                    hermine_client().send(hermine_client().find_user(message.user),
-                                          message.message)
+                    hermine_client.send(hermine_client().find_user(message.user),
+                                        message.message)
                 except TargetNotFoundError:
                     continue
 
