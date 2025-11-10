@@ -52,6 +52,7 @@ COPY ./kantine /opt/app/kantine
 COPY ./login_hermine /opt/app/login_hermine
 COPY ./abfrage /opt/app/abfrage
 COPY ./unterweisung /opt/app/unterweisung
+COPY ./reservierung /opt/app/reservierung
 
 RUN find "." -exec chown root:root '{}' +  && \
     find "." -type d -exec chmod 755 '{}' +  && \
