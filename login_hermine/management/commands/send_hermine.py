@@ -48,16 +48,16 @@ class HermineClient:
 class Command(BaseCommand):
     help = "Send Hermine Messages in Queue and cleanup done ones"
 
-    def handle(self, **_kwargs: dict[str, Any]) -> None:
-        @cached_property
-        def hermine_client():
-            return HermineClient()
+    @cached_property
+    def hermine_client():
+        return HermineClient()
 
+    def handle(self, **_kwargs: dict[str, Any]) -> None:
         try:
             for message in models.HermineChannelMessage.objects.filter(sent__isnull=True):
                 try:
-                    hermine_client.send(hermine_client().find_channel(message.channel),
-                                        message.message)
+                    self.hermine_client.send(self.hermine_client.find_channel(message.channel),
+                                             message.message)
                 except TargetNotFoundError:
                     continue
 
@@ -66,8 +66,8 @@ class Command(BaseCommand):
 
             for message in models.HermineUserMessage.objects.filter(sent__isnull=True):
                 try:
-                    hermine_client.send(hermine_client().find_user(message.user),
-                                        message.message)
+                    self.hermine_client.send(self.hermine_client.find_user(message.user),
+                                             message.message)
                 except TargetNotFoundError:
                     continue
 
