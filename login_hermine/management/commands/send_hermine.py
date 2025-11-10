@@ -28,7 +28,7 @@ class HermineClient:
         try:
             channel_attrs = next(channel
                                  for channel in self.channels
-                                 if channel["name"] == message.channel)
+                                 if channel["name"] == channel_name)
         except StopIteration:
             raise TargetNotFoundError from None
 
