@@ -49,7 +49,7 @@ class Command(BaseCommand):
     help = "Send Hermine Messages in Queue and cleanup done ones"
 
     @cached_property
-    def hermine_client():
+    def hermine_client(self):
         return HermineClient()
 
     def handle(self, **_kwargs: dict[str, Any]) -> None:
