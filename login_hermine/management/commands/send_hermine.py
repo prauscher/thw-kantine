@@ -62,7 +62,7 @@ class Command(BaseCommand):
                     continue
 
                 message.sent = timezone.now()
-                message.save(updated_fields=["sent"])
+                message.save(update_fields=["sent"])
 
             for message in models.HermineUserMessage.objects.filter(sent__isnull=True):
                 try:
@@ -72,7 +72,7 @@ class Command(BaseCommand):
                     continue
 
                 message.sent = timezone.now()
-                message.save(updated_fields=["sent"])
+                message.save(update_fields=["sent"])
 
         except ConnectionFailedError:
             self.stderr.write("Hermine Login failed\n")
