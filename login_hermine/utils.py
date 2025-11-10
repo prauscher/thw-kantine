@@ -8,4 +8,4 @@ def send_hermine_channel(channel_name: str, message: str) -> None:
 
 def send_hermine_user(user_name: str, message: str) -> None:
     models.HermineUserMessage.objects.create(
-        uer=user_name, message=message)
+        user=user_name, message=message)
