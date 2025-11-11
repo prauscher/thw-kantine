@@ -30,16 +30,22 @@
 </form>
 
 <div class="row">
-{% for label, start, end, usages in items %}
+{% for label, start, end, termine in items %}
  <div class="col-12 col-md-6 col-lg-4 mb-2">
   <div class="card">
    <div class="card-header">{{ label }}</div>
    <ul class="list-group list-group-flush">
-    {% for usage in usages %}
+    {% for termin in termine %}
     <li class="list-group-item">
-     <a href="{{ usage.get_absolute_url }}">{{ usage.resource.label }}</a> für <strong>{{ usage.termin.label }}</strong> <small>{{ usage.termin.owner }}</small><br />
-     zwischen {% format_time_relative start usage.termin.start %} und {% format_time_relative start usage.termin.end %}
-     {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state %}
+     <a href="{{ termin.get_absolute_url }}">{{ termin.label }}</a>
+     <span class="text-nowrap">({% format_time_relative start termin.start %}-{% format_time_relative start termin.end %})</span>
+     von <strong>{{ termin.owner }}</strong><br />
+     {% for usage in termin.usages.all %}
+      <span class="text-nowrap">
+       {{ usage.resource.label }}
+       {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state %}
+      </span>
+     {% endfor %}
     </li>
     {% empty %}
     <li class="list-group-item text-muted">(Keine Einträge)</li>

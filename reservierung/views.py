@@ -369,11 +369,11 @@ class CalendarView(TemplateView):
 
         context["items"] = []
         for label, start, end in self.get_timeranges():
-            usages = models.ResourceUsage.objects.filter(
-                termin__start__lte=end,
-                termin__end__gte=start,
-            ).order_by("termin__start")
-            context["items"].append((label, start, end, usages))
+            termine = models.Termin.objects.filter(
+                start__lte=end,
+                end__gte=start,
+            ).order_by("start")
+            context["items"].append((label, start, end, termine))
 
         return context
 
