@@ -315,8 +315,14 @@ class Resource(models.Model):
             if not users:
                 yield (None, manager)
 
+    def _get_admin_query(self):
+        return ResourceManager.objects.filter(admin=True, resource__in=self.traverse_up()):
+
+    def is_admin(self, user):
+        return self.get_admin_query().filter(funktion__user=user).exists()
+
     def get_admins(self):
-        for admin in ResourceManager.objects.filter(admin=True, resource__in=self.traverse_up()):
+        for admin in self._get_admin_query():
             users = admin.funktion.user.all()
             for user in users:
                 yield (user, admin)

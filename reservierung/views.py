@@ -602,12 +602,11 @@ class ResourceUsageDetailView(DetailView):
 
         user = models.User.get(self.request)
 
-        is_admin = any(admin_user == user for admin_user, _ in self.object.resource.get_admins())
-        context["may_reject"] = self.object.rejected_at is None and is_admin
+        context["may_reject"] = self.object.rejected_at is None and self.object.resource.is_admin(user)
         context["may_revert_reject"] = self.object.rejected_by == user
         context["may_revoke"] = self.object.confirmations.filter(
             revoked_at__isnull=True, approver=user).exists()
-        context["may_vote"] = not context["may_revoke"] and self.object.managers.filter(
+        context["may_vote"] = not context["may_revoke"] and self.object.resource.managers.filter(
             Q(funktion__user=user) & ~Q(voting_group=""))
 
         context["conflicts"], context["conflict_confirmed"] = self.object.get_conflicts()
@@ -678,7 +677,7 @@ class ResourceUsageVoteView(ResourceUsageConfirmView):
             raise Http404
 
         # check if we may vote after all
-        if not self.object.managers.filter(Q(funktion__user=user) & ~Q(voting_group="")).exists():
+        if not self.object.resource.managers.filter(Q(funktion__user=user) & ~Q(voting_group="")).exists():
             raise Http404
 
         # store vote
@@ -726,10 +725,7 @@ class ResourceUsageRejectView(ResourceUsageConfirmView):
         user = models.User.get(request)
 
         # check if we may vote after all
-        for admin_user, admin in self.object.resource.get_admins():
-            if user == admin_user:
-                break
-        else:
+        if not self.object.resource.is_admin(user):
             raise Http404
 
         self.object.rejected_at = timezone.now()
