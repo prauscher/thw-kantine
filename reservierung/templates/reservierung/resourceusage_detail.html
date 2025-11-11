@@ -45,7 +45,7 @@
 
 <p class="alert alert-info">
 {% if object.state == "requested" %}
- {% if not voting_groups %}
+ {% if not has_voting_groups %}
   Diese Buchung für eine selbstverwaltete Ressource steht noch im Konflikt mit anderen Buchungen.
   Sobald diese Konflikte ausgeräumt wurden, wird diese Buchung "Bestätigt". Der Konflikt kann am
   einfachsten durch im Gespräch zwischen den Terminbuchenden gelöst werden, indem einer der beiden

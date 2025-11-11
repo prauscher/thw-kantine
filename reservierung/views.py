@@ -602,6 +602,7 @@ class ResourceUsageDetailView(DetailView):
             revoked_at__isnull=True, approver=user).exists()
         context["may_vote"] = not context["may_revoke"] and self.object.resource.managers.filter(
             Q(funktion__user=user) & ~Q(voting_group=""))
+        context["has_voting_groups"] = self.object.resource.managers.filter(~Q(voting_group="")).exists()
 
         context["conflicts"], context["conflict_confirmed"] = self.object.get_conflicts()
 
