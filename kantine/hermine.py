@@ -440,7 +440,7 @@ def get_hermine_client():
         _hermine_data["hidden_id"] = client.hidden_id
 
         if "HERMINE_DATA_FILE" in os.environ:
-            with open(os.environ["HERMINE_DATA_FILE", "wb", encoding="utf-8") as file:
+            with open(os.environ["HERMINE_DATA_FILE"], "wb", encoding="utf-8") as file:
                 file.write(json.dumps(_hermine_data))
 
     client.open_private_key(encryption)
