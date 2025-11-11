@@ -6,7 +6,7 @@
 {% block title %}{{ object.label }}{% endblock %}
 
 {% block buttons %}
- <a class="btn btn-success" href="{% url "reservierung:termin_create" %}?resources={{ object.pk }}">Buchen</a>
+ {% if object.selectable %}<a class="btn btn-success" href="{% url "reservierung:termin_create" %}?resources={{ object.pk }}">Buchen</a>{% endif %}
 {% endblock %}
 
 {% block content %}
