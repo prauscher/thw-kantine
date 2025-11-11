@@ -30,11 +30,11 @@ $(function () {
 {% endblock %}
 
 {% block content %}
-<div class="mb-2">
- <a href="{% url 'reservierung:calendar' %}" class="btn btn-secondary">Wochenkalender</a>
- <a href="{% url 'reservierung:resource_list' %}" class="btn btn-secondary">Alle Ressourcen</a>
- <a href="{% url 'reservierung:termin_list' %}" class="btn btn-secondary">Alle Termine</a>
- <a href="{% url 'reservierung:termin_create' %}" class="btn btn-success">Neuen Termin anlegen</a>
+<div>
+ <a href="{% url 'reservierung:calendar' %}" class="mb-2 btn btn-secondary">Wochenkalender</a>
+ <a href="{% url 'reservierung:resource_list' %}" class="mb-2 btn btn-secondary">Alle Ressourcen</a>
+ <a href="{% url 'reservierung:termin_list' %}" class="mb-2 btn btn-secondary">Alle Termine</a>
+ <a href="{% url 'reservierung:termin_create' %}" class="mb-2 btn btn-success">Neuen Termin anlegen</a>
 </div>
 
 <div class="accordion accordion-flush">
@@ -94,10 +94,10 @@ $(function () {
  </div>
 </div>
 
-<div class="row mt-2">
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
 {% if missing_approval %}
- <div class="col-12 col-md-6 col-lg-4">
-  <div class="card">
+ <div class="col">
+  <div class="card mb-2">
    <div class="card-header">Buchungen bei denen meine Zustimmung noch fehlt</div>
    <ul class="list-group list-group-flush">
     {% for usage in missing_approval %}
@@ -113,8 +113,8 @@ $(function () {
  </div>
 {% endif %}
 {% if admin_missing_approval %}
- <div class="col-12 col-md-6 col-lg-4">
-  <div class="card">
+ <div class="col">
+  <div class="card mb-2">
    <div class="card-header">Buchungen in von mir administrierten selbstverwalteten Ressourcen ohne Zustimmung</div>
    <ul class="list-group list-group-flush">
     {% for usage in admin_missing_approval %}
@@ -130,8 +130,8 @@ $(function () {
  </div>
 {% endif %}
 {% if next_own_termine %}
- <div class="col-12 col-md-6 col-lg-4">
-  <div class="card">
+ <div class="col">
+  <div class="card mb-2">
    <div class="card-header">Anstehende eigene Termine</div>
    <ul class="list-group list-group-flush">
     {% for termin, state in next_own_termine %}
@@ -149,8 +149,8 @@ $(function () {
  </div>
 {% endif %}
 {% if next_managed_resource_termine %}
- <div class="col-12 col-md-6 col-lg-4">
-  <div class="card">
+ <div class="col">
+  <div class="card mb-2">
    <div class="card-header">Anstehende Buchungen in von mir verantworteten Ressourcen</div>
    <ul class="list-group list-group-flush">
     {% for usage in next_managed_resource_termine %}
