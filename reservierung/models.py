@@ -537,7 +537,7 @@ class ResourceUsage(models.Model):
                                "resource_slug": self.resource.slug})
 
     def get_absolute_vote_revoke_url(self):
-        return reverse("reservierung:resourceusage_revoke_vote",
+        return reverse("reservierung:resourceusage_vote_revoke",
                        kwargs={"termin_id": self.termin.id,
                                "termin_date": f"{self.termin.start:%Y%m%d}",
                                "termin_slug": slugify(self.termin.label),

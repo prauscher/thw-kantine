@@ -48,11 +48,11 @@ urlpatterns = [
          name="resourceusage_vote"),
     path("termin/<int:termin_id>_<str:termin_date>_<str:termin_slug>/_/<slug:resource_slug>/revoke_vote",
          views.ResourceUsageRevokeVoteView.as_view(),
-         name="resourceusage_revoke_vote"),
+         name="resourceusage_vote_revoke"),
     path("termin/<int:termin_id>_<str:termin_date>_<str:termin_slug>/_/<slug:resource_slug>/reject",
          views.ResourceUsageRejectView.as_view(),
          name="resourceusage_reject"),
     path("termin/<int:termin_id>_<str:termin_date>_<str:termin_slug>/_/<slug:resource_slug>/revert_reject",
          views.ResourceUsageRevertRejectView.as_view(),
-         name="resourceusage_revert_reject"),
+         name="resourceusage_reject_revert"),
 ]
