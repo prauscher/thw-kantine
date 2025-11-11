@@ -16,6 +16,16 @@
  </ol>
 </nav>
 
+{% if object.consists_of.exists %}
+<h3>Untergeordnete Ressourcen</h3>
+
+<div class="mb-2">
+{% for child in object.consists_of.all %}
+ <a class="btn btn-outline-secondary" href="{{ child.get_absolute_url }}">{{ child.label }}</a>
+{% endfor %}
+</div>
+{% endif %}
+
 {% if usages %}
 <h3>Nächste Buchungen</h3>
 
@@ -41,16 +51,6 @@
 {% endfor %}
 </tbody>
 </table>
-{% endif %}
-
-{% if object.consists_of.exists %}
-<h3>Untergeordnete Ressourcen</h3>
-
-<div class="mb-2">
-{% for child in object.consists_of.all %}
- <a class="btn btn-outline-secondary" href="{{ child.get_absolute_url }}">{{ child.label }}</a>
-{% endfor %}
-</div>
 {% endif %}
 
 <h3>Freigabe</h3>
