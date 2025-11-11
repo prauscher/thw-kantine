@@ -346,6 +346,7 @@ class Funktion(models.Model):
     user = models.ManyToManyField(
         User,
         related_name="funktionen",
+        blank=True,
     )
     funktion_label = models.CharField(
         max_length=40,

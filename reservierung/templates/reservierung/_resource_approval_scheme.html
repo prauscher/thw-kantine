@@ -1,7 +1,19 @@
 {% if not resource.selectable %}
-<p>Diese Ressource kann nicht selbst ausgewählt werden.</p>
+<p class="alert alert-info">
+ Diese Ressource kann nicht selbst ausgewählt werden.
+</p>
 {% elif voting_groups %}
-<p>Um einer Terminbuchung für diese Ressource zuzustimmen, muss je Abstimmungsgruppe eine Person zustimmen. Ist eine Person in mehreren Abstimmungsgruppen, zählt ihre Zustimmung für alle Abstimmunsgruppen.</p>
+<p class="alert alert-info">
+ Um einer Terminbuchung für diese Ressource zuzustimmen, muss je Abstimmungsgruppe eine Person
+ zustimmen. Ist eine Person in mehreren Abstimmungsgruppen, zählt ihre Zustimmung für alle
+ Abstimmunsgruppen.
+</p>
+{% else %}
+<p class="alert alert-info">
+ Diese Ressource benötigt keine separate Freigabe: Sofern sie (und ihre Untergeordneten Ressourcen)
+ verfügbar sind, wird eine Buchung automatisch angenommen.
+</p>
+{% endif %}
 
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
  {% for voting_group_name, voting_group in voting_groups %}
@@ -13,7 +25,7 @@
    <ul class="list-group list-group-flush">
     {% for user, vote, member in voting_group %}
     <li class="list-group-item">
-     {% if user is None %}(Unbesetzt){% else %}{{ user }}{% endif %}
+     {% if user is None %}<span class="text-muted">(Unbesetzt)</span>{% else %}{{ user }}{% endif %}<br />
      <small>{{ member.funktion.funktion_label }}</small>
      {% if vote %}<span class="badge bg-success">Zugestimmt</span>{% endif %}
     </li>
@@ -22,25 +34,26 @@
   </div>
  </div>
  {% endfor %}
+ {% if admins %}
+ <div class="col">
+  <div class="card">
+   <div class="card-header">
+    Administratoren
+   </div>
+   <div class="card-body">
+    Administratoren können direkt definiert oder von übergeordneten Ressourcen vererbt werden. Sie
+    können Buchungen dieser Ressource unabhängig von erteilten Freigaben stornieren.
+   </div>
+   <ul class="list-group list-group-flush">
+    {% for admin_user, admin_manager in admins %}
+    <li class="list-group-item">
+     {% if admin_manager.resource != resource %}<span class="badge bg-primary float-end">vererbt von {{ admin_manager.resource }}</span>{% endif %}
+     {% if admin_user is None %}<span class="text-muted">(Unbesetzt)</span>{% else %}{{ admin_user }}{% endif %}<br />
+     <small>{{ admin_manager.funktion.funktion_label }}</small>
+    </li>
+    {% endfor %}
+   </ul>
+  </div>
+ </div>
+ {% endif %}
 </div>
-{% else %}
-<p>Diese Ressource benötigt keine separate Freigabe: Sofern sie (und ihre Untergeordneten Ressourcen) verfügbar sind,
- wird eine Buchung automatisch angenommen.</p>
-{% endif %}
-
-{% if admins %}
-<h3>Administratoren</h3>
-<!-- TODO: migrate admin to above list -->
-
-<p>Administratoren können direkt definiert oder von übergeordneten Ressourcen vererbt werden. Sie können Buchungen dieser Ressource unabhängig von erteilten Freigaben stornieren.</p>
-
-<ul>
-{% for admin_user, admin_manager in admins %}
- <li>
-  {% if admin_user is None %}(Unbesetzt){% else %}{{ admin_user }}{% endif %}
-  <small>{{ admin_manager.funktion.funktion_label }}</small>
-  {% if admin_manager.resource != resource %}vererbt von {{ admin_manager.resource }}{% endif %}
- </li>
-{% endfor %}
-</ul>
-{% endif %}

@@ -40,7 +40,7 @@ def resource_approval_scheme(resource_or_usage: models.Resource | models.Resourc
     context["resource"] = resource
     context["informed"] = voting_groups.pop("", [])
     context["voting_groups"] = sorted(voting_groups.items())
-    context["admins"] = resource.get_admins()
+    context["admins"] = list(resource.get_admins())
 
     return mark_safe(loader.render_to_string(
         "reservierung/_resource_approval_scheme.html", context))
