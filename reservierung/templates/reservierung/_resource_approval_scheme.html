@@ -25,9 +25,9 @@
    <ul class="list-group list-group-flush">
     {% for user, vote, member in voting_group %}
     <li class="list-group-item">
+     {% if vote %}<span class="badge bg-success float-end">Zugestimmt</span>{% endif %}
      {% if user is None %}<span class="text-muted">(Unbesetzt)</span>{% else %}{{ user }}{% endif %}<br />
      <small>{{ member.funktion.funktion_label }}</small>
-     {% if vote %}<span class="badge bg-success">Zugestimmt</span>{% endif %}
     </li>
     {% endfor %}
    </ul>
