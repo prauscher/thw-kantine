@@ -316,7 +316,7 @@ class Resource(models.Model):
                 yield (None, manager)
 
     def _get_admin_query(self):
-        return ResourceManager.objects.filter(admin=True, resource__in=self.traverse_up()):
+        return ResourceManager.objects.filter(admin=True, resource__in=self.traverse_up())
 
     def is_admin(self, user):
         return self.get_admin_query().filter(funktion__user=user).exists()
