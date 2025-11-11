@@ -722,7 +722,7 @@ class ResourceUsageRejectView(ResourceUsageConfirmView):
     template_name = "reservierung/resourceusage_reject.html"
 
     def form_valid(self, form):
-        user = models.User.get(request)
+        user = models.User.get(self.request)
 
         # check if we may vote after all
         if not self.object.resource.is_admin(user):
