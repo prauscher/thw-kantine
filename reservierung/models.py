@@ -319,7 +319,7 @@ class Resource(models.Model):
         return ResourceManager.objects.filter(admin=True, resource__in=self.traverse_up())
 
     def is_admin(self, user):
-        return self.get_admin_query().filter(funktion__user=user).exists()
+        return self._get_admin_query().filter(funktion__user=user).exists()
 
     def get_admins(self):
         for admin in self._get_admin_query():
