@@ -678,12 +678,7 @@ class ResourceUsageVoteView(ResourceUsageConfirmView):
             raise Http404
 
         # check if we may vote after all
-        for manager_user, manager in self.object.resource.get_managers():
-            if not manager.voting_group:
-                continue
-            if user == manager_user:
-                break
-        else:
+        if not self.object.managers.filter(Q(funktion__user=user) & ~Q(voting_group="")).exists():
             raise Http404
 
         # store vote
