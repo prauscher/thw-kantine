@@ -14,7 +14,7 @@ class ResourceAvailabilityUpdater {
 			for (const [duration, kind, usage_ids] of bar_entries) {
 				var classes = ["progress-bar"];
 				if (kind == "direct" || kind == "super") {
-					if (usage_ids.filter((usage_id) => data.usages[usage_id].termin_id == this.active_termin).length == 0) {
+					if (usage_ids.filter((usage_id) => data.usages[usage_id].termin_id != this.active_termin).length == 0) {
 						classes.push("bg-primary");
 					} else {
 						classes.push("bg-danger");
