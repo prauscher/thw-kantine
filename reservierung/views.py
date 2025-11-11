@@ -687,8 +687,10 @@ class ResourceUsageVoteView(ResourceUsageConfirmView):
             comment=form.cleaned_data["comment"],
         )
 
+        comment_note = (f'mit Kommentar "{form.cleaned_data["comment"]}'
+                        if form.cleaned_data["comment"] else "ohne Kommentar")
         self.object.log(models.ResourceUsageLogMessage.VOTES, user,
-                        f'Manuell mit Kommentar "{form.cleaned_data["comment"]}" zugestimmt.')
+                        f"Manuell {comment_note} zugestimmt.")
 
         # possibly confirm usage
         self.object.update_state()
