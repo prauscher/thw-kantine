@@ -454,14 +454,14 @@ class TerminFormView(FormView):
     def dispatch(self, *args, **kwargs):
         # use dispatch here, as setup does not have jwt-data populated in request
         if "pk" in kwargs:
-            self.object = self._get_object(kwargs["pk"])
+            self.object = self._get_object()
         else:
             self.object = None
 
         return super().dispatch(*args, **kwargs)
 
-    def _get_object(self, pk):
-        return get_object_or_404(models.Termin, pk=pk,
+    def _get_object(self):
+        return get_object_or_404(models.Termin, pk=self.kwargs["pk"],
                                  owner=models.User.get(self.request))
 
     def get_form_kwargs(self):
@@ -471,7 +471,6 @@ class TerminFormView(FormView):
         context = super().get_context_data(*args, **kwargs)
 
         context["object"] = self.object
-
         context["resources"] = list(_build_resources(part_of__isnull=True))
 
         context["selected_resources"] = []
@@ -490,48 +489,43 @@ class TerminFormView(FormView):
     def form_valid(self, form):
         user = models.User.get(self.request)
 
-        if self.object:
-            termin = self.object
+        # as form is a ModelForm, its instance attribute already contains changed values
 
-            if termin.start > form.cleaned_data["start"] or termin.end < form.cleaned_data["end"]:
+        if self.object:
+            # refetch current values for comparision
+            termin = self._get_object()
+
+            if termin.start > form.instance.start or termin.end < form.instance.end:
                 # renew confirmations (later) when time range is exceeded
-                termin.usages.delete()
-            elif termin.start < form.cleaned_data["start"] or termin.end > form.cleaned_data["end"]:
+                termin.usages.all().delete()
+            elif termin.start < form.instance.start or termin.end > form.instance.end:
                 # shortened, maybe this resolved conflicts?
-                for usage in termin.usages.all():
-                    usage.log(ResourceUsageLogMessage.META, user,
-                              f"Anfragezeitraum auf {timerange_filter(form.cleaned_data['start'], form.cleaned_data['end'])} verkürzt.")
+                for usage in form.instance.usages.all():
+                    usage.log(models.ResourceUsageLogMessage.META, user,
+                              f"Anfragezeitraum auf {timerange_filter(form.instance.start, form.instance.end)} verkürzt.")
 
                     for conflict, _, _ in usage.get_conflicts()[0]:
                         conflict.update_state()
 
-            termin.label = form.cleaned_data["label"]
-            termin.description = form.cleaned_data["description"]
-            termin.start = form.cleaned_data["start"]
-            termin.end = form.cleaned_data["end"]
-            termin.save(update_fields=["label", "description", "start", "end"])
+            # fields have already been updated during form clean
         else:
-            termin = models.Termin.objects.create(
-                label=form.cleaned_data["label"],
-                description=form.cleaned_data["description"],
-                start=form.cleaned_data["start"],
-                end=form.cleaned_data["end"],
-                owner=models.User.get(self.request),
-            )
+            form.instance.owner = user
 
-        current_resource_ids = {int(usage.resource.pk) for usage in termin.usages.all()}
+        form.instance.save()
+        self.success_url = form.instance.get_absolute_url()
+
+        current_resource_ids = {int(usage.resource.pk) for usage in form.instance.usages.all()}
         target_resource_ids = {int(pk) for pk in form.cleaned_data.get("resources", [])}
 
         for resource_id in current_resource_ids - target_resource_ids:
             resource = models.Resource.objects.get(pk=resource_id)
-            termin.remove_usage(resource, user)
+            form.instance.remove_usage(resource, user)
 
         # create new resources
         for resource_id in target_resource_ids - current_resource_ids:
             resource = models.Resource.objects.get(pk=resource_id)
-            termin.create_usage(resource, user)
+            form.instance.create_usage(resource, user)
 
-        self.success_url = termin.get_absolute_url()
         return super().form_valid(form)
 
 
