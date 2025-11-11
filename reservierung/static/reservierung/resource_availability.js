@@ -13,10 +13,12 @@ class ResourceAvailabilityUpdater {
 			bar.empty();
 			for (const [duration, kind, usage_ids] of bar_entries) {
 				var classes = ["progress-bar"];
-				if (usage_ids.length == 1 && data.usages[usage_ids[0]].termin_id == this.active_termin) {
-					classes.push("bg-primary");
-				} else if (kind == "direct" || kind == "super") {
-					classes.push("bg-danger");
+				if (kind == "direct" || kind == "super") {
+					if (usage_ids.filter((usage_id) => data.usages[usage_id].termin_id == this.active_termin).length == 0) {
+						classes.push("bg-primary");
+					} else {
+						classes.push("bg-danger");
+					}
 				} else if (kind == "part") {
 					classes.push("bg-warning");
 				} else if (kind == "free") {
