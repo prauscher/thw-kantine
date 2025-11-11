@@ -412,6 +412,10 @@ def get_hermine_client():
     if not username or not password or not encryption:
         return None
 
+    if not _hermine_data and "HERMINE_DATA_FILE" in os.environ:
+        with suppress(FileNotFoundError), open(os.environ["HERMINE_DATA_FILE"], "r", encoding="utf-8") as file:
+            _hermine_data = json.load(file)
+
     client = None
     if _hermine_data:
         client = StashCatClient(_hermine_data["device_id"],
@@ -434,6 +438,10 @@ def get_hermine_client():
         _hermine_data["client_key"] = client.client_key
         _hermine_data["user_id"] = client.user_id
         _hermine_data["hidden_id"] = client.hidden_id
+
+        if "HERMINE_DATA_FILE" in os.environ:
+            with open(os.environ["HERMINE_DATA_FILE", "wb", encoding="utf-8") as file:
+                file.write(json.dumps(_hermine_data))
 
     client.open_private_key(encryption)
     return client
