@@ -405,6 +405,8 @@ _hermine_data = {}
 
 
 def get_hermine_client():
+    global _hermine_data
+
     username = os.environ.get("HERMINE_USERNAME")
     password = os.environ.get("HERMINE_PASSWORD")
     encryption = os.environ.get("HERMINE_ENCRYPTION")
@@ -414,7 +416,7 @@ def get_hermine_client():
 
     if not _hermine_data and "HERMINE_DATA_FILE" in os.environ:
         with suppress(FileNotFoundError), open(os.environ["HERMINE_DATA_FILE"], "r", encoding="utf-8") as file:
-            _hermine_data = json.load(file)
+            _hermine_data.update(json.load(file))
 
     client = None
     if _hermine_data:
