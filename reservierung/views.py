@@ -607,7 +607,8 @@ class ResourceUsageDetailView(DetailView):
         context["may_revert_reject"] = self.object.rejected_by == user
         context["may_revoke"] = self.object.confirmations.filter(
             revoked_at__isnull=True, approver=user).exists()
-        context["may_vote"] = False
+        context["may_vote"] = not context["may_revoke"] and self.object.managers.filter(
+            Q(funktion__user=user) & ~Q(voting_group=""))
 
         context["conflicts"], context["conflict_confirmed"] = self.object.get_conflicts()
 
