@@ -22,8 +22,11 @@
 
 <div class="alert alert-info">
  Hier kannst du einen {% if object %}Termin bearbeiten{% else %}neuen Termin erstellen{% endif %}.
- Wenn du den Zeitbereich angegeben hast wird die Verfügbarkeit der Ressourcen als Balken neben der jeweiligen Ressource angezeigt.
- Der Balken symbolisiert den angegebenen Zeitraum, die jeweiligen Farben zeigen die Verfügbarkeit an: Grün heißt die Ressource ist frei, Orange zeigt an dass nur ein Teil der Ressource belegt ist und rot zeigt an dass bereits eine Buchung für die Ressource eingetragen ist.
+ Wenn du den Zeitbereich angegeben hast wird die Verfügbarkeit der Ressourcen als Balken neben der
+ jeweiligen Ressource angezeigt. Der Balken symbolisiert den angegebenen Zeitraum, die jeweiligen
+ Farben zeigen die Verfügbarkeit an: Grün heißt die Ressource ist frei, Orange zeigt an dass nur
+ ein Teil der Ressource belegt ist und rot zeigt an dass bereits eine Buchung für die Ressource
+ eingetragen ist.
  {% if object %}Blau zeigt an, dass die Ressource nur durch diesen Termin belegt ist.{% endif %}
  Ein schraffierter Balken zeigt an, dass die entsprechenden Buchungen noch nicht bestätigt wurden.
  Eine Buchung einer übergeordneten Ressource beinhaltet somit alle untergeordneten Ressourcen.
