@@ -519,8 +519,8 @@ class TerminFormView(FormView):
                 owner=models.User.get(self.request),
             )
 
-        current_resource_ids = {usage.resource.pk for usage in termin.usages.all()}
-        target_resource_ids = set(form.cleaned_data.get("resources", []))
+        current_resource_ids = {int(usage.resource.pk) for usage in termin.usages.all()}
+        target_resource_ids = {int(pk) for pk in form.cleaned_data.get("resources", [])}
 
         for resource_id in current_resource_ids - target_resource_ids:
             resource = models.Resource.objects.get(pk=resource_id)
