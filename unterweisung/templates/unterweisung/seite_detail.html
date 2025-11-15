@@ -28,7 +28,7 @@
  {% csrf_token %}
 {{ inhalt }}
 
-<div class="row">
+<div class="row mb-2">
  <div class="col-sm-4 col-md-5 col-lg-6 col-xxl-7">
   <div class="progress mt-1">
    <div class="progress-bar" role="progressbar" aria-valuenow="{{ seite_nr }}" aria-valuemin="1" aria-valuemax="{{ seite_count }}" style="width:{% widthratio seite_nr seite_count 100 %}%;">&nbsp;</div>
