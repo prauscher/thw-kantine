@@ -1,49 +1,41 @@
-ARG PYTHON_VERSION=3.12.12-r0
-ARG POSTGRESQL_VERSION=17.6-r0
-ARG BUILD_BASE_VERSION=0.5-r3
-ARG PY3_PIP_VERSION=25.1.1-r0
 ARG PYPI_PIP_VERSION=25.3
+ARG POSTGRESQL_VERSION=17.7-r0
 
-FROM alpine:3.22 AS base
+FROM python:3.14-alpine3.22 AS base
 
-ARG PYTHON_VERSION
-ARG POSTGRESQL_VERSION
-ARG UNIT_VERSION=1.35.0-r0
-ARG TINI_VERSION=0.19.0-r3
 ARG TZDATA_VERSION=2025b-r0
 ARG CURL_VERSION=8.14.1-r2
+ARG POSTGRESQL_VERSION
 
-RUN apk add --no-cache "tini=${TINI_VERSION}" "tzdata=${TZDATA_VERSION}" "python3=${PYTHON_VERSION}" "unit=${UNIT_VERSION}" "unit-python3=${UNIT_VERSION}" "postgresql17-client=${POSTGRESQL_VERSION}" "curl=${CURL_VERSION}" \
+RUN apk add --no-cache "tzdata=${TZDATA_VERSION}" "postgresql17-client=${POSTGRESQL_VERSION}" "curl=${CURL_VERSION}" \
     && addgroup -g 1000 worker \
     && adduser -S -D -H -u 1000 -G worker worker
 
-# needs to contain url-part /static
-ENV STATIC_ROOT=/opt/static/static
+# Read by django
+ENV STATIC_ROOT=/opt/static
 
 FROM base AS build_contrib
 
 COPY ./contrib/prepare_db.sh /prepare_db.sh
-COPY ./contrib/start_unit.sh /start_unit.sh
+COPY ./contrib/start_webserver.sh /start_webserver.sh
 COPY ./contrib/healthcheck.sh /healthcheck.sh
 COPY ./contrib/housekeeping.sh /housekeeping.sh
 
-RUN chmod 555 /prepare_db.sh /start_unit.sh /healthcheck.sh /housekeeping.sh && \
-    chown root:root /prepare_db.sh /start_unit.sh /healthcheck.sh /housekeeping.sh
+RUN chmod 555 /prepare_db.sh /start_webserver.sh /healthcheck.sh /housekeeping.sh && \
+    chown root:root /prepare_db.sh /start_webserver.sh /healthcheck.sh /housekeeping.sh
 
 FROM base AS build_venv
 
-ARG PYTHON_VERSION
-ARG POSTGRESQL_VERSION
-ARG BUILD_BASE_VERSION
-ARG PY3_PIP_VERSION
 ARG PYPI_PIP_VERSION
+ARG POSTGRESQL_VERSION
+ARG BUILD_BASE_VERSION=0.5-r3
 
-RUN apk add --no-cache "build-base=${BUILD_BASE_VERSION}" "libpq-dev=${POSTGRESQL_VERSION}" "python3-dev=${PYTHON_VERSION}" "py3-pip=${PY3_PIP_VERSION}" && \
-    python3 -m venv /opt/venv
+RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt /tmp/requirements.txt
-RUN python3 -m pip install "pip==${PYPI_PIP_VERSION}" && \
+RUN apk add --no-cache "build-base=${BUILD_BASE_VERSION}" "libpq-dev=${POSTGRESQL_VERSION}" && \
+    python3 -m pip install "pip==${PYPI_PIP_VERSION}" && \
     python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
 
 WORKDIR /opt/app
@@ -62,21 +54,24 @@ RUN find "." -exec chown root:root '{}' +  && \
 
 FROM base
 
-ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["/prepare_db.sh", "/start_unit.sh"]
+CMD ["/prepare_db.sh", "/start_webserver.sh"]
 WORKDIR /opt/app
 
+RUN mkdir /media; chown worker /media
+VOLUME /media
+
+ENV MEDIA_ROOT=/media
 ENV PORT=8080
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-ENV APP_WSGI=kantine.wsgi
+ENV PYTHONUNBUFFERED=1
 
 COPY --from=build_contrib /prepare_db.sh /prepare_db.sh
-COPY --from=build_contrib /start_unit.sh /start_unit.sh
+COPY --from=build_contrib /start_webserver.sh /start_webserver.sh
 COPY --from=build_contrib /healthcheck.sh /healthcheck.sh
 COPY --from=build_contrib /housekeeping.sh /housekeeping.sh
 COPY --from=build_venv /opt/venv /opt/venv
 COPY --from=build_venv /opt/app /opt/app
-COPY --from=build_venv /opt/static /opt/static
+COPY --from=build_venv "${STATIC_ROOT}" "${STATIC_ROOT}"
 
 HEALTHCHECK --start-period=60s --interval=10s --timeout=60s \
   CMD ["/healthcheck.sh"]
