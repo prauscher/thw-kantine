@@ -16,7 +16,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'kantine.settings')
 
 application = get_wsgi_application()
 
-pplication = wrap_wsgi_with_proxy_headers(
+application = wrap_wsgi_with_proxy_headers(
     application,
     trusted_hosts=os.environ.get("PROXY_SOURCE", "172.16.0.0/12").split(" "),
 )

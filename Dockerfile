@@ -30,12 +30,12 @@ ARG PYPI_PIP_VERSION
 ARG POSTGRESQL_VERSION
 ARG BUILD_BASE_VERSION=0.5-r3
 
-RUN python3 -m venv /opt/venv
+RUN apk add --no-cache "build-base=${BUILD_BASE_VERSION}" "libpq-dev=${POSTGRESQL_VERSION}" && \
+    python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt /tmp/requirements.txt
-RUN apk add --no-cache "build-base=${BUILD_BASE_VERSION}" "libpq-dev=${POSTGRESQL_VERSION}" && \
-    python3 -m pip install "pip==${PYPI_PIP_VERSION}" && \
+RUN python3 -m pip install "pip==${PYPI_PIP_VERSION}" && \
     python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
 
 WORKDIR /opt/app
@@ -57,8 +57,8 @@ FROM base
 CMD ["/prepare_db.sh", "/start_webserver.sh"]
 WORKDIR /opt/app
 
-RUN mkdir /media; chown worker /media
-VOLUME /media
+RUN mkdir /opt/media; chown worker /opt/media
+VOLUME /opt/media
 
 ENV MEDIA_ROOT=/media
 ENV PORT=8080
