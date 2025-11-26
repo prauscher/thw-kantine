@@ -57,13 +57,13 @@ FROM base
 CMD ["/prepare_db.sh", "/start_webserver.sh"]
 WORKDIR /opt/app
 
-RUN mkdir /opt/media; chown worker /opt/media
-VOLUME /opt/media
-
-ENV MEDIA_ROOT=/media
+ENV MEDIA_ROOT="/opt/media"
 ENV PORT=8080
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 ENV PYTHONUNBUFFERED=1
+
+RUN mkdir "${MEDIA_ROOT}"; chown worker "${MEDIA_ROOT}"
+VOLUME "${MEDIA_ROOT}"
 
 COPY --from=build_contrib /prepare_db.sh /prepare_db.sh
 COPY --from=build_contrib /start_webserver.sh /start_webserver.sh
