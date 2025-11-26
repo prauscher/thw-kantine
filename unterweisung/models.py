@@ -115,10 +115,11 @@ def _parse_date_or_none(input: str):
 
 class FuehrerscheinDatenSeite(Seite):
     def get_template_context(self, request, *, export: bool = False) -> tuple[str, dict]:
+        context = {}
+
         if export:
             return "unterweisung/seite_fuehrerschein_export.html", context
 
-        context = {}
         context["nummer"] = None
 
         klassen = {klasse: (None, None) for klasse in Fahrerlaubnis.KLASSEN.keys()}
