@@ -16,29 +16,32 @@
 <p>Diese Frage muss zum bestehen <strong>zwingend</strong> richtig beantwortet werden.</p>
 {% endif %}
 {% for antwort_id, antwort_text, antwort_richtig, antwort_checked in frage.antworten %}
-<div class="form-check">
-  {% if export %}
-   <span class="position-absolute lh-1 fs-5 fw-bold" style="margin-left:-1em; margin-top:0.1em;">
+ {% if export %}
+  <p class="mb-0">
+   <span class="d-inline-block lh-1 fs-5 fw-bold text-center" style="width:2em;">
    {% if frage.richtige_antworten == 1 %}
     {% if antwort_checked %}●{% else %}○{% endif %}
    {% else %}
     {% if antwort_checked %}■{% else %}□{% endif %}
    {% endif %}
    </span>
-  {% else %}
-   <input class="form-check-input" type="{% if frage.richtige_antworten == 1 %}radio{% else %}checkbox{% endif %}" {% if geloest %}onclick="return false;"{% endif %} {% if antwort_checked %}checked="checked"{% endif %} name="frage_{{ frage.pk }}" value="{{ antwort_id }}" id="antwort_{{ antwort_id }}" />
-  {% endif %}
-  <label class="form-check-label" for="antwort_{{ antwort_id }}">
-   {% if geloest and not frage.korrekt %}
-    {% if antwort_richtig == antwort_checked %}
-     <span class="badge rounded-pill text-bg-success">Antwort Korrekt</span>
-    {% else %}
-     <span class="badge rounded-pill text-bg-danger">Antwort Falsch</span>
-    {% endif %}
-   {% endif %}
    {{ antwort_text|markdownify_inline }}
-  </label>
-</div>
+  </p>
+ {% else %}
+  <div class="form-check">
+   <input class="form-check-input" type="{% if frage.richtige_antworten == 1 %}radio{% else %}checkbox{% endif %}" {% if geloest %}onclick="return false;"{% endif %} {% if antwort_checked %}checked="checked"{% endif %} name="frage_{{ frage.pk }}" value="{{ antwort_id }}" id="antwort_{{ antwort_id }}" />
+   <label class="form-check-label" for="antwort_{{ antwort_id }}">
+    {% if geloest and not frage.korrekt %}
+     {% if antwort_richtig == antwort_checked %}
+      <span class="badge rounded-pill text-bg-success">Antwort Korrekt</span>
+     {% else %}
+      <span class="badge rounded-pill text-bg-danger">Antwort Falsch</span>
+     {% endif %}
+    {% endif %}
+    {{ antwort_text|markdownify_inline }}
+   </label>
+  </div>
+ {% endif %}
 {% endfor %}
 </div>
 {% endfor %}
