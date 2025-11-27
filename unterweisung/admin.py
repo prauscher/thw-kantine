@@ -255,7 +255,14 @@ class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admi
     list_filter = ["active"]
     actions = ["activate", "deactivate"]
     change_actions = ["goto_export", "copy_recursive"]
-    change_list_template = "admin/unterweisung/unterweisung/change_list.html"
+    changelist_actions = ["goto_export_list"]
+    # change_{list,form}_template are overwritten by DjangoObjectActions, so need to specify default here
+    change_form_template = "admin/unterweisung/unterweisung/change_form.html"
+
+    @action(label="Export",
+            description="Zeige Unterweisungen für Ausdruck an.")
+    def goto_export_list(self, request, queryset):
+        return redirect(reverse("admin:unterweisung_unterweisung_export"))
 
     @action(label="Export",
             description="Zeige diese Unterweisung einzeln an.")
