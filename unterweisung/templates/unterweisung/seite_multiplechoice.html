@@ -15,9 +15,9 @@
 {% if not frage.optional %}
 <p>Diese Frage muss zum bestehen <strong>zwingend</strong> richtig beantwortet werden.</p>
 {% endif %}
-{% for antwort_id, antwort_text, antwort_richtig, antwort_checked in frage.antworten %}
- {% if export %}
-  <p class="mb-0">
+{% if export %}
+ <p class="mb-0">
+  {% for antwort_id, antwort_text, antwort_richtig, antwort_checked in frage.antworten %}
    <span class="d-inline-block lh-1 fs-5 fw-bold text-center" style="width:2em;">
    {% if frage.richtige_antworten == 1 %}
     {% if antwort_checked %}●{% else %}○{% endif %}
@@ -25,9 +25,11 @@
     {% if antwort_checked %}■{% else %}□{% endif %}
    {% endif %}
    </span>
-   {{ antwort_text|markdownify_inline }}
-  </p>
- {% else %}
+   {{ antwort_text|markdownify_inline }}<br />
+  {% endfor %}
+ </p>
+{% else %}
+ {% for antwort_id, antwort_text, antwort_richtig, antwort_checked in frage.antworten %}
   <div class="form-check">
    <input class="form-check-input" type="{% if frage.richtige_antworten == 1 %}radio{% else %}checkbox{% endif %}" {% if geloest %}onclick="return false;"{% endif %} {% if antwort_checked %}checked="checked"{% endif %} name="frage_{{ frage.pk }}" value="{{ antwort_id }}" id="antwort_{{ antwort_id }}" />
    <label class="form-check-label" for="antwort_{{ antwort_id }}">
@@ -41,8 +43,8 @@
     {{ antwort_text|markdownify_inline }}
    </label>
   </div>
- {% endif %}
-{% endfor %}
+ {% endfor %}
+{% endif %}
 </div>
 {% endfor %}
 
