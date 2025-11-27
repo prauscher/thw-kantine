@@ -6,6 +6,7 @@ from datetime import datetime, UTC
 from django import forms
 from django.contrib import admin, messages
 from django.db import models as db_models
+from django.shortcuts import redirect
 from django.urls import path, reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.safestring import mark_safe
@@ -77,11 +78,16 @@ class UnterweisungExportView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        if "unterweisung" in self.request.GET:
+            unterweisung_filter = {"pk__in": self.request.GET["unterweisung"].split(",")}
+        else:
+            unterweisung_filter = {"active": True}
+
         context["unterweisungen"] = [
             (unterweisung,
              [(nr, seite, mark_safe(seite.render(self.request, export=True)))
               for nr, seite in enumerate(unterweisung.seiten.all(), 1)])
-            for unterweisung in models.Unterweisung.objects.filter(active=True)]
+            for unterweisung in models.Unterweisung.objects.filter(**unterweisung_filter)]
 
         return context
 
@@ -248,8 +254,14 @@ class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admi
     list_display = ["label", "active"]
     list_filter = ["active"]
     actions = ["activate", "deactivate"]
-    change_actions = ["copy_recursive"]
+    change_actions = ["goto_export", "copy_recursive"]
     change_list_template = "admin/unterweisung/unterweisung/change_list.html"
+
+    @action(label="Export",
+            description="Zeige diese Unterweisung einzeln an.")
+    def goto_export(self, request, obj):
+        return redirect(reverse("admin:unterweisung_unterweisung_export") +
+                        f"?unterweisung={obj.pk}")
 
     @action(label="Kopie erstellen",
             description="Kopiert die Unterweisung vollständig.")
