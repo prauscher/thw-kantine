@@ -373,6 +373,7 @@ class MultipleChoiceSeite(Seite):
         anzahl_required = sum(1 for frage in fragen if not frage["optional"])
 
         return "unterweisung/seite_multiplechoice.html", {
+            "export": export,
             "geloest": geloest,
             "fragen": fragen,
             "min_richtig": self.min_richtig,
