@@ -18,13 +18,13 @@
 {% for antwort_id, antwort_text, antwort_richtig, antwort_checked in frage.antworten %}
 <div class="form-check">
   {% if export %}
-   <div class="position-absolute lh-1 fs-5 fw-bold" style="margin-left:-1em; margin-top:0.1em;">
+   <span class="position-absolute lh-1 fs-5 fw-bold" style="margin-left:-1em; margin-top:0.1em;">
    {% if frage.richtige_antworten == 1 %}
     {% if antwort_checked %}●{% else %}○{% endif %}
    {% else %}
     {% if antwort_checked %}■{% else %}□{% endif %}
    {% endif %}
-   </div>
+   </span>
   {% else %}
    <input class="form-check-input" type="{% if frage.richtige_antworten == 1 %}radio{% else %}checkbox{% endif %}" {% if geloest %}onclick="return false;"{% endif %} {% if antwort_checked %}checked="checked"{% endif %} name="frage_{{ frage.pk }}" value="{{ antwort_id }}" id="antwort_{{ antwort_id }}" />
   {% endif %}
