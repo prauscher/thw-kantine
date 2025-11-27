@@ -11,7 +11,7 @@
 <div class="alert {% if frage.korrekt %}alert-success{% elif geloest %}alert-danger{% else %}alert-secondary{% endif %}">
 {% if frage.korrekt %}<span class="float-end badge text-bg-success">Richtig beantwortet</span>
 {% elif geloest %}<span class="float-end badge text-bg-danger">Falsch beantwortet</span>{% endif %}
-<h5>{{ frage.frage|markdownify }}</h5>
+<h5>{{ frage.frage|markdownify_inline }}</h5>
 {% if not frage.optional %}
 <p>Diese Frage muss zum bestehen <strong>zwingend</strong> richtig beantwortet werden.</p>
 {% endif %}
@@ -36,7 +36,7 @@
      <span class="badge rounded-pill text-bg-danger">Antwort Falsch</span>
     {% endif %}
    {% endif %}
-   {{ antwort_text|markdownify }}
+   {{ antwort_text|markdownify_inline }}
   </label>
 </div>
 {% endfor %}
