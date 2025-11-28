@@ -11,7 +11,8 @@ def fill_new(apps, schema_editor):
     # Copy all Fragen
     for seite in MultipleChoiceSeite.objects.all():
         for frage in seite.fragen.all():
-            antworten = frage.antworten.all()
+            # must be evaluated before
+            antworten = list(frage.antworten.all())
 
             frage.pk = None
             frage.seite = seite
