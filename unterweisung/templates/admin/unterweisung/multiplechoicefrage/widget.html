@@ -1,0 +1,56 @@
+<div class="fragen_container" style="width:100%;">
+<p class="help" style="margin-left:0;">
+ Spezifiziere die Fragen, die verwendet werden sollen. Um eine Frage oder Antwortoption zu löschen,
+ leere einfach ihren Text und speichere ab. Die Fragen werden immer sortiert nach ihrer Reihenfolge
+ angezeigt, die Antwortmöglichkeiten zufällig durchmischt. Fragen die als Optional gekennzeichnet
+ sind, können auch falsch beantwortet werden, sofern insgesamt ausreichend viele Fragen richtig
+ beantwortet wurden.
+</p>
+<input type="hidden" class="fragen_count" name="{{ widget.name }}_count" value="{{ fragen_count }}" />
+{% for frage in fragen %}
+<div style="{% if frage.num == "__frage_template__" %}display:none;{% endif %}" class="frage_container">
+<input type="hidden" name="{{ widget.name }}_{{ frage.num }}_pk" value="{{ frage.pk|default:"" }}" />
+<input type="hidden" name="{{ widget.name }}_{{ frage.num }}_count" class="antworten_count" value="{{ frage.antworten_count }}" />
+<table style="margin-top:1em; margin-bottom:1em; width:100%;">
+<tr>
+ <th style="text-align:center; vertical-align:middle; width:6em;">Fragetext</th>
+ <th colspan="2">
+  <div class="markdownx frage_text">
+   <textarea {{ markdownx_attrs }} name="{{ widget.name }}_{{ frage.num }}_text" onkeyup="multiplechoicefragewidget_checkFragen(this)" rows="1" cols="60">{{ frage.text }}</textarea>
+   <div class="markdownx-preview"></div>
+  </div>
+ </th>
+</tr>
+<tr>
+ <th style="text-align:center; vertical-align:middle;">Reihenfolge</th>
+ <th style="width:10em;"><input type="number" name="{{ widget.name }}_{{ frage.num }}_sort" class="vIntegerField frage_sort" value="{{ frage.sort }}" /></th>
+ <th style="vertical-align:middle;">
+  <div class="flex-container checkbox-row">
+   <input type="checkbox" name="{{ widget.name }}_{{ frage.num }}_optional" value="1" {% if frage.optional %}checked="checked"{% endif %} />
+   <label class="vCheckboxLabel" for="{{ widget.name }}_{{ frage.num }}_optional">Optional</label>
+  </div>
+ </th>
+</tr>
+<tr>
+ <th style="text-align:center; vertical-align:middle;">Antwort richtig?</th>
+ <th colspan="2" style="vertical-align:middle;">Antworttext</th>
+</tr>
+{% for antwort in frage.antworten %}
+<tr style="{% if antwort.num == "__antwort_template__" %}display:none;{% endif %}" class="antwort_container">
+ <th style="text-align:center; vertical-align:middle;">
+  <input type="hidden" name="{{ widget.name }}_{{ frage.num }}_{{ antwort.num }}_pk" value="{{ antwort.pk|default:"" }}" />
+  <input type="checkbox" name="{{ widget.name }}_{{ frage.num }}_{{ antwort.num }}_richtig" value="1" {% if antwort.richtig %}checked="checked"{% endif %} />
+ </th>
+ <th colspan="2">
+  <div class="markdownx antwort_text">
+   <textarea {{ markdownx_attrs }} name="{{ widget.name }}_{{ frage.num }}_{{ antwort.num }}_text" onkeyup="multiplechoicefragewidget_checkAntworten(this)" rows="1" cols="60">{{ antwort.text }}</textarea>
+   <div class="markdownx-preview"></div>
+  </div>
+ </th>
+</tr>
+{% endfor %}
+</table>
+<br />
+</div>
+{% endfor %}
+</div>

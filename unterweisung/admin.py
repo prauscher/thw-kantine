@@ -34,22 +34,135 @@ def _strxfrm(text):
     return text
 
 
-class MultipleChoiceOptionInline(admin.StackedInline):
-    model = models.MultipleChoiceOption
-    extra = 3
+class MultipleChoiceFragenWidget(forms.Widget):
+    template_name = "admin/unterweisung/multiplechoicefrage/widget.html"
 
-    formfield_overrides = {
-        MarkdownxField: {'widget': MarkdownxWidget(attrs={"rows": 1, "cols": 60})},
-    }
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+
+        context["markdownx_attrs"] = " ".join(
+            f'{k}={v}'
+            for k, v in MarkdownxWidget.add_markdownx_attrs({}).items()
+        )
+
+        context["fragen"] = []
+        for i, (frage_pk, frage_data, antworten) in enumerate(value or []):
+            context["fragen"].append({
+                "num": i,
+                "sort": (i + 1) * 10,
+                "pk": frage_pk,
+                **frage_data,
+                "antworten": [{"num": i, "pk": antwort_pk, **antwort_data}
+                              for i, (antwort_pk, antwort_data) in enumerate(antworten)],
+            })
+
+        # add empty and template frage
+        context["fragen"].append({"num": len(context["fragen"]), "sort": (len(context["fragen"]) + 1) * 10, "antworten": []})
+        context["fragen_count"] = len(context["fragen"])
+        context["fragen"].append({"num": "__frage_template__", "antworten": []})
+
+        # add empty and template antworten
+        for i in range(len(context["fragen"])):
+            context["fragen"][i]["antworten"].append({"num": len(context["fragen"][i]["antworten"])})
+            context["fragen"][i]["antworten_count"] = len(context["fragen"][i]["antworten"])
+            context["fragen"][i]["antworten"].append({"num": "__antwort_template__"})
+
+        return context
+
+    def _read_fragen(self, data, prefix):
+        for i in range(int(data.get(f"{prefix}_count", "0"))):
+            yield from self._read_frage(data, f"{prefix}_{i}")
+
+    def _read_frage(self, data, prefix):
+        pk = data.get(f"{prefix}_pk")
+        text = data.get(f"{prefix}_text", "")
+        optional = f"{prefix}_optional" in data
+        sort = int(data.get(f"{prefix}_sort", "0"))
+
+        if not text.strip():
+            return
+
+        yield (sort,
+               int(pk) if pk else None,
+               {"text": text, "optional": optional},
+               list(self._read_antworten(data, prefix)))
+
+    def _read_antworten(self, data, prefix):
+        for i in range(int(data.get(f"{prefix}_count", "0"))):
+            yield from self._read_antwort(data, f"{prefix}_{i}")
+
+    def _read_antwort(self, data, prefix):
+        pk = data.get(f"{prefix}_pk")
+        text = data.get(f"{prefix}_text", "")
+        richtig = f"{prefix}_richtig" in data
+
+        if not text.strip():
+            return
+
+        yield (int(pk) if pk else None,
+               {"text": text, "richtig": richtig})
+
+    def value_from_datadict(self, data, files, name):
+        return [(frage_pk, frage_data, antworten)
+                for _, frage_pk, frage_data, antworten in sorted(self._read_fragen(data, name))]
+
+    class Media:
+        js = [
+            "unterweisung/multiplechoicefrage_widget.js",
+        ]
 
 
-@admin.register(models.MultipleChoiceFrage)
-class MultipleChoiceFrageAdmin(admin.ModelAdmin):
-    inlines = (MultipleChoiceOptionInline,)
+class MultipleChoiceInlineForm(forms.ModelForm):
+    fragen = forms.Field(
+        widget=MultipleChoiceFragenWidget(),
+    )
 
-    formfield_overrides = {
-        MarkdownxField: {'widget': MarkdownxWidget(attrs={"rows": 2, "cols": 60})},
-    }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if "instance" in kwargs:
+            self.initial["fragen"] = [
+                (frage.pk,
+                 {"text": frage.text, "optional": frage.optional},
+                 [(antwort.pk, {"text": antwort.text, "richtig": antwort.richtig})
+                  for antwort in frage.antworten.all()])
+                for frage in kwargs["instance"].fragen.all()]
+
+    def save(self, commit=True):
+        instance = super().save(commit=commit)
+
+        # store fragen
+        if commit:
+            old_fragen_pks = {frage.pk for frage in instance.fragen.all()}
+            for i, (frage_pk, frage_data, antworten) in enumerate(self.cleaned_data["fragen"]):
+                old_fragen_pks.discard(frage_pk)
+                frage_data["sort"] = i
+
+                # create new
+                if frage_pk is None:
+                    frage = instance.fragen.create(**frage_data)
+                else:
+                    queryset = instance.fragen.filter(pk=frage_pk)
+                    queryset.update(**frage_data)
+                    frage = queryset.get()
+
+                old_antworten_pks = {antwort.pk for antwort in frage.antworten.all()}
+                for antwort_pk, antwort_data in antworten:
+                    old_antworten_pks.discard(antwort_pk)
+
+                    if antwort_pk is None:
+                        frage.antworten.create(**antwort_data)
+                    else:
+                        frage.antworten.filter(pk=antwort_pk).update(**antwort_data)
+
+                for antwort_pk in old_antworten_pks:
+                    frage.antworten.get(pk=antwort_pk).delete()
+
+            # delete old
+            for frage_pk in old_fragen_pks:
+                instance.fragen.get(pk=frage_pk).delete()
+
+        return instance
 
 
 class SeiteInline(StackedPolymorphicInline):
@@ -64,6 +177,7 @@ class SeiteInline(StackedPolymorphicInline):
 
     class MultipleChoiceInline(StackedPolymorphicInline.Child):
         model = models.MultipleChoiceSeite
+        form = MultipleChoiceInlineForm
 
     model = models.Seite
     child_inlines = (FuehrerscheinDatenInline,

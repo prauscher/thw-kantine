@@ -69,14 +69,17 @@ class Seite(PolymorphicModel):
     sort = models.IntegerField(
         default=0,
         db_index=True,
+        verbose_name="Reihenfolge",
         help_text="Sortierreihenfolge der Seite innerhalb der Unterweisung",
     )
     titel = models.CharField(
         max_length=70,
+        verbose_name="Titel",
         help_text="Überschrift der Seite",
     )
     is_required = models.BooleanField(
         default=True,
+        verbose_name="Erforderlich",
         help_text="Muss diese Seite erfolgreich abgeschlossen werden, um eine Teilnahme zu hinterlegen?",
     )
 
@@ -197,7 +200,14 @@ class FuehrerscheinDatenSeite(Seite):
 
 
 class InfoSeite(Seite):
-    content = MarkdownxField()
+    content = MarkdownxField(
+        verbose_name="Inhalt",
+        help_text='Inhalt der Folie als <a href="https://www.markdownguide.org/basic-syntax/" targ'
+                  'et="_blank">Markdown-Formatierung</a>: Absätze werden durch eine freie Zeile ge'
+                  'trennt, Text kann <code><b>**fett**</b></code> und <code><i>*kursiv*</i></code>'
+                  ' hervorgehoben werden. Bilder können außerhalb kopiert und im Textfeld eingefüg'
+                  't werden, sie erscheinen dann als <code>![](/media/....)</code>.',
+    )
     min_time = models.IntegerField(
         default=10,
         validators=[MinValueValidator(0)],
@@ -314,8 +324,6 @@ class MultipleChoiceSeite(Seite):
                   "bestehen. Hinweis: Erforderliche Fragen müssen immer richtig beantwortet werden"
                   ".",
     )
-    fragen = models.ManyToManyField("MultipleChoiceFrage",
-                                    related_name="seiten")
 
     def clone(self):
         fragen = []
@@ -408,6 +416,8 @@ class MultipleChoiceSeite(Seite):
 
 
 class MultipleChoiceFrage(models.Model):
+    seite = models.ForeignKey("MultipleChoiceSeite", on_delete=models.CASCADE,
+                              related_name="fragen")
     text = MarkdownxField(
         verbose_name="Fragetext",
         help_text="Überschrift der einzelnen Optionen",
