@@ -7,6 +7,13 @@
 # Offene Aufgaben / TODOs
 - Stornierungsmöglichkeit -> Auf null setzen geht doch?
 - Ausgabe markieren (später ggf. inkl Bezahlung)
+- Neue Buchung unterhalb wenn obere Ressource gebucht?
+- Tags (Laut / Leise)
+
+- ResourceManager: Funktion, Voting Group, Recursive
+ - Inform?
+- Vote: ResourceUsage, User, Comment, Approval / Reject
+ - Voting Group: Abgelehnt wenn eine Ablehnung; Zugestimmt wenn eine Zustimmung; Offen sonst
 
 ## Hermine Anbindung
 - Ankündigung in Kantine

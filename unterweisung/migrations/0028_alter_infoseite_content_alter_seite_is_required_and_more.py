@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('unterweisung', '0025_multiplechoicefrage_seite'),
+        ('unterweisung', '0027_multiplechoicefrage_seite_3'),
     ]
 
     operations = [

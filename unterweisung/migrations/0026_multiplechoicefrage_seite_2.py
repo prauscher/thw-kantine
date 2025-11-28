@@ -22,7 +22,7 @@ def fill_new(apps, schema_editor):
                 antwort.frage = frage
                 antwort.save()
 
-    # Now remove all old (with seite=None
+    # Now remove all old (with seite=None)
     MultipleChoiceFrage.objects.filter(seite__isnull=True).delete()
 
 
@@ -38,23 +38,9 @@ def fill_old(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('unterweisung', '0024_alter_fahrerlaubnis_fuehrerschein_and_more'),
+        ('unterweisung', '0025_multiplechoicefrage_seite_1'),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='multiplechoicefrage',
-            name='seite',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='fragen_neu', to='unterweisung.multiplechoiceseite'),
-        ),
         migrations.RunPython(code=fill_new, reverse_code=fill_old),
-        migrations.RemoveField(
-            model_name='multiplechoiceseite',
-            name='fragen',
-        ),
-        migrations.AlterField(
-            model_name='multiplechoicefrage',
-            name='seite',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fragen', to='unterweisung.multiplechoiceseite'),
-        ),
     ]
