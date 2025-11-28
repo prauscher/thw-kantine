@@ -16,9 +16,7 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
     StackedPolymorphicInline,
 )
-from markdownx.admin import MarkdownxModelAdmin
 from django_object_actions import DjangoObjectActions, action
-from markdownx.models import MarkdownxField
 from markdownx.widgets import MarkdownxWidget
 from kantine.utils import find_login_url
 from . import models, views
@@ -420,6 +418,14 @@ class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admi
                  name="unterweisung_unterweisung_export"),
         ] + urls
         return urls
+
+    # style up markdownx inputs
+    class Media:
+        css = {
+            "all": [
+                "unterweisung/markdownx-input.css",
+            ]
+        }
 
 
 class ImportTeilnahmeForm(forms.Form):

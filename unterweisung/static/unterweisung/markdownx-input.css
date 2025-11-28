@@ -1,0 +1,23 @@
+/* use additional class side-widget to avoid large inputs for multiple choice */
+.side-widget.markdownx {
+	display: flex;
+	flex-wrap: wrap;
+	width: 100%;
+	height: 25em;
+	margin-bottom: 1em;
+}
+.side-widget.markdownx .markdownx-editor {
+	width: 45%;
+	height: 100%;
+	box-sizing: border-box;
+	resize: none;
+	margin-right: 1em;
+}
+.side-widget.markdownx .markdownx-preview {
+	width: 45%;
+	height: 100%;
+	box-sizing: border-box;
+	overflow: scroll;
+	border: 1px solid var(--border-color);
+	padding: 0.5em;
+}
