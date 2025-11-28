@@ -41,7 +41,7 @@ function multiplechoicefragewidget_checkAntworten(field) {
 		cloned.find("*").each(function () {multiplechoicefragewidget_replaceIndex(this, "__antwort_template__", next_id);});
 		cloned.show();
 		cloned.insertBefore(template);
-		fragen_container.find(".antworten_count").val(next_id + 1);
+		antworten_container.find(".antworten_count").val(next_id + 1);
 		// Reenable markdownx...
 		cloned[0].dispatchEvent(new CustomEvent("formset:added", {bubbles: true}));
 	}
