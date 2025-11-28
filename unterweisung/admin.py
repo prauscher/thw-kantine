@@ -402,6 +402,9 @@ class UnterweisungAdmin(PolymorphicInlineSupportMixin, DjangoObjectActions, admi
             seite.unterweisung = obj
             seite.save()
 
+        return redirect(reverse("admin:unterweisung_unterweisung_change",
+                                args=(obj.pk,)))
+
     @action(description="Ausgewählte aktivieren")
     def activate(self, request, queryset):
         queryset.update(active=True)
