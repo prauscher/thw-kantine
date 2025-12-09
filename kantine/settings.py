@@ -161,7 +161,7 @@ USE_TZ = True
 
 # Logging
 
-ADMINS = [("Admin", admin_mail)
+ADMINS = [admin_mail
           for admin_mail in _read_setting("ADMINS", default="").split(",")
           if admin_mail]
 
