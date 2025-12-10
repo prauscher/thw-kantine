@@ -34,7 +34,7 @@ def resource_approval_scheme(resource_or_usage: models.Resource | models.Resourc
 
     for manager_user, manager in resource.get_managers():
         voting_groups[manager.voting_group].append(
-            (manager_user, votes.get(manager_user), manager))
+            (manager_user, votes.get(manager_user), manager.funktion.funktion_label))
 
     context = {}
     context["resource"] = resource
