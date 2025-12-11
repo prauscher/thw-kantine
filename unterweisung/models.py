@@ -146,10 +146,12 @@ class FuehrerscheinDatenSeite(Seite):
             context["abgelaufen"] = []
 
         for klasse in Fahrerlaubnis.KLASSEN.keys():
+            gueltig_ab, gueltig_bis = klassen[klasse]
             if f"klasse_{klasse}_gueltig_ab" in request.POST:
-                klassen[klasse] = (parse_date(request.POST[f"klasse_{klasse}_gueltig_ab"]), klassen[klasse][1])
+                gueltig_ab = parse_date(request.POST[f"klasse_{klasse}_gueltig_ab"])
             if f"klasse_{klasse}_gueltig_bis" in request.POST:
-                klassen[klasse] = (klassen[klasse][0], parse_date(request.POST[f"klasse_{klasse}_gueltig_bis"]))
+                gueltig_bis = parse_date(request.POST[f"klasse_{klasse}_gueltig_bis"])
+            klassen[klasse] = (gueltig_ab, gueltig_bis)
 
         context["klassen"] = [(klasse, gueltig_ab, gueltig_bis) for
                               klasse, (gueltig_ab, gueltig_bis) in klassen.items()]
@@ -173,7 +175,7 @@ class FuehrerscheinDatenSeite(Seite):
             if gueltig_bis and gueltig_bis < timezone.now().date():
                 raise ValidationError(f"Gültigkeitsdatum für Klasse {klasse} liegt in der Vergangenheit")
 
-            if klasse.startswith("C") and not gueltig_bis:
+            if klasse in {"C", "CE"} and not gueltig_bis:
                 raise ValidationError(f"Bitte gib das Gültigkeitsdatum für Klasse {klasse} an")
 
             klassen[klasse] = (gueltig_ab, gueltig_bis)
