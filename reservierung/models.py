@@ -519,15 +519,18 @@ class ResourceUsage(models.Model):
         for vote in self.confirmations.filter(revoked_at__isnull=True):
             approved_voting_groups.update(matching_voting_groups[vote.approver])
 
+        # approve once no voting group is left without approval
         should_approved = not (all_voting_groups - approved_voting_groups)
 
-        conflicts = ResourceUsage.find_related(
-            self.termin.start, self.termin.end, [self.resource],
-        ).exclude(termin=self.termin)
+        # special case for self regulating resources: only approve if no
+        # conflict exists
+        if not all_voting_groups:
+            conflicts = ResourceUsage.find_related(
+                self.termin.start, self.termin.end, [self.resource],
+            ).exclude(termin=self.termin)
 
-        if not all_voting_groups and conflicts.exists():
-            # If no voting group exists but conflicting usages exist, do not approve yet.
-            should_approved = False
+            if conflicts.exists():
+                should_approved = False
 
         # approved_at should be None iff missing_voting_groups is not empty
         if should_approved != (self.approved_at is not None):
