@@ -157,16 +157,17 @@ class UebersichtView(TemplateView):
             all_voting_groups = set()
             our_voting_groups = set()
             approved_voting_groups = set()
-            for manager_user, manager in usage.resource.get_managers():
-                if not manager.voting_group:
+
+            for voting_group, manager_users in usage.resource.get_voting_groups().items():
+                if not voting_group:
                     continue
 
-                all_voting_groups.add(manager.voting_group)
-                if manager_user in votes:
-                    approved_voting_groups.add(manager.voting_group)
-
-                if manager_user == user:
-                    our_voting_groups.add(manager.voting_group)
+                all_voting_groups.add(voting_group)
+                for _, manager_user in manager_users:
+                    if manager_user in votes:
+                        approved_voting_groups.add(voting_group)
+                    if manager_user == user:
+                        our_voting_groups.add(voting_group)
 
             our_missing_voting_groups = (all_voting_groups - approved_voting_groups) & our_voting_groups
             if not our_missing_voting_groups:

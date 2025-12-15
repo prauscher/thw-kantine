@@ -208,12 +208,11 @@ class Termin(models.Model):
 
         missing_voting_groups = set()
         voting_groups = defaultdict(list)
-        for manager_user, manager in resource.get_managers():
-            if manager.voting_group:
-                missing_voting_groups.add(manager.voting_group)
+        for voting_group, manager_users in resource.get_voting_groups().items():
+            if voting_group:
+                missing_voting_groups.add(voting_group)
 
-            if manager_user is not None:
-                voting_groups[manager.voting_group].append(manager_user)
+            voting_groups[voting_groups].extend(manager_user for _, manager_user in manager_users)
 
         inform_users = set(voting_groups.pop("", []))
         vote_users = set()
@@ -307,13 +306,23 @@ class Resource(models.Model):
         for child in self.consists_of.all():
             yield from child.traverse_down()
 
-    def get_managers(self):
+    def get_voting_groups(self):
+        """Get voting groups of this Resource.
+
+        Returns a dict with str containing the voting group as key and a list
+        of tuples consisting of the Funktion and User for each eligble user.
+        Note that one voting group may be the empty string for users not
+        actually voting, but being informed.
+
+        str (voting group) => list of (Funktion, User)
+        """
+        voting_groups = {}
         for manager in self.managers.all():
-            users = manager.funktion.user.all()
-            for user in users:
-                yield (user, manager)
-            if not users:
-                yield (None, manager)
+            voting_group = manager.voting_group
+            voting_groups.setdefault(voting_group, [])
+            voting_groups[voting_group].extend(
+                (manager.funktion, user) for user in manager.funktion.user.all())
+        return voting_groups
 
     def _get_admin_query(self):
         return ResourceManager.objects.filter(admin=True, resource__in=self.traverse_up())
@@ -490,10 +499,13 @@ class ResourceUsage(models.Model):
         approved_voting_groups = set()
         matching_voting_groups = defaultdict(set)
 
-        for manager_user, manager in self.resource.get_managers():
-            if manager.voting_group:
-                all_voting_groups.add(manager.voting_group)
-                matching_voting_groups[manager_user].add(manager.voting_group)
+        for voting_group, manager_users in self.resource.get_voting_groups().items():
+            if not voting_group:
+                continue
+
+            all_voting_groups.add(voting_group)
+            for _, manager_user in manager_users:
+                matching_voting_groups[manager_user].add(voting_group)
 
         for vote in self.confirmations.filter(revoked_at__isnull=True):
             approved_voting_groups.update(matching_voting_groups[vote.approver])

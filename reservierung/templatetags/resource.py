@@ -12,8 +12,6 @@ register = template.Library()
 @register.filter("resource_approval_scheme")
 def resource_approval_scheme(resource_or_usage: models.Resource | models.ResourceUsage,
                              ) -> SafeText:
-    voting_groups = defaultdict(list)
-
     if isinstance(resource_or_usage, models.Resource):
         resource = resource_or_usage
         usage = None
@@ -32,9 +30,11 @@ def resource_approval_scheme(resource_or_usage: models.Resource | models.Resourc
                      approver__isnull=False,
                  )}
 
-    for manager_user, manager in resource.get_managers():
-        voting_groups[manager.voting_group].append(
-            (manager_user, votes.get(manager_user), manager.funktion.funktion_label))
+    raw_voting_groups = resource.get_voting_groups()
+
+    voting_groups = {voting_group: [(manager_user, votes.get(manager_user), funktion.funktion_label)
+                                    for funktion, manager_user in manager_users]
+                     for voting_group, manager_users in raw_voting_groups.items()}
 
     context = {}
     context["resource"] = resource
