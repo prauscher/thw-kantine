@@ -610,6 +610,13 @@ class ResourceUsage(models.Model):
         for manager in ResourceManager.objects.filter(resource__in=resources):
             users.update(manager.funktion.user.all())
 
+        # add users of conflicting usages
+        conflicts, _ = self.get_conflicts()
+        for conflict_usage, _, _ in conflicts:
+            conflict_owner = conflict_usage.termin.owner
+            if conflict_owner:
+                users.add(conflict_owner)
+
         return users
 
     def send_confirm(self):
