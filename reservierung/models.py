@@ -469,7 +469,27 @@ class ResourceUsage(models.Model):
         Mostly the same as voting groups for the Resource of this Usage, but
         may contain an additional voting group to resolve conflicts.
         """
-        return self.resource.get_voting_groups()
+        voting_groups = self.resource.get_voting_groups()
+
+        # special case for self-regulating resources: require approval from
+        # earlier conflicting usages
+        if list(voting_groups) == [""]:
+            related_usages = ResourceUsage.find_related(
+                self.termin.start,
+                self.termin.end,
+                [self.resource],
+            ).filter(approved_by__lt=self.approved_at)
+
+            for related_usage in related_usages:
+                related_owner = related_usage.termin.owner
+                if related_owner:
+                    voting_group = f"Buchung #{related_usage.id}"
+                    voting_groups.setdefault(voting_group, [])
+                    voting_groups[voting_group].append(
+                        (f"Terminersteller {related_usage.termin.label}", related_owner),
+                    )
+
+        return voting_groups
 
     def get_conflicts(self) -> tuple[list[tuple["ResourceUsage", datetime, datetime]], bool]:
         """Find conflicting ResourceUsage with this ResourceUsage.
