@@ -713,13 +713,6 @@ class ResourceUsageLogMessage(models.Model):
 
 
 class ResourceUsageConfirmation(models.Model):
-    REVOKE_TERMIN_CHANGE = "termin_change"
-    REVOKE_APPROVER = "approver"
-    REVOKE_REASONS = {
-        REVOKE_TERMIN_CHANGE: "Änderung an Termin",
-        REVOKE_APPROVER: "Durch Genehmiger zurückgezogen",
-    }
-
     resource_usage = models.ForeignKey(
         ResourceUsage,
         on_delete=models.CASCADE,
@@ -749,13 +742,6 @@ class ResourceUsageConfirmation(models.Model):
         verbose_name="Zurückgezogen",
         help_text="Datum zu dem die Genehmigung zurückgezogen wurde (leer wenn"
                   " die Genehmigung gültig ist)",
-    )
-    revoke_reason = models.CharField(
-        max_length=20,
-        choices=REVOKE_REASONS,
-        blank=True,
-        verbose_name="Rückzugsgrund",
-        help_text="Grund für den Rückzug der Genehmigung.",
     )
 
     def __str__(self):
