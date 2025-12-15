@@ -306,15 +306,16 @@ class Resource(models.Model):
         for child in self.consists_of.all():
             yield from child.traverse_down()
 
-    def get_voting_groups(self) -> dict[str, list[tuple["Funktion", "User"]]]:
+    def get_voting_groups(self) -> dict[str, list[tuple[str, "User"]]]:
         """Get voting groups of this Resource.
 
         Returns a dict with str containing the voting group as key and a list
-        of tuples consisting of the Funktion and User for each eligble user.
+        of tuples consisting of the funktion_label and User for each eligble
+        user.
         Note that one voting group may be the empty string for users not
         actually voting, but being informed.
 
-        str (voting group) => list of (Funktion, User)
+        str (voting group) => list of (str (funktion_label), User)
         """
         voting_groups = {}
         for manager in self.managers.all():
@@ -462,7 +463,7 @@ class ResourceUsage(models.Model):
             rejected_at__isnull=True,
         )
 
-    def get_voting_groups(self) -> dict[str, list[tuple["Funktion", "User"]]]:
+    def get_voting_groups(self) -> dict[str, list[tuple[str, "User"]]]:
         """Get voting groups eligble for this Usage.
 
         Mostly the same as voting groups for the Resource of this Usage, but

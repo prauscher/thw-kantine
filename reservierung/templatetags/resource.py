@@ -32,8 +32,8 @@ def resource_approval_scheme(resource_or_usage: models.Resource | models.Resourc
                      approver__isnull=False,
                  )}
 
-    voting_groups = {voting_group: [(manager_user, votes.get(manager_user), funktion.funktion_label)
-                                    for funktion, manager_user in manager_users]
+    voting_groups = {voting_group: [(manager_user, votes.get(manager_user), funktion_label)
+                                    for funktion_label, manager_user in manager_users]
                      for voting_group, manager_users in raw_voting_groups.items()}
 
     context = {}
