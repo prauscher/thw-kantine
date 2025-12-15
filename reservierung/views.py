@@ -158,7 +158,7 @@ class UebersichtView(TemplateView):
             our_voting_groups = set()
             approved_voting_groups = set()
 
-            for voting_group, manager_users in usage.resource.get_voting_groups().items():
+            for voting_group, manager_users in usage.get_voting_groups().items():
                 if not voting_group:
                     continue
 

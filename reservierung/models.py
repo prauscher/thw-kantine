@@ -208,7 +208,7 @@ class Termin(models.Model):
 
         missing_voting_groups = set()
         voting_groups = defaultdict(list)
-        for voting_group, manager_users in resource.get_voting_groups().items():
+        for voting_group, manager_users in usage.get_voting_groups().items():
             if voting_group:
                 missing_voting_groups.add(voting_group)
 
@@ -306,7 +306,7 @@ class Resource(models.Model):
         for child in self.consists_of.all():
             yield from child.traverse_down()
 
-    def get_voting_groups(self):
+    def get_voting_groups(self) -> dict[str, list[tuple["Funktion", "User"]]]:
         """Get voting groups of this Resource.
 
         Returns a dict with str containing the voting group as key and a list
@@ -462,6 +462,14 @@ class ResourceUsage(models.Model):
             rejected_at__isnull=True,
         )
 
+    def get_voting_groups(self) -> dict[str, list[tuple["Funktion", "User"]]]:
+        """Get voting groups eligble for this Usage.
+
+        Mostly the same as voting groups for the Resource of this Usage, but
+        may contain an additional voting group to resolve conflicts.
+        """
+        return self.resource.get_voting_groups()
+
     def get_conflicts(self) -> tuple[list[tuple["ResourceUsage", datetime, datetime]], bool]:
         """Find conflicting ResourceUsage with this ResourceUsage.
 
@@ -499,7 +507,7 @@ class ResourceUsage(models.Model):
         approved_voting_groups = set()
         matching_voting_groups = defaultdict(set)
 
-        for voting_group, manager_users in self.resource.get_voting_groups().items():
+        for voting_group, manager_users in self.get_voting_groups().items():
             if not voting_group:
                 continue
 

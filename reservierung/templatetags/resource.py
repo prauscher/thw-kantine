@@ -15,9 +15,11 @@ def resource_approval_scheme(resource_or_usage: models.Resource | models.Resourc
     if isinstance(resource_or_usage, models.Resource):
         resource = resource_or_usage
         usage = None
+        raw_voting_groups = resource.get_voting_groups()
     elif isinstance(resource_or_usage, models.ResourceUsage):
         resource = resource_or_usage.resource
         usage = resource_or_usage
+        raw_voting_groups = usage.get_voting_groups()
     else:
         message = f"{resource_or_usage} ({type(resource_or_usage)} is not supported."
         raise TypeError(message)
@@ -29,8 +31,6 @@ def resource_approval_scheme(resource_or_usage: models.Resource | models.Resourc
                      revoked_at__isnull=True,
                      approver__isnull=False,
                  )}
-
-    raw_voting_groups = resource.get_voting_groups()
 
     voting_groups = {voting_group: [(manager_user, votes.get(manager_user), funktion.funktion_label)
                                     for funktion, manager_user in manager_users]
