@@ -359,7 +359,7 @@ class Funktion(models.Model):
         blank=True,
     )
     funktion_label = models.CharField(
-        max_length=40,
+        max_length=50,
         blank=True,
         verbose_name="Funktion",
         help_text="Optionale Funktionsbezeichnung wie in THWin (z.B. Gruppenfü"
