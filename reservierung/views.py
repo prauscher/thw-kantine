@@ -116,14 +116,35 @@ class UebersichtView(TemplateView):
         context = super().get_context_data()
         user = models.User.get(self.request)
 
+        context["next_own_termine"] = self.get_next_own_termine(user, limit=5)
+        context["admin_missing_approval"] = self.get_admin_missing_approval(user)
+        context["missing_approval"] = self.get_missing_approval(user, limit=5)
+        context["next_managed_resource_termine"] = self.get_next_managed_resource_termine(user, limit=5)
+        return context
+
+    def get_next_own_termine(self, user, *, limit):
         next_own_termine = models.Termin.objects.filter(
             owner=user,
             end__gte=timezone.now(),
-        ).order_by("start")[:5]
-        context["next_own_termine"] = []
-        for termin in next_own_termine:
-            context["next_own_termine"].append((termin, termin.state))
+        ).order_by("start")[:limit]
+        return [(termin, termin.state) for termin in next_own_termine]
 
+    def get_admin_missing_approval(self, user):
+        admin_resources = set()
+        for manager in models.ResourceManager.objects.filter(admin=True, funktion__user=user):
+            admin_resources.update(manager.resource.traverse_down())
+        # remove resources with managers (we only want to show self managed)
+        for manager in models.ResourceManager.objects.filter(~Q(voting_group="")):
+            admin_resources.discard(manager.resource)
+
+        return models.ResourceUsage.objects.filter(
+            termin__end__gte=timezone.now(),
+            resource__in=admin_resources,
+            approved_at__isnull=True,
+            rejected_at__isnull=True,
+        )
+
+    def get_missing_approval(self, user, *, limit: int):
         # find ResourceUsage with pending approval where we are manager and have not voted yet
         all_missing_approval = models.ResourceUsage.objects.filter(
             approved_at__isnull=True,
@@ -134,20 +155,7 @@ class UebersichtView(TemplateView):
             Q(resource__managers__funktion__user=models.User.get(self.request))
         ).order_by("termin__start")
 
-        admin_resources = set()
-        for manager in models.ResourceManager.objects.filter(admin=True, funktion__user=user):
-            admin_resources.update(manager.resource.traverse_down())
-        # remove resources with managers (we only want to show self managed)
-        for manager in models.ResourceManager.objects.filter(~Q(voting_group="")):
-            admin_resources.discard(manager.resource)
-        context["admin_missing_approval"] = models.ResourceUsage.objects.filter(
-            termin__end__gte=timezone.now(),
-            resource__in=admin_resources,
-            approved_at__isnull=True,
-            rejected_at__isnull=True,
-        )
-
-        context["missing_approval"] = []
+        missing_approval = []
         for usage in all_missing_approval:
             votes = {}
             for vote in usage.confirmations.filter(revoked_at__isnull=True, approver__isnull=False):
@@ -173,20 +181,20 @@ class UebersichtView(TemplateView):
             if not our_missing_voting_groups:
                 continue
 
-            context["missing_approval"].append(usage)
+            missing_approval.append(usage)
 
-            # show maximum 5 items here
-            if len(context["missing_approval"]) >= 5:
+            if len(context["missing_approval"]) >= limit:
                 break
 
+        return missing_approval
+
+    def get_next_managed_resource_termine(self, user, *, limit: int):
         my_resources = models.ResourceManager.objects.filter(funktion__user=user).values("resource")
-        context["next_managed_resource_termine"] = models.ResourceUsage.objects.filter(
+        return models.ResourceUsage.objects.filter(
             rejected_at__isnull=True,
             termin__end__gte=timezone.now(),
             resource__in=my_resources,
-        )[:5]
-
-        return context
+        )[:limit]
 
 
 def update_url(request, params):
