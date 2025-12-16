@@ -647,6 +647,16 @@ class ResourceUsage(models.Model):
         User.send_multiple(self.get_audience(), MESSAGE_CONFIRM,
                            **self._message_kwargs())
 
+        # check if this owner should now vote on other usages
+        if list(self.resource.get_voting_groups()) == [""]:
+            depending_usages = ResourceUsage.find_related(
+                self.termin.start,
+                self.termin.end,
+                [self.resource],
+            ).filter(approved_by__isnull=True)
+            for usage in depending_usages:
+                usage.send_vote([self.owner])
+
     def send_unconfirm(self):
         User.send_multiple(self.get_audience(), MESSAGE_UNCONFIRM,
                            **self._message_kwargs())
