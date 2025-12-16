@@ -111,5 +111,19 @@ $(function () {
 	start_field.change(_check);
 	end_field.change(_check);
 });
+
+$(function () {
+	// Allow clicking on any part of the ressource row to toggle checkbox
+	$("#resources tr").click(function (e) {
+		e.stopPropagation();
+
+		var $checkbox = $(this).find("input:checkbox");
+		var $label = $(this).find("label");
+
+		if (! $(e.target).is($checkbox) && ! $(e.target).is($label)) {
+			$checkbox.prop("checked", ! $checkbox.prop("checked"));
+		}
+	})
+});
 </script>
 {% endblock %}
