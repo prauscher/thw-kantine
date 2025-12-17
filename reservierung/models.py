@@ -248,6 +248,11 @@ class Termin(models.Model):
         usage.delete()
 
 
+class VotingGroups(dict[str, list[tuple[str, User]]]):
+    def is_open(self) -> bool:
+        return list(voting_group for voting_group in self if voting_group) == []
+
+
 class Resource(models.Model):
     part_of = models.ForeignKey(
         "self",
@@ -322,7 +327,7 @@ class Resource(models.Model):
         except ResourceUsage.DoesNotExist:
             return None
 
-    def get_voting_groups(self) -> dict[str, list[tuple[str, "User"]]]:
+    def get_voting_groups(self) -> VotingGroups:
         """Get voting groups of this Resource.
 
         Returns a dict with str containing the voting group as key and a list
@@ -484,7 +489,7 @@ class ResourceUsage(models.Model):
             related_usages = related_usages.filter(termin__start__lte=end)
         return related_usages
 
-    def get_voting_groups(self) -> dict[str, list[tuple[str, "User"]]]:
+    def get_voting_groups(self) -> VotingGroups:
         """Get voting groups eligble for this Usage.
 
         Mostly the same as voting groups for the Resource of this Usage, but
@@ -494,7 +499,7 @@ class ResourceUsage(models.Model):
 
         # special case for self-regulating resources: require approval from
         # earlier conflicting usages
-        if list(voting_groups) == [""]:
+        if voting_groups.is_open():
             related_usages = ResourceUsage.find_related(
                 self.termin.start,
                 self.termin.end,
@@ -669,7 +674,7 @@ class ResourceUsage(models.Model):
                            **self._message_kwargs())
 
         # check if this owner should now vote on other usages
-        if list(self.resource.get_voting_groups()) == [""]:
+        if self.resource.get_voting_groups().is_open():
             depending_usages = ResourceUsage.find_related(
                 self.termin.start,
                 self.termin.end,
