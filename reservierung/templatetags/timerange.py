@@ -33,7 +33,7 @@ TIMEDELTA_FORMATS = [
     (lambda delta: delta.seconds, timedelta(seconds=10), "Sekunde,Sekunden"),
 ]
 
-@register.simple_tag
+@register.filter
 def timedelta_until(end: datetime) -> str:
     delta = timezone.now() - end
 
