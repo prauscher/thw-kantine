@@ -35,7 +35,7 @@ TIMEDELTA_FORMATS = [
 
 @register.filter
 def timedelta_until(end: datetime) -> str:
-    delta = timezone.now() - end
+    delta = end - timezone.now()
 
     for formater, threshold, units in TIMEDELTA_FORMATS:
         if delta > threshold:

@@ -213,7 +213,7 @@ class UebersichtView(TemplateView):
                     None,  # until
                 )
             else:
-                blocked = next_usage.termin.start >= timezone.now()
+                blocked = next_usage.termin.start <= timezone.now()
                 yield (
                     resource,
                     blocked,
