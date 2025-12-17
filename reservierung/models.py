@@ -338,7 +338,7 @@ class Resource(models.Model):
 
         str (voting group) => list of (str (funktion_label), User)
         """
-        voting_groups = {}
+        voting_groups = VotingGroups()
         for manager in self.managers.all():
             voting_group = manager.voting_group
             voting_groups.setdefault(voting_group, [])
