@@ -212,7 +212,7 @@ class Termin(models.Model):
             if voting_group:
                 missing_voting_groups.add(voting_group)
 
-            voting_groups[voting_groups].extend(manager_user for _, manager_user in manager_users)
+            voting_groups[voting_group].extend(manager_user for _, manager_user in manager_users)
 
         inform_users = set(voting_groups.pop("", []))
         vote_users = set()
