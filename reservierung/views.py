@@ -136,7 +136,7 @@ class UebersichtView(TemplateView):
         for manager in models.ResourceManager.objects.filter(admin=True, funktion__user=user):
             admin_resources.update(manager.resource.traverse_down())
         # remove resources with managers (we only want to show self managed)
-        for manager in models.ResourceManager.objects.filter(~Q(voting_group="")):
+        for manager in models.ResourceManager.objects.exclude(voting_group=""):
             admin_resources.discard(manager.resource)
 
         return models.ResourceUsage.objects.filter(
