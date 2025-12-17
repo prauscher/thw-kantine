@@ -628,14 +628,15 @@ class ResourceUsageDetailView(DetailView):
         context = super().get_context_data(*args, **kwargs)
 
         user = models.User.get(self.request)
+        voting_groups = self.object.get_voting_groups()
 
+        context["voting_groups"] = voting_groups
         context["may_reject"] = self.object.rejected_at is None and self.object.resource.is_admin(user)
         context["may_revert_reject"] = self.object.rejected_by == user
         context["may_revoke"] = self.object.confirmations.filter(
             revoked_at__isnull=True, approver=user).exists()
-        context["may_vote"] = not context["may_revoke"] and self.object.resource.managers.filter(
-            Q(funktion__user=user) & ~Q(voting_group=""))
-        context["has_voting_groups"] = self.object.resource.managers.filter(~Q(voting_group="")).exists()
+        context["may_vote"] = not context["may_revoke"] and voting_groups.may_vote(user)
+        context["has_voting_groups"] = not voting_groups.is_open()
 
         context["conflicts"], context["conflict_confirmed"] = self.object.get_conflicts()
 
@@ -704,8 +705,10 @@ class ResourceUsageVoteView(ResourceUsageConfirmView):
         if self.get_confirmation_queryset(user).exists():
             raise Http404
 
+        voting_groups = self.object.get_voting_groups()
+
         # check if we may vote after all
-        if not self.object.resource.managers.filter(Q(funktion__user=user) & ~Q(voting_group="")).exists():
+        if not voting_groups.may_vote(user):
             raise Http404
 
         # store vote

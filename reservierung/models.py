@@ -252,6 +252,10 @@ class VotingGroups(dict[str, list[tuple[str, User]]]):
     def is_open(self) -> bool:
         return list(voting_group for voting_group in self if voting_group) == []
 
+    def may_vote(self, /, user) -> bool:
+        return any(any(user == manager_user for _, manager_user in users)
+                   for voting_group, users in self.items() if voting_group)
+
 
 class Resource(models.Model):
     part_of = models.ForeignKey(

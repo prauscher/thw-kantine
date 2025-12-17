@@ -94,6 +94,6 @@
 
 {% include "reservierung/_log_messages.html" with log_messages=log_messages show_usage_col=False %}
 
-{{ object|resource_approval_scheme }}
+{{ object|resource_approval_scheme:voting_groups }}
 
 {% endblock %}
