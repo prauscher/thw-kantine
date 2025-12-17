@@ -12,7 +12,7 @@ class UserAdmin(admin.ModelAdmin):
 class ResourceUsageInline(admin.StackedInline):
     model = models.ResourceUsage
     readonly_fields = ("created_at",)
-    fields = ("approved_at", "rejected_at", "rejected_by")
+    fields = ("approved_at", "rejected_at", "rejected_by", "resource")
 
 
 @admin.register(models.Termin)
