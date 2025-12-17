@@ -283,11 +283,11 @@ class Resource(models.Model):
     )
 
     @property
-    def related_resources(self):
+    def related_resources(self) -> set["Resource"]:
         """List all related resources (superordinated and subordnated)."""
         return set(self.traverse_up()) | set(self.traverse_down())
 
-    def traverse_up(self):
+    def traverse_up(self) -> Iterator["Resource"]:
         """Iterate over all superordinated `Resource`s.
 
         Include own object. Useful when looking for conflicts.
@@ -296,7 +296,7 @@ class Resource(models.Model):
         if self.part_of:
             yield from self.part_of.traverse_up()
 
-    def traverse_down(self):
+    def traverse_down(self) -> Iterator["Resource"]:
         """Iterate over all subordinate `Resource`s.
 
         Include own object as first item. Useful to find all `ResourceManager`s
@@ -305,6 +305,22 @@ class Resource(models.Model):
         yield self
         for child in self.consists_of.all():
             yield from child.traverse_down()
+
+    def get_next_usage(self) -> "ResourceUsage" | None:
+        """Get next ResourceUsage matching this Resource."""
+        try:
+            # look for first ResourceUsage for self after now, priorizing
+            # approved ones
+            return ResourceUsage.find_related(
+                timezone.now(),
+                None,
+                [self],
+            ).order_by(
+                "start",
+                models.F("approved_at").asc(nulls_last=True),
+            )[:1]
+        except ResourceUsage.DoesNotExist:
+            return None
 
     def get_voting_groups(self) -> dict[str, list[tuple[str, "User"]]]:
         """Get voting groups of this Resource.
@@ -325,13 +341,13 @@ class Resource(models.Model):
                 (manager.funktion, user) for user in manager.funktion.user.all())
         return voting_groups
 
-    def _get_admin_query(self):
+    def _get_admin_query(self) -> QuerySet["ResourceManager"]:
         return ResourceManager.objects.filter(admin=True, resource__in=self.traverse_up())
 
-    def is_admin(self, user):
+    def is_admin(self, user) -> bool:
         return self._get_admin_query().filter(funktion__user=user).exists()
 
-    def get_admins(self):
+    def get_admins(self) -> Iterator[tuple[User | None, "ResourceManager"]]:
         for admin in self._get_admin_query():
             users = admin.funktion.user.all()
             for user in users:
@@ -451,17 +467,22 @@ class ResourceUsage(models.Model):
         return self.approved_at is not None and self.rejected_at is None
 
     @classmethod
-    def find_related(cls, /, start: datetime, end: datetime, resources: Iterable[Resource]) -> models.QuerySet["ResourceUsage"]:
+    def find_related(cls, /, start: datetime | None, end: datetime | None,
+                     resources: Iterable[Resource],
+                     ) -> models.QuerySet["ResourceUsage"]:
         related_resources = set()
         for resource in resources:
             related_resources.update(resource.related_resources)
 
-        return cls.objects.filter(
-            termin__start__lte=end,
-            termin__end__gte=start,
+        related_usages = cls.objects.filter(
             resource__in=related_resources,
             rejected_at__isnull=True,
         )
+        if start:
+            related_usages = related_usages.filter(termin__end__gte=start)
+        if end:
+            related_usages = related_usages.filter(termin__start__lte=end)
+        return related_usages
 
     def get_voting_groups(self) -> dict[str, list[tuple[str, "User"]]]:
         """Get voting groups eligble for this Usage.

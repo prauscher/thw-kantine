@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from django import template
 from django.utils import timezone
+from django.template.defaultfilters import pluralize
 
 register = template.Library()
 
@@ -23,3 +24,21 @@ def format_time_relative(relative: datetime, target: datetime) -> str:
     if relative.date() == target.date():
         return f"{target:%H:%M}"
     return f"{target:%d.%m.%Y %H:%M}"
+
+
+TIMEDELTA_FORMATS = [
+    (lambda delta: delta.days, timedelta(hours=36), "Tag,Tage"),
+    (lambda delta: delta.seconds // 3600, timedelta(hours=2), "Stunde,Stunden"),
+    (lambda delta: delta.seconds // 60, timedelta(minutes=2), "Minute,Minuten"),
+    (lambda delta: delta.seconds, timedelta(seconds=10), "Sekunde,Sekunden"),
+]
+
+@register.simple_tag
+def timedelta_until(end: datetime) -> str:
+    delta = timezone.now() - end
+
+    for formater, threshold, units in TIMEDELTA_FORMATS:
+        if delta > threshold:
+            result = formater(delta)
+            return f"noch {result} {pluralize(result, units)}"
+    return "bis gleich"

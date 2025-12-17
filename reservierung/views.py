@@ -120,6 +120,8 @@ class UebersichtView(TemplateView):
         context["admin_missing_approval"] = self.get_admin_missing_approval(user)
         context["missing_approval"] = self.get_missing_approval(user, limit=5)
         context["next_managed_resource_termine"] = self.get_next_managed_resource_termine(user, limit=5)
+        context["next_usages"] = self.get_next_usages()
+
         return context
 
     def get_next_own_termine(self, user, *, limit):
@@ -195,6 +197,32 @@ class UebersichtView(TemplateView):
             termin__end__gte=timezone.now(),
             resource__in=my_resources,
         )[:limit]
+
+    def get_next_usages(self):
+        # "open" resources are those which are selectable and have no manager with a voting group
+        open_resources = models.Resource.objects.filter(selectable=True).exclude(
+            managers__voting_group__regex=".+",
+        ).order_by("label")
+
+        for resource in open_resources:
+            next_usage = resource.get_next_usage()
+            if next_usage is None:
+                yield (
+                    resource,
+                    False,  # blocked
+                    None,  # until
+                    False,  # approved
+                    None,  # next_usage
+                )
+            else:
+                blocked = next_usage.start >= timezone.now()
+                yield (
+                    resource,
+                    blocked,
+                    next_usage.end if blocked else next_usage.start,  # until
+                    next_usage.approved_at is not None,  # approved
+                    next_usage,
+                )
 
 
 def update_url(request, params):
