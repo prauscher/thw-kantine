@@ -850,7 +850,7 @@ class ResourceDetailView(DetailView):
 
         context["usages"] = models.ResourceUsage.find_related(
             timezone.now(),
-            timezone.now() + timedelta(days=30),
+            None,
             [self.object],
         ).order_by("termin__start")[:3]
 
