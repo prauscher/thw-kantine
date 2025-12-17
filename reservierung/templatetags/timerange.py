@@ -15,7 +15,7 @@ def timerange_filter(start: datetime, end: datetime) -> str:
     if end - start < timedelta(hours=12) or start.date() == end.date():
         return f"{start:%d.%m.%Y %H:%M} - {end:%H:%M}"
     if start.year == end.year and start.month == end.month:
-        return f"{start:%d}. - {end:%m.%Y %H:%M}"
+        return f"{start:%d.} - {end:%d.%m.%Y %H:%M}"
     return f"{start:%d.%m.Y} - {end:%d.%m.%Y}"
 
 
