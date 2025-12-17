@@ -498,13 +498,16 @@ class ResourceUsage(models.Model):
         voting_groups = self.resource.get_voting_groups()
 
         # special case for self-regulating resources: require approval from
-        # earlier conflicting usages
+        # usages already approved. If we are approved, only use usages approved
+        # until our own approval time.
         if voting_groups.is_open():
             related_usages = ResourceUsage.find_related(
                 self.termin.start,
                 self.termin.end,
                 [self.resource],
-            ).filter(approved_at__lt=self.approved_at)
+            ).filter(**({"approved_at__isnull": False}
+                        if self.approved_at is None else
+                        {"approved_at__lt": self.approved_at}))
 
             for related_usage in related_usages:
                 related_owner = related_usage.termin.owner
