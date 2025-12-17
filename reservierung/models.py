@@ -504,7 +504,7 @@ class ResourceUsage(models.Model):
                 self.termin.start,
                 self.termin.end,
                 [self.resource],
-            ).filter(approved_by__lt=self.approved_at)
+            ).filter(approved_at__lt=self.approved_at)
 
             for related_usage in related_usages:
                 related_owner = related_usage.termin.owner
@@ -679,7 +679,7 @@ class ResourceUsage(models.Model):
                 self.termin.start,
                 self.termin.end,
                 [self.resource],
-            ).filter(approved_by__isnull=True)
+            ).filter(approved_at__isnull=True)
             for usage in depending_usages:
                 usage.send_vote([self.owner])
 
