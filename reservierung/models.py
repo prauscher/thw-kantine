@@ -316,7 +316,7 @@ class Resource(models.Model):
                 None,
                 [self],
             ).order_by(
-                "start",
+                "termin__start",
                 models.F("approved_at").asc(nulls_last=True),
             )[:1]
         except ResourceUsage.DoesNotExist:
