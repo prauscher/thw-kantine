@@ -113,6 +113,25 @@ $(function () {
 });
 
 $(function () {
+	// Default end to start + 2 hours
+	$("#id_start").change(function () {
+		var value = $(this).val();
+		if (value != "" && $("#id_end").val() == "") {
+			var date = new Date(value);
+			date.setHours(date.getHours() + 2);
+			// toISOString is nearly perfect, but uses UTC...
+			$("#id_end").val(
+				date.getFullYear() + "-" +
+				(date.getMonth() + 1).toString().padStart(2, "0") + "-" +
+				date.getDate().toString().padStart(2, "0") + "T" +
+				date.getHours().toString().padStart(2, "0") + ":" +
+				date.getMinutes().toString().padStart(2, "0")
+			);
+		}
+	});
+});
+
+$(function () {
 	// Allow clicking on any part of the ressource row to toggle checkbox
 	$("#resources tr").click(function (e) {
 		e.stopPropagation();
