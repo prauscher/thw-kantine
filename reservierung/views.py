@@ -353,6 +353,16 @@ class TerminListView(FilteredListView):
     search_fields = ("label", "usages__resource__label")
     ordering = ("start",)
 
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context["object_list"] = [
+            {
+                "termin": object,
+                "usages": object.usages.all().order_by("resource__label"),
+            } for object in context["object_list"]
+        ]
+        return context
+
 
 @method_decorator(require_jwt_login, name="dispatch")
 class ResourceUsageListView(TitledMixin, FilteredListView):

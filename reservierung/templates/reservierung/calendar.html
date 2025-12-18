@@ -43,7 +43,7 @@
      {% for usage in termin.usages.all %}
       <span class="text-nowrap">
        {{ usage.resource.label }}
-       {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state %}
+       {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state label=None %}
       </span>
      {% endfor %}
     </li>

@@ -28,14 +28,20 @@
  <th scope="col">Termin</th>
  <th scope="col">Zeitraum</th>
  <th scope="col">Person</th>
+ <th scope="col" class="d-none d-lg-table-cell">Ressourcen</th>
 {% endblock %}
 
 {% block item %}
- <th scope="row"><a href="{{ object.get_absolute_url }}">{{ object.label|highlighter:search_words }}</a></td>
- <td>{{ object.start|timerange:object.end }}</td>
- <td>{{ object.owner|highlighter:search_words }}</td>
+ <th scope="row"><a href="{{ object.termin.get_absolute_url }}">{{ object.termin.label|highlighter:search_words }}</a></td>
+ <td>{{ object.termin.start|timerange:object.termin.end }}</td>
+ <td>{{ object.termin.owner|highlighter:search_words }}</td>
+ <td class="d-none d-lg-table-cell">
+  {% for usage in object.usages %}
+   {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state label=usage.resource.label %}
+  {% endfor %}
+ </td>
 {% endblock %}
 
 {% block empty %}
- <th colspan="3">(Keine Einträge)</th>
+ <th colspan="4">(Keine Einträge)</th>
 {% endblock %}

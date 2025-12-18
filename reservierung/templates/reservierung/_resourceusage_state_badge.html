@@ -1,7 +1,7 @@
 {% if state == "requested" %}
- <span class="badge bg-info">Angefragt</span>
+ <span class="badge bg-info">{{ label|default:"Angefragt" }}</span>
 {% elif state == "approved" %}
- <span class="badge bg-success">Bestätigt</span>
+ <span class="badge bg-success">{{ label|default:"Bestätigt" }}</span>
 {% elif state == "rejected" %}
- <span class="badge bg-danger">Abgelehnt</span>
+ <span class="badge bg-danger">{{ label|default:"Abgelehnt" }}</span>
 {% endif %}
