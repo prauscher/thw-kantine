@@ -29,6 +29,10 @@
   {% if show_usage_col %}<td><a href="{{ log_message.usage.get_absolute_url }}">{{ log_message.usage.resource.label }}</a></td>{% endif %}
   <td>{{ log_message.message }}</td>
  </tr>
+ {% empty %}
+ <tr>
+  <td colspan="{% if show_usage_col %}5{% else %}4{% endif %}">Keine Meldungen hinterlegt.</td>
+ </tr>
  {% endfor %}
 </tbody>
 </table>
