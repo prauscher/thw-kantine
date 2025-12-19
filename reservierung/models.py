@@ -1,5 +1,5 @@
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from contextlib import suppress
 from datetime import datetime
 import uuid
@@ -315,7 +315,7 @@ class Resource(models.Model):
         for child in self.consists_of.all():
             yield from child.traverse_down()
 
-    def get_next_usage(self) -> "ResourceUsage" | None:
+    def get_next_usage(self) -> "ResourceUsage | None":
         """Get next ResourceUsage matching this Resource."""
         try:
             # look for first ResourceUsage for self after now, priorizing
@@ -350,7 +350,7 @@ class Resource(models.Model):
                 (manager.funktion, user) for user in manager.funktion.user.all())
         return voting_groups
 
-    def _get_admin_query(self) -> QuerySet["ResourceManager"]:
+    def _get_admin_query(self) -> models.QuerySet["ResourceManager"]:
         return ResourceManager.objects.filter(admin=True, resource__in=self.traverse_up())
 
     def is_admin(self, user) -> bool:

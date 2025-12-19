@@ -11,7 +11,7 @@ register = template.Library()
 
 @register.filter("resource_approval_scheme")
 def resource_approval_scheme(resource_or_usage: models.Resource | models.ResourceUsage,
-                             raw_voting_groups: models.VotingGroup | None = None,
+                             raw_voting_groups: models.VotingGroups | None = None,
                              ) -> SafeText:
     if isinstance(resource_or_usage, models.Resource):
         resource = resource_or_usage
