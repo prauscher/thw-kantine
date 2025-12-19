@@ -28,11 +28,13 @@
   einer Buchungsmöglichkeit wähle eine Ressource aus.</p>
 </div>
 
-<div class="row">
- <div class="ms-auto col-md-auto">
-  <div class="input-group mb-2">
-   <span class="input-group-text">Verfügbarkeitsanzeige:</span>
-   <input type="date" class="form-control" id="avail_date" value="{% now 'Y-m-d' %}" />
+<div class="d-none d-sm-block">
+ <div class="row">
+  <div class="ms-auto col-md-auto">
+   <div class="input-group mb-2">
+    <span class="input-group-text">Verfügbarkeitsanzeige:</span>
+    <input type="date" class="form-control" id="avail_date" value="{% now 'Y-m-d' %}" />
+   </div>
   </div>
  </div>
 </div>
@@ -41,7 +43,7 @@
 <thead>
 <tr>
  <th style="width:20em;" scope="col">Name</th>
- <th scope="col">Verfügbarkeit</th>
+ <th scope="col" class="d-none d-sm-table-cell">Verfügbarkeit</th>
 </tr>
 </thead>
 <tbody>
@@ -58,7 +60,7 @@
     {% endif %}
    </span>
   </th>
-  <td>
+  <td class="d-none d-sm-table-cell">
    <div class="progress usage_bar" id="usage_bar_{{ resource.pk }}"></div>
   </td>
  </tr>
