@@ -1,10 +1,18 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from django import template
 from django.utils import timezone
 from django.template.defaultfilters import pluralize
 
 register = template.Library()
+
+
+def daterange_filter(start: date, end: date) -> str:
+    if (start.month, start.year) == (end.month, end.year):
+        return f"{start:%d.} - {end:%d.%m.%Y}"
+    if start.year == end.year:
+        return f"{start:%d.%m} - {end:%d.%m.%Y}"
+    return f"{start:%d.%m.%Y} - {end:%d.%m.%Y}"
 
 
 @register.filter("timerange")
@@ -14,9 +22,11 @@ def timerange_filter(start: datetime, end: datetime) -> str:
 
     if end - start < timedelta(hours=12) or start.date() == end.date():
         return f"{start:%d.%m.%Y %H:%M} - {end:%H:%M}"
-    if start.year == end.year and start.month == end.month:
-        return f"{start:%d.} - {end:%d.%m.%Y %H:%M}"
-    return f"{start:%d.%m.Y} - {end:%d.%m.%Y}"
+    if (start.month, start.year) == (end.month, end.year):
+        return f"{start:%d.} - {end:%d.%m.%Y}"
+    if start.year == end.year:
+        return f"{start:%d.%m.} - {end:%d.%m.%Y}"
+    return f"{start:%d.%m.%Y} - {end:%d.%m.%Y}"
 
 
 @register.simple_tag
