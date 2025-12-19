@@ -26,15 +26,15 @@
 
 {% block thead %}
  <th scope="col">Termin</th>
- <th scope="col">Zeitraum</th>
- <th scope="col">Person</th>
+ <th scope="col" class="d-none d-sm-table-cell">Zeitraum</th>
+ <th scope="col" class="d-none d-md-table-cell">Person</th>
  <th scope="col" class="d-none d-lg-table-cell">Ressourcen</th>
 {% endblock %}
 
 {% block item %}
  <th scope="row"><a href="{{ object.termin.get_absolute_url }}">{{ object.termin.label|highlighter:search_words }}</a></td>
- <td>{{ object.termin.start|timerange:object.termin.end }}</td>
- <td>{{ object.termin.owner|highlighter:search_words }}</td>
+ <td class="d-none d-sm-table-cell">{{ object.termin.start|timerange:object.termin.end }}</td>
+ <td class="d-none d-md-table-cell">{{ object.termin.owner|highlighter:search_words }}</td>
  <td class="d-none d-lg-table-cell">
   {% for usage in object.usages %}
    {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state label=usage.resource.label %}
