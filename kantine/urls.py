@@ -27,6 +27,7 @@ urlpatterns = [
     path('abfrage/', include('abfrage.urls')),
     path('unterweisung/', include('unterweisung.urls')),
     path('reservierung/', include('reservierung.urls')),
+    path('monitor/', include('monitor.urls')),
     path('admin/', admin.site.urls),
     path('markdownx/', include('markdownx.urls')),
 ]

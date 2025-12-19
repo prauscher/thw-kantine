@@ -11,6 +11,8 @@ pillow==11.3.0
 django-mathfilters==1.0.0
 django-markdownx==4.0.9
 django-object-actions==5.0.0
+caldav==2.2.3
+icalendar==6.3.2
 granian==2.6.0
 # required for django-polymorphic
 setuptools==80.9.0
