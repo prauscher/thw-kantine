@@ -1,5 +1,6 @@
 {% load django_bootstrap5 %}
 {% load bootstrap_icons %}
+{% load static %}
 
 <!doctype html>
 <html lang="de" data-bs-theme="dark">
@@ -41,6 +42,9 @@
      <h1>{% bs_icon 'bar-chart-fill' size='1em' %} Umfragen</h1>
      <div class="card mt-3">
       <ul class="list-group list-group-flush" id="polls_list"></ul>
+     </div>
+     <div class="text-center">
+      <img src="{% static 'monitor/qrcode-polls.svg' %}" class="w-75" />
      </div>
     </div>
     <div class="col-3">
