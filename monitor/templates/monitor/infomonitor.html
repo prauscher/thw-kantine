@@ -45,8 +45,7 @@
     </div>
     <div class="col-3">
      <h1>{% bs_icon 'clock-fill' size='1em' %} Belegung</h1>
-     <div class="card mt-3">
-      <ul class="list-group list-group-flush" id="reservierung_list"></ul>
+     <div id="reservierung_container">
      </div>
     </div>
    </div>
@@ -149,11 +148,12 @@ function renderPolls(data) {
 }
 
 function renderReservierung(data) {
-	$("#reservierung_list").empty().append(data.map((entry) => $("<li>").addClass("list-group-item").append(
-		$("<div>").css("margin-left", entry.indent + "em").append([
+	$("#reservierung_container").empty().append(data.map((entries) => $("<div>").addClass(["card", "mt-3"]).append(
+		$("<ul>").addClass(["list-group", "list-group-flush"]).append(entries.map((entry) => $("<li>").addClass("list-group-item").append([
 			$("<span>").addClass(["fs-5", "badge", entry.blocked ? "bg-danger" : "bg-success", "float-end"]).text((entry.blocked ? "Belegt" : "Frei") + " " + entry.until),
 			$("<span>").addClass(["fs-4", "d-block"]).text(entry.resource),
-		])
+			$("<span>").text(entry.usage_label),
+		])))
 	)));
 }
 

@@ -170,7 +170,7 @@ $(function () {
   <div class="card">
    <div class="card-header">Selbstverwaltete Ressourcen</div>
    <ul class="list-group list-group-flush">
-    {% for resource, blocked, until in next_usages %}
+    {% for resource, next_usage, blocked, until in next_usages %}
     <li class="list-group-item">
      <div class="float-end">
       <span class="badge {% if blocked %}bg-danger{% else %}bg-success{% endif %}">{% if blocked %}Belegt{% else %}Frei{% endif %}</span>

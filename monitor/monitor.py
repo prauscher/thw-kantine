@@ -131,14 +131,24 @@ def build_polls():
 
 
 def build_reservierung():
-    return [
-        {
-            "indent": indent,
+    usages = {
+        resource.pk: {
             "resource": resource.label,
             "blocked": blocked,
-            "until": "" if until >= timezone.now() + timedelta(hours=8) else until.strftime("bis %H:%M"),
+            **({"until": timezone.localtime(until).strftime("bis %H:%M"), "usage_label": next_usage.termin.label}
+               if until and next_usage and until < timezone.now() + timedelta(hours=8) else
+               {"until": "", "usage_label": ""}),
         }
-        for indent, resource, blocked, until in get_next_usages()
+        for resource, next_usage, blocked, until in get_next_usages()
+    }
+
+    return [
+        [
+            usages[resource_id]
+            for resource_id in cluster
+            if resource_id in usages
+        ]
+        for cluster in [(8, 9, 10), (17, 16, 12, 14, 13)]
     ]
 
 

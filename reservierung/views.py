@@ -199,8 +199,7 @@ class UebersichtView(TemplateView):
         )[:limit]
 
     def get_next_usages(self):
-        # strip indention information
-        yield from (next_usage for _, *next_usage in utils.get_next_usages())
+        yield from utils.get_next_usages()
 
 
 def update_url(request, params):
