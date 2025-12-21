@@ -18,7 +18,8 @@ def get_next_usages(**kwargs):
             until = None
         else:
             blocked = next_usage.termin.start <= timezone.now()
-            until = next_usage.termin.end if blocked else next_usage.termin.start
+            until = timezone.localtime(
+                next_usage.termin.end if blocked else next_usage.termin.start)
 
         next_usages.append((sort_key, resource, blocked, until))
 
