@@ -185,7 +185,7 @@ class UebersichtView(TemplateView):
 
             missing_approval.append(usage)
 
-            if len(context["missing_approval"]) >= limit:
+            if len(missing_approval) >= limit:
                 break
 
         return missing_approval
