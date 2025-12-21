@@ -115,7 +115,7 @@ def build_polls():
 
         # nextcloud gives empty list, but entries are dicts?!
         groups = list(dict(poll["currentUserStatus"]["groupInvitations"]).values())
-        if "Ortsverband" not in groups and False:
+        if "Ortsverband" not in groups:
             continue
 
         polls.append({
