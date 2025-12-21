@@ -31,7 +31,7 @@ class Command(BaseCommand):
         hermine_client = get_hermine_client()
 
         if not hermine_client:
-            raise CommandError("Konnte Hermine-Client initialisieren.")
+            raise CommandError("Konnte Hermine-Client nicht initialisieren.")
 
         def _action(teilnehmer: models.Teilnehmer,
                     unterweisungen: QuerySet[models.Unterweisung]) -> None:
