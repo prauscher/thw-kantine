@@ -54,25 +54,29 @@ class Command(BaseCommand):
 
     def handle(self, **_kwargs: dict[str, Any]) -> None:
         try:
-            for message in models.HermineChannelMessage.objects.filter(sent__isnull=True):
+            for message in models.HermineChannelMessage.objects.filter(sent__isnull=True, delay__lte=timezone.now()):
                 try:
                     self.hermine_client.send(self.hermine_client.find_channel(message.channel),
                                              message.message)
                 except TargetNotFoundError:
-                    continue
+                    message.delay = timezone.now() + timedelta(minutes=15)
+                    message.error = "Target not found"
+                    message.save(update_fields=["delay", "error"])
+                else:
+                    message.sent = timezone.now()
+                    message.save(update_fields=["sent"])
 
-                message.sent = timezone.now()
-                message.save(update_fields=["sent"])
-
-            for message in models.HermineUserMessage.objects.filter(sent__isnull=True):
+            for message in models.HermineUserMessage.objects.filter(sent__isnull=True, delay__lte=timezone.now()):
                 try:
                     self.hermine_client.send(self.hermine_client.find_user(message.user),
                                              message.message)
                 except TargetNotFoundError:
-                    continue
-
-                message.sent = timezone.now()
-                message.save(update_fields=["sent"])
+                    message.delay = timezone.now() + timedelta(minutes=15)
+                    message.error = "Target not found"
+                    message.save(update_fields=["delay", "error"])
+                else:
+                    message.sent = timezone.now()
+                    message.save(update_fields=["sent"])
 
         except ConnectionFailedError:
             self.stderr.write("Hermine Login failed\n")
