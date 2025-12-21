@@ -1,5 +1,6 @@
 from datetime import timedelta
 from functools import wraps
+from contextlib import suppress
 import hashlib
 
 from django.db import models
@@ -18,15 +19,18 @@ class CacheItem(models.Model):
                 key = f"{func.__qualname__}#{args}#{sorted(kwargs.items())}"
                 return hashlib.sha256(key.encode()).hexdigest()
 
+            func._update_handlers = []
+
             @wraps(func)
             def wrapper(*args, **kwargs):
                 key = _build_cache_key(args, kwargs)
-                try:
-                    item = cls.objects.get(
-                        key=key,
-                        expires__gte=timezone.now()
-                    )
-                except cls.DoesNotExist:
+                item = None
+                old_value = None
+                with suppress(cls.DoesNotExist):
+                    item = cls.objects.get(key=key)
+                    old_value = item.value
+
+                if item is None or item.expires >= timezone.now():
                     result = func(*args, **kwargs)
                     item, _ = cls.objects.update_or_create(
                         key=key,
@@ -36,13 +40,21 @@ class CacheItem(models.Model):
                         }
                     )
 
+                for update_handler in func._update_handlers:
+                    update_handler(args, kwargs, old_value, item.value)
+
                 return item.value
 
             def _invalidate(*args, **kwargs):
                 key = _build_cache_key(args, kwargs)
                 cls.objects.filter(key=key).delete()
 
+            def _add_update_handler(handler):
+                func._update_handlers.append(handler)
+                return handler
+
             wrapper.invalidate = _invalidate
+            wrapper.on_update = _add_update_handler
             return wrapper
 
         return decorator
