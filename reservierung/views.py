@@ -15,7 +15,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import FormView, TemplateView, ListView, DetailView, DeleteView
 
 from kantine.decorators import require_jwt_login
-from . import models, utils
+from . import models
 from .templatetags.timerange import timerange_filter
 
 @require_POST
@@ -202,7 +202,14 @@ class UebersichtView(TemplateView):
         # "open" resources are those which are selectable and have no manager with a voting group
         open_resources = models.Resource.objects.filter(Q(selectable=True) & ~Q(managers__voting_group__regex=".+")).order_by("label")
 
-        yield from utils.get_next_usages(open_resources)
+        for resource in open_resources:
+            next_usage = resource.get_next_usage()
+            blocked = False
+            until = None
+            if next_usage:
+                blocked = next_usage.termin.start <= timezone.now()
+                until = next_usage.termin.end if blocked else next_usage.termin.start
+            yield resource, next_usage, blocked, until
 
 
 def update_url(request, params):

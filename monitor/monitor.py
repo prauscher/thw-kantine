@@ -4,7 +4,6 @@ from datetime import date, datetime, timedelta
 from django.utils import timezone
 
 from reservierung.models import Resource
-from reservierung.utils import get_next_usages
 from reservierung.templatetags.timerange import daterange_filter, timerange_filter, timedelta_until
 from .announce import query_announce
 from .calendar import query_calendar
@@ -140,23 +139,29 @@ def build_reservierung():
 
     resources = Resource.objects.filter(id__in=set().union(*clusters))
 
-    usages = {
-        resource.pk: {
+    usages = {}
+    for resource in Resource.objects.filter(id__in=set().union(*clusters)):
+        next_usage = resource.get_next_usage()
+        if next_usage and next_usage.termin.start > timezone.now() + timedelta(hours=8):
+            next_usage = None
+
+        blocked = False
+        until = None
+        usage_label = ""
+        if next_usage:
+            blocked = next_usage.termin.start <= timezone.now()
+            until = next_usage.termin.end if blocked else next_usage.termin.start
+            usage_label = next_usage.termin.label
+
+        usages[resource.pk] = {
             "resource": resource.label,
             "blocked": blocked,
-            **({"until": timezone.localtime(until).strftime("bis %H:%M"), "usage_label": next_usage.termin.label}
-               if until and next_usage and until < timezone.now() + timedelta(hours=8) else
-               {"until": "", "usage_label": ""}),
+            "until": timezone.localtime(until).strftime("bis %H:%M") if until else "",
+            "usage_label": usage_label,
         }
-        for resource, next_usage, blocked, until in get_next_usages(resources)
-    }
 
     return [
-        [
-            usages[resource_id]
-            for resource_id in cluster
-            if resource_id in usages
-        ]
+        [usages[resource_id] for resource_id in cluster]
         for cluster in clusters
     ]
 
