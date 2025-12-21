@@ -56,7 +56,7 @@ class User(models.Model):
     def send_hermine(self, message):
         if not self.firstname or not self.surname:
             raise ValueError
-        send_hermine_user(f"{self.firstname} {self.surname}", message)
+        send_hermine_user(f"{self.firstname} {self.surname} (OV Darmstadt)", message)
 
     @classmethod
     def send_multiple(cls, users, message, **kwargs) -> None:
