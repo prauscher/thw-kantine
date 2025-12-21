@@ -181,8 +181,8 @@ function refresh() {
 		"error": function () {
 			$("#loading").show();
 		},
-		"complete": function () {
-			setTimeout(refresh, 30000);
+		"complete": function (jqXHR, status) {
+			setTimeout(refresh, status == "success" ? 30000 : 10000);
 		},
 	});
 }
