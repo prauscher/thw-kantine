@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 
 from django.utils import timezone
 
+from reservierung.models import Resource
 from reservierung.utils import get_next_usages
 from reservierung.templatetags.timerange import daterange_filter, timerange_filter, timedelta_until
 from .announce import query_announce
@@ -131,6 +132,14 @@ def build_polls():
 
 
 def build_reservierung():
+    clusters = [
+        (8, 9, 10),  # hof
+        (17, 16, 12, 14, 13),  # unterrichtsraeume
+        (24, 25),  # pkw und mtw ov
+    ]
+
+    resources = Resource.objects.filter(id__in=set().union(*clusters))
+
     usages = {
         resource.pk: {
             "resource": resource.label,
@@ -139,7 +148,7 @@ def build_reservierung():
                if until and next_usage and until < timezone.now() + timedelta(hours=8) else
                {"until": "", "usage_label": ""}),
         }
-        for resource, next_usage, blocked, until in get_next_usages()
+        for resource, next_usage, blocked, until in get_next_usages(resources)
     }
 
     return [
@@ -148,7 +157,7 @@ def build_reservierung():
             for resource_id in cluster
             if resource_id in usages
         ]
-        for cluster in [(8, 9, 10), (17, 16, 12, 14, 13)]
+        for cluster in clusters
     ]
 
 

@@ -199,7 +199,10 @@ class UebersichtView(TemplateView):
         )[:limit]
 
     def get_next_usages(self):
-        yield from utils.get_next_usages()
+        # "open" resources are those which are selectable and have no manager with a voting group
+        open_resources = models.Resource.objects.filter(Q(selectable=True) & ~Q(managers__voting_group__regex=".+")).order_by("label")
+
+        yield from utils.get_next_usages(open_resources)
 
 
 def update_url(request, params):
