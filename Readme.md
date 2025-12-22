@@ -16,7 +16,6 @@
  - Voting Group: Abgelehnt wenn eine Ablehnung; Zugestimmt wenn eine Zustimmung; Offen sonst
 
 - Infotext je Ressource (0,5to Anhänger)
-- Stein: Aktualisierung in LuK-Hermine-Gruppe
 
 ## Hermine Anbindung
 - Ankündigung in Kantine
