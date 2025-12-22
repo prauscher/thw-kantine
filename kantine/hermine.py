@@ -61,6 +61,7 @@ class StashCatClient:
             data["client_key"] = self.client_key
 
         response = requests.post(f"{self.base_url}/{url}", data=data, headers=self.headers,
+                                 timeout=20,
                                  **kwargs)
         try:
             response.raise_for_status()
