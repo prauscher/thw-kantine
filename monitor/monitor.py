@@ -16,14 +16,12 @@ def build_announce():
     if not announce_url:
         return None
 
-    announce = query_announce(announce_url)
-    if not announce["enabled"] or not announce["message"]:
-        return None
-
-    return {
-        "message": announce["message"],
-        "style": announce["variant"],
-    }
+    announces = query_announce(announce_url)
+    return [
+        {"message": announce["message"], "style": announce["variant"]}
+        for announce in announces["banners"]
+        if announce["enabled"] and announce["message"]
+    ]
 
 
 def build_termine():

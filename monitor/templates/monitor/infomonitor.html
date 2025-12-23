@@ -80,9 +80,7 @@ setInterval(function() {
 }, 500);
 
 function renderAnnounce(data) {
-	$("#announce").empty().append(data == null ? [] : [
-		$("<div>").addClass(["fs-4", "alert", "alert-" + data.style]).text(data.message),
-	]);
+	$("#announce").empty().append(data.map((announce) => $("<div>").addClass(["fs-4", "alert", "alert-" + announce.style]).text(announce.message)));
 }
 
 function renderTermine(data) {
