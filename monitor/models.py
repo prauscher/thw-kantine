@@ -30,7 +30,7 @@ class CacheItem(models.Model):
                     item = cls.objects.get(key=key)
                     old_value = item.value
 
-                if item is None or item.expires >= timezone.now():
+                if item is None or item.expires < timezone.now():
                     result = func(*args, **kwargs)
                     item, _ = cls.objects.update_or_create(
                         key=key,
