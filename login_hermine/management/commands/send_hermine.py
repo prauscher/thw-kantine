@@ -1,3 +1,5 @@
+import requests
+import os
 from functools import cached_property
 from typing import Any
 from django.core.management.base import BaseCommand
@@ -45,11 +47,31 @@ class HermineClient:
         return self.client.send_msg(target, *args, **kwargs)
 
 
+class ExternalHermineClient:
+    def __init__(self, root_url):
+        self.root_url = root_url
+
+    def find_channel(self, channel_name):
+        return f"chan/{channel_name}"
+
+    def find_user(self, name):
+        return f"user/{name}"
+
+    def send(self, target, message):
+        requests.post(f"{self.root_url}{target}",
+                      data=message.encode("utf-8"),
+                      headers={"Content-Type": "text/plain; charset=utf-8"})
+
+
 class Command(BaseCommand):
     help = "Send Hermine Messages in Queue and cleanup done ones"
 
     @cached_property
     def hermine_client(self):
+        extern_url = os.environ.get("HERMINE_URL")
+        if extern_url:
+            return ExternalHermineClient(extern_url)
+
         return HermineClient()
 
     def handle(self, **_kwargs: dict[str, Any]) -> None:
@@ -68,7 +90,7 @@ class Command(BaseCommand):
 
             for message in models.HermineUserMessage.objects.filter(sent__isnull=True, delay__lte=timezone.now()):
                 try:
-                    self.hermine_client.send(self.hermine_client.find_user(message.user),
+                    self.hermine_client.send(self.hermine_client.find_user(f"{message.user} (OV Darmstadt)"),
                                              message.message)
                 except TargetNotFoundError:
                     message.delay = timezone.now() + timedelta(minutes=15)
