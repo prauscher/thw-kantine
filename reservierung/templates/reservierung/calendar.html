@@ -41,10 +41,7 @@
      <span class="text-nowrap">({% format_time_relative start termin.start %}-{% format_time_relative start termin.end %})</span>
      von <strong>{{ termin.owner }}</strong><br />
      {% for usage in termin.usages.all %}
-      <span class="text-nowrap">
-       {{ usage.resource.label }}
-       {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state label=None %}
-      </span>
+      {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state label=usage.resource.label %}
      {% endfor %}
     </li>
     {% empty %}
