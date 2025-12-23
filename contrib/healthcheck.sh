@@ -7,9 +7,8 @@ curl -H "Host: " -s http://localhost:${PORT}/healthcheck/ > /dev/null || exit 1
 if [ ! -f /tmp/_housekeeping ] || [ $(( $(date +%s) - $(stat -c "%Y" /tmp/_housekeeping) )) -gt 86400 ]; then
 	/housekeeping.sh
 	touch /tmp/_housekeeping
-# disabled temporarily
-#else
+else
 	# avoid timeout, so only run housekeeping or these jobs
-#	python3 /opt/app/manage.py send_hermine
+	python3 /opt/app/manage.py send_hermine
 fi
 
