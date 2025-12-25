@@ -119,6 +119,7 @@ def view_webhook(request):
         raise Http404
 
     data = json.load(request)
+    print("rcvd stein webhook", data, flush=True)
 
     for item in data["items"]:
         if item["type"] == "bu" and item["action"] == "update":
