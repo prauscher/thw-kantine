@@ -40,8 +40,9 @@ class CacheItem(models.Model):
                         }
                     )
 
-                for update_handler in func._update_handlers:
-                    update_handler(args, kwargs, old_value, item.value)
+                if old_value != item.value:
+                    for update_handler in func._update_handlers:
+                        update_handler(args, kwargs, old_value, item.value)
 
                 return item.value
 
