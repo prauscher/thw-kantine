@@ -1,13 +1,13 @@
 ARG PYPI_PIP_VERSION=25.3
-ARG POSTGRESQL_VERSION=17.7-r0
+ARG POSTGRESQL_VERSION=18.1-r0
 
-FROM python:3.14-alpine3.22 AS base
+FROM python:3.14-alpine3.23 AS base
 
-ARG TZDATA_VERSION=2025b-r0
-ARG CURL_VERSION=8.14.1-r2
+ARG TZDATA_VERSION=2025c-r0
+ARG CURL_VERSION=8.17.0-r1
 ARG POSTGRESQL_VERSION
 
-RUN apk add --no-cache "tzdata=${TZDATA_VERSION}" "postgresql17-client=${POSTGRESQL_VERSION}" "curl=${CURL_VERSION}" \
+RUN apk add --no-cache "tzdata=${TZDATA_VERSION}" "postgresql18-client=${POSTGRESQL_VERSION}" "curl=${CURL_VERSION}" \
     && addgroup -g 1000 worker \
     && adduser -S -D -H -u 1000 -G worker worker
 
