@@ -28,19 +28,25 @@ STEIN_STATES = {
 }
 
 
-# 60 minutes is valid as we have webhooks to invalidate between
-@CacheItem.cache(expiration=timedelta(minutes=60))
-def query_stein_assets(bu_id: int, /):
-    result = requests.get(
-        "https://stein.app/api/api/ext/assets/",
-        params={"buIds": str(bu_id)},
+def _query_stein(url, **kwargs):
+    return requests.get(
+        url,
+        **kwargs,
         headers={
             "User-Agent": "Mozilla/5.0",
             "Authorization": f"Bearer {os.environ['STEIN_API_KEY']}",
             "Accept": "application/json",
         },
+    ).json()
+
+
+# 60 minutes is valid as we have webhooks to invalidate between
+@CacheItem.cache(expiration=timedelta(minutes=60))
+def query_stein_assets(bu_id: int, /):
+    return _query_stein(
+        "https://stein.app/api/api/ext/assets/",
+        params={"buIds": str(bu_id)},
     )
-    return result.json()
 
 
 @query_stein_assets.on_update
@@ -122,8 +128,16 @@ def view_webhook(request):
     print("rcvd stein webhook", data, flush=True)
 
     for item in data["items"]:
+        bu_id = None
+
         if item["type"] == "bu" and item["action"] == "update":
-            query_stein_assets.invalidate(item["id"])
-            query_stein_assets(item["id"])
+            bu_id = item["id"]
+
+        if item["type"] == "asset" and item["action"] == "update":
+            bu_id = _query_stein(item["url"])["buId"]
+
+        if bu_id:
+            query_stein_assets.invalidate(bu_id)
+            query_stein_assets(bu_id)
 
     return JsonResponse({})
