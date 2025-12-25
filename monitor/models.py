@@ -22,7 +22,7 @@ class CacheItem(models.Model):
             func._update_handlers = []
 
             @wraps(func)
-            def wrapper(*args, **kwargs):
+            def wrapper(*args, force_update = False, **kwargs):
                 key = _build_cache_key(args, kwargs)
                 item = None
                 old_value = None
@@ -30,7 +30,7 @@ class CacheItem(models.Model):
                     item = cls.objects.get(key=key)
                     old_value = item.value
 
-                if item is None or item.expires < timezone.now():
+                if force_update or item is None or item.expires < timezone.now():
                     result = func(*args, **kwargs)
                     item, _ = cls.objects.update_or_create(
                         key=key,
@@ -46,15 +46,10 @@ class CacheItem(models.Model):
 
                 return item.value
 
-            def _invalidate(*args, **kwargs):
-                key = _build_cache_key(args, kwargs)
-                cls.objects.filter(key=key).delete()
-
             def _add_update_handler(handler):
                 func._update_handlers.append(handler)
                 return handler
 
-            wrapper.invalidate = _invalidate
             wrapper.on_update = _add_update_handler
             return wrapper
 

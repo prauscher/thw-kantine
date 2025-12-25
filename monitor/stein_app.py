@@ -137,7 +137,6 @@ def view_webhook(request):
             bu_id = _query_stein(item["url"])["buId"]
 
         if bu_id:
-            query_stein_assets.invalidate(bu_id)
-            query_stein_assets(bu_id)
+            query_stein_assets(bu_id, force_update=True)
 
     return JsonResponse({})
