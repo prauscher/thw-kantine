@@ -127,16 +127,18 @@ def view_webhook(request):
     data = json.load(request)
     print("rcvd stein webhook", data, flush=True)
 
+    update_bu_ids = set()
+
     for item in data["items"]:
         bu_id = None
 
         if item["type"] == "bu" and item["action"] == "update":
-            bu_id = item["id"]
+            update_bu_ids.add(item["id"])
 
         if item["type"] == "asset" and item["action"] == "update":
-            bu_id = _query_stein(item["url"])["buId"]
+            update_bu_ids.add(_query_stein(item["url"])["buId"])
 
-        if bu_id:
-            query_stein_assets(bu_id, force_update=True)
+    for bu_id in update_bu_ids:
+        query_stein_assets(bu_id, force_update=True)
 
     return JsonResponse({})
