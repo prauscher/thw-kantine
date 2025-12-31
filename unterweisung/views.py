@@ -208,15 +208,11 @@ class GruppenUebersichtView(TemplateView):
         max_age = timedelta(days=30)
 
         try:
-            # support old and new tokens
-            if ":" in token:
-                content = signer.unsign(token, max_age=max_age)
-                if content == "$all":
-                    gruppe = None
-                else:
-                    gruppe = base64.urlsafe_b64decode(content + "==").decode()
+            content = signer.unsign(token, max_age=max_age)
+            if content == "$all":
+                gruppe = None
             else:
-                gruppe = signer.unsign(base64.urlsafe_b64decode(token + "==").decode(), max_age=max_age)
+                gruppe = base64.urlsafe_b64decode(content + "==").decode()
         except SignatureExpired:
             context["error"] = "Der Token ist abgelaufen, bitte lass dir einen neuen geben"
             return context
