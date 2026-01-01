@@ -11,7 +11,7 @@
 <nav aria-label="breadcrumb">
  <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="{% url "unterweisung:start" %}">Unterweisungen</a></li>
-  <li class="breadcrumb-item"><a href="{% url "unterweisung:unterweisung_detail" pk=object.unterweisung.pk %}">{{ object.unterweisung.label }}</a></li>
+  <li class="breadcrumb-item"><a href="{{ object.unterweisung.get_absolute_url }}">{{ object.unterweisung.label }}</a></li>
   <li class="breadcrumb-item active" aria-current="page">{{ object.titel }}</li>
  </ol>
 </nav>

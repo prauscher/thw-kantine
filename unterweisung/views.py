@@ -191,24 +191,22 @@ class SeiteDetailView(DetailView):
 
 class GruppenUebersichtView(TemplateView):
     template_name = "unterweisung/gruppen_fehlend.html"
-    signer_salt = "587612c0-bbc1-4333-85fc-4b6f585b813c"  # generated
+    signer = TimestampSigner(salt="587612c0-bbc1-4333-85fc-4b6f585b813c")  # generated
 
     @classmethod
     def get_token(cls, gruppe):
-        signer = TimestampSigner(salt=cls.signer_salt)
         if gruppe is None:
-            return signer.sign("$all")
-        return signer.sign(base64.urlsafe_b64encode(gruppe.encode()).decode("ascii").rstrip("="))
+            return cls.signer.sign("$all")
+        return cls.signer.sign(base64.urlsafe_b64encode(gruppe.encode()).decode("ascii").rstrip("="))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        signer = TimestampSigner(salt=self.signer_salt)
         token = self.kwargs.get("token", "")
         max_age = timedelta(days=30)
 
         try:
-            content = signer.unsign(token, max_age=max_age)
+            content = self.signer.unsign(token, max_age=max_age)
             if content == "$all":
                 gruppe = None
             else:
