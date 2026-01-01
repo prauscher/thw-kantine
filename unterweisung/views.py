@@ -5,13 +5,23 @@ from datetime import timedelta
 from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.views.generic import DetailView, ListView, TemplateView
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.http import Http404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from kantine.decorators import require_jwt_login
 from . import models
+
+
+class SignedDetailView(DetailView):
+    def get_object(self):
+        try:
+            pk = int(self.model.url_signer.unsign(self.kwargs["pk_signed"]))
+        except (BadSignature, ValueError):
+            raise Http404
+
+        return get_object_or_404(self.get_queryset(), pk=pk)
 
 
 @method_decorator(require_jwt_login, name="dispatch")
@@ -36,7 +46,7 @@ class UnterweisungListView(ListView):
 
 
 @method_decorator(require_jwt_login, name="dispatch")
-class UnterweisungDetailView(DetailView):
+class UnterweisungDetailView(SignedDetailView):
     model = models.Unterweisung
 
     def get_context_data(self, **kwargs):
@@ -60,7 +70,7 @@ class UnterweisungDetailView(DetailView):
 
 
 @method_decorator(require_jwt_login, name="dispatch")
-class SeiteDetailView(DetailView):
+class SeiteDetailView(SignedDetailView):
     model = models.Seite
     template_name = "unterweisung/seite_detail.html"
 

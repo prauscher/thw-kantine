@@ -2,6 +2,7 @@ import time
 from collections.abc import Iterator
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.signing import Signer
 from django.core.validators import MinValueValidator
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -44,6 +45,8 @@ class Unterweisung(models.Model):
         help_text="Soll die Unterweisung aktuell angezeigt werden?",
     )
 
+    url_signer = Signer(salt="0982cc1f-e05c-491d-a5ab-ca3aac5f5b27")  # generated
+
     def get_teilnahme(self, username: str) -> "Teilnahme | None":
         try:
             return Teilnahme.objects.get(teilnehmer__username=username, unterweisung=self)
@@ -52,7 +55,7 @@ class Unterweisung(models.Model):
 
     def get_absolute_url(self) -> str:
         return reverse("unterweisung:unterweisung_detail",
-                       kwargs={"pk": self.pk})
+                       kwargs={"pk_signed": self.url_signer.sign(self.pk)})
 
     def __str__(self) -> str:
         return f"{self.label} ({self.short_label})"
@@ -83,6 +86,8 @@ class Seite(PolymorphicModel):
         help_text="Muss diese Seite erfolgreich abgeschlossen werden, um eine Teilnahme zu hinterlegen?",
     )
 
+    url_signer = Signer(salt="4205055b-7e54-4f27-9e60-d64643647c39")  # generated
+
     def __str__(self) -> str:
         return f"{self.unterweisung}: #{self.sort} {self.titel}"
 
@@ -104,7 +109,7 @@ class Seite(PolymorphicModel):
 
     def get_absolute_url(self) -> str:
         return reverse("unterweisung:seite_detail",
-                       kwargs={"pk": self.pk})
+                       kwargs={"pk_signed": self.url_signer.sign(self.pk)})
 
     class Meta:
         ordering = ["sort"]
