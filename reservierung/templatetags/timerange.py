@@ -31,6 +31,9 @@ def timerange_filter(start: datetime, end: datetime) -> str:
 
 @register.simple_tag
 def format_time_relative(relative: datetime, target: datetime) -> str:
+    relative = timezone.localtime(relative)
+    target = timezone.localtime(target)
+
     if relative.date() == target.date():
         return f"{target:%H:%M}"
     return f"{target:%d.%m.%Y %H:%M}"
