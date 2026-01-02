@@ -350,7 +350,7 @@ class TeilnahmeExportView(TemplateView):
                         durations_combined[i].append(durations_combined[i][0])
 
                     if durations_combined[i]:
-                        _quantiles = statistics.quantiles(durations_combined[i])
+                        _quantiles = statistics.quantiles(durations_combined[i], n=2)
                         quantiles.append({"median": _quantiles[0]})
                     else:
                         quantiles.append(None)
