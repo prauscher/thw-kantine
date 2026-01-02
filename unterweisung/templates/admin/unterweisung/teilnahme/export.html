@@ -357,6 +357,8 @@ $("#container").empty().append(svg.node());
 <style type="text/css">
 @media print {
 	h1, nav, .nav {display:none;}
+	/* Avoid margin on print */
+	main.container {margin:0;}
 }
 </style>
 {% endif %}
