@@ -35,9 +35,9 @@
    <label class="form-check-label" for="antwort_{{ antwort_id }}">
     {% if geloest and not frage.korrekt %}
      {% if antwort_richtig == antwort_checked %}
-      <span class="badge rounded-pill text-bg-success">Antwort Korrekt</span>
+      <span class="badge rounded-pill text-bg-success">Korrekt beantwortet</span>
      {% else %}
-      <span class="badge rounded-pill text-bg-danger">Antwort Falsch</span>
+      <span class="badge rounded-pill text-bg-danger">Falsch beantwortet</span>
      {% endif %}
     {% endif %}
     {{ antwort_text|markdownify_inline }}
