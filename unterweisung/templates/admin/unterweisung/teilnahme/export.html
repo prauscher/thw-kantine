@@ -48,7 +48,7 @@ const marginBottom = 20;
 const marginLeft = 30;
 
 // Declare the x (horizontal position) scale.
-const x = d3.scaleUtc()
+const x = d3.scaleTime()
     .range([marginLeft, width - marginRight]);
 
 function read_x_scale() {
