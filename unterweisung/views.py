@@ -213,7 +213,7 @@ class GruppenUebersichtView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         token = self.kwargs.get("token", "")
-        max_age = timedelta(days=30)
+        max_age = timedelta(days=60)
 
         try:
             content = self.signer.unsign(token, max_age=max_age)
