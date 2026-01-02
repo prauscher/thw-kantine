@@ -26,4 +26,11 @@
 {% endfor %}
 
 {% endfor %}
+
+<style type="text/css">
+/* Avoid margin on print */
+@media print {
+	main.container {margin:0; max-width:100%;}
+}
+</style>
 {% endblock %}
