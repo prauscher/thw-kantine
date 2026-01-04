@@ -35,9 +35,17 @@
    <label class="form-check-label" for="antwort_{{ antwort_id }}">
     {% if geloest and not frage.korrekt %}
      {% if antwort_richtig == antwort_checked %}
-      <span class="badge rounded-pill text-bg-success">Korrekt beantwortet</span>
+      {% if frage.richtige_antworten > 1 %}
+       <span class="badge rounded-pill text-bg-success">Korrekt</span>
+      {% endif %}
      {% else %}
-      <span class="badge rounded-pill text-bg-danger">Falsch beantwortet</span>
+      <span class="badge rounded-pill text-bg-danger">
+       {% if antwort_richtig and not antwort_checked %}
+        Richtige Antwort
+       {% elif not antwort_richtig and antwort_checked %}
+        Falsche Antwort
+       {% endif %}
+      </span>
      {% endif %}
     {% endif %}
     {{ antwort_text|markdownify_inline }}
