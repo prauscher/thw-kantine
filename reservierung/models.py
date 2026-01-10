@@ -201,43 +201,6 @@ class Termin(models.Model):
             models.Index(fields=("start", "end")),
         ]
 
-    def create_usage(self, resource, user):
-        usage = ResourceUsage.objects.create(termin=self, resource=resource)
-        usage.log(ResourceUsageLogMessage.META, user,
-                  f"Anfrage für {timerange_filter(self.start, self.end)} erstellt.")
-
-        missing_voting_groups = set()
-        voting_groups = defaultdict(list)
-        for voting_group, manager_users in usage.get_voting_groups().items():
-            if voting_group:
-                missing_voting_groups.add(voting_group)
-
-            voting_groups[voting_group].extend(manager_user for _, manager_user in manager_users)
-
-        inform_users = set(voting_groups.pop("", []))
-        vote_users = set()
-
-        for voting_group, manager_users in voting_groups.items():
-            if user in manager_users:
-                ResourceUsageConfirmation.objects.update_or_create(
-                    resource_usage=usage,
-                    approver=user,
-                    defaults={"comment": ""},
-                )
-                usage.log(ResourceUsageLogMessage.VOTES, user,
-                          "Zustimmung bei Erstellung der Anfrage.")
-                missing_voting_groups.discard(voting_group)
-                inform_users.update(manager_users)
-            else:
-                vote_users.update(manager_users)
-
-        if missing_voting_groups:
-            usage.send_inform(inform_users - vote_users)
-            usage.send_vote(vote_users)
-        else:
-            # update_state will inform users
-            usage.update_state()
-
     def remove_usage(self, resource, user):
         try:
             usage = ResourceUsage.objects.filter(termin=self, resource=resource).get()
@@ -555,6 +518,39 @@ class ResourceUsage(models.Model):
             user=user,
             message=message,
         )
+
+    def request_approvals(self, user):
+        missing_voting_groups = set()
+        voting_groups = defaultdict(list)
+        for voting_group, manager_users in self.get_voting_groups().items():
+            if voting_group:
+                missing_voting_groups.add(voting_group)
+
+            voting_groups[voting_group].extend(manager_user for _, manager_user in manager_users)
+
+        inform_users = set(voting_groups.pop("", []))
+        vote_users = set()
+
+        for voting_group, manager_users in voting_groups.items():
+            if user in manager_users:
+                ResourceUsageConfirmation.objects.update_or_create(
+                    resource_usage=self,
+                    approver=user,
+                    defaults={"comment": ""},
+                )
+                self.log(ResourceUsageLogMessage.VOTES, user,
+                         "Zustimmung bei Erstellung der Anfrage.")
+                missing_voting_groups.discard(voting_group)
+                inform_users.update(manager_users)
+            else:
+                vote_users.update(manager_users)
+
+        if missing_voting_groups:
+            self.send_inform(inform_users - vote_users)
+            self.send_vote(vote_users)
+        else:
+            # update_state will inform users
+            self.update_state()
 
     def update_state(self):
         all_voting_groups = set()

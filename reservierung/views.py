@@ -529,23 +529,32 @@ class TerminFormView(FormView):
             # refetch current values for comparision
             termin = self._get_object()
 
-            if termin.start > form.instance.start or termin.end < form.instance.end:
-                # renew confirmations (later) when time range is exceeded
-                termin.usages.all().delete()
-            elif termin.start < form.instance.start or termin.end > form.instance.end:
-                # shortened, maybe this resolved conflicts?
-                for usage in form.instance.usages.all():
-                    usage.log(models.ResourceUsageLogMessage.META, user,
-                              f"Anfragezeitraum auf {timerange_filter(form.instance.start, form.instance.end)} verkürzt.")
+            # save new values, otherwise get_conflicts can result in errors due to inconsitency
+            # (e.g. setting new time so that a conflict gets resolved => get_conflicts will work
+            # with old data)
+            form.instance.save()
 
-                    for conflict, _, _ in usage.get_conflicts()[0]:
-                        conflict.update_state()
+            if termin.start != form.instance.start or termin.end != form.instance.end:
+                for usage in form.instance.usages.all():
+                    if termin.start > form.instance.start or termin.end < form.instance.end:
+                        # range exceeded, revoke confirmations
+                        usage.log(models.ResourceUsageLogMessage.META, user,
+                                  f"Anfragezeitraum auf {timerange_filter(form.instance.start, form.instance.end)} erweitert.")
+                        usage.confirmations.all().delete()
+                        usage.request_approvals(user)
+                    else:
+                        # range must be shortened, check if conflict could be resolved
+                        usage.log(models.ResourceUsageLogMessage.META, user,
+                                  f"Anfragezeitraum auf {timerange_filter(form.instance.start, form.instance.end)} verkürzt.")
+
+                        for conflict, _, _ in usage.get_conflicts()[0]:
+                            conflict.update_state()
 
             # fields have already been updated during form clean
         else:
             form.instance.owner = user
+            form.instance.save()
 
-        form.instance.save()
         self.success_url = form.instance.get_absolute_url()
 
         current_resource_ids = {int(usage.resource.pk) for usage in form.instance.usages.all()}
@@ -558,7 +567,10 @@ class TerminFormView(FormView):
         # create new resources
         for resource_id in target_resource_ids - current_resource_ids:
             resource = models.Resource.objects.get(pk=resource_id)
-            form.instance.create_usage(resource, user)
+            usage = models.ResourceUsage.objects.create(termin=form.instance, resource=resource)
+            usage.log(models.ResourceUsageLogMessage.META, user,
+                      f"Anfrage für {timerange_filter(form.instance.start, form.instance.end)} erstellt.")
+            usage.request_approvals(user)
 
         return super().form_valid(form)
 
