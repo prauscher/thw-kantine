@@ -36,7 +36,8 @@ def build_termine():
     for event in query_calendar(caldav_url, 6):
         if len(event["start"]) == 10:
             start = date.fromisoformat(event["start"])
-            end = date.fromisoformat(event["end"])
+            # ical always specifies the end as the day after the next day
+            end = date.fromisoformat(event["end"]) - timedelta(days=1)
             event["timerange"] = daterange_filter(start, end)
         else:
             start = datetime.fromisoformat(event["start"])
