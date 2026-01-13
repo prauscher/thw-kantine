@@ -639,9 +639,9 @@ class FuehrerscheinInfoView(TemplateView):
             yield row["Name"], row["Vorname"], klasse, row["Nr. / Bem."], gueltig_ab, gueltig_bis
 
 
-class FahrerlaubnisInline(admin.StackedInline):
+class FahrerlaubnisInline(admin.TabularInline):
     model = models.Fahrerlaubnis
-    extra = 3
+    extra = 2
 
 
 @admin.register(models.Fuehrerschein)
