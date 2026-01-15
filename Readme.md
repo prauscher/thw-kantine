@@ -15,6 +15,7 @@
 - Vote: ResourceUsage, User, Comment, Approval / Reject
  - Voting Group: Abgelehnt wenn eine Ablehnung; Zugestimmt wenn eine Zustimmung; Offen sonst
 
+- Genauen Zeitraum bei mehrtägigen Terminen irgendwo anzeigen
 - Infotext je Ressource (0,5to Anhänger)
 
 ## Hermine Anbindung
