@@ -549,6 +549,7 @@ class TerminFormView(FormView):
 
                         for conflict, _, _ in usage.get_conflicts()[0]:
                             conflict.update_state()
+                        usage.update_state()
 
             # fields have already been updated during form clean
         else:
