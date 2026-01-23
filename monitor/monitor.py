@@ -11,10 +11,11 @@ from .polls import query_polls
 from .stein_app import query_stein_assets
 
 COLORS = ["#f29633", "#ef6a31", "#ec2b2e", "#a12e65", "#572d91", "#1370b6", "#02a6e3", "#00a056"]
+KNOWN_CATEGORIES = ["Schulferien", "Feiertage", "Bereichsausbildung", "Grundausbildung", "Ortsverband", "Helferverein", "Unterführer", "Jugend", "Veranstaltung"]
 
 
 def _generate_color_selector():
-    selected_colors = {}
+    selected_colors = {cat: COLORS[i % len(COLORS)] for i, cat in enumerate(KNOWN_CATEGORIES)}
 
     def _cat_color(cat: str) -> str:
         selected_colors.setdefault(cat, COLORS[len(selected_colors) % len(COLORS)])
