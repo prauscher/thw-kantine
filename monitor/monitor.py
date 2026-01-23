@@ -10,6 +10,18 @@ from .calendar import query_calendar
 from .polls import query_polls
 from .stein_app import query_stein_assets
 
+COLORS = ["#f29633", "#ef6a31", "#ec2b2e", "#a12e65", "#572d91", "#1370b6", "#02a6e3", "#00a056"]
+
+
+def _generate_color_selector():
+    selected_colors = {}
+
+    def _cat_color(cat: str) -> str:
+        selected_colors.setdefault(cat, COLORS[len(selected_colors) % len(COLORS)])
+        return selected_colors[cat]
+
+    return _cat_color
+
 
 def build_announce():
     announce_url = os.environ.get("NC_ANNOUNCE_URL", "")
@@ -29,8 +41,7 @@ def build_termine():
     if not caldav_url:
         return []
 
-    COLORS = ["#f29633", "#ef6a31", "#ec2b2e", "#a12e65", "#572d91", "#1370b6", "#02a6e3", "#00a056"]
-    selected_colors = {}
+    _cat_color = _generate_color_selector()
 
     events = []
     for event in query_calendar(caldav_url, 6):
@@ -44,12 +55,8 @@ def build_termine():
             end = datetime.fromisoformat(event["end"])
             event["timerange"] = timerange_filter(start, end)
 
-        categories = []
-        for category in event["categories"]:
-            selected_colors.setdefault(category, COLORS[len(selected_colors) % len(COLORS)])
-            categories.append({"label": category, "color": selected_colors[category]})
-
-        event["categories"] = categories
+        event["categories"] = [{"label": category, "color": _cat_color(category)}
+                               for category in event["categories"]]
 
         events.append(event)
 
