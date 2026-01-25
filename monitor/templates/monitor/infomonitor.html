@@ -120,27 +120,16 @@ function renderStein(data) {
 }
 
 function renderPolls(data) {
-	$("#polls_list").empty().append(data.map(function (entry) {
-		var expire_badge_label = "";
-		var expire_badge_bg = "";
-
-		if (entry.expire == null) {
-			expire_badge_label = "Unbekannt";
-			expire_badge_bg = "bg-warning";
-		} else {
-			expire_badge_label = entry.expire.label;
-			expire_badge_bg = entry.expire.seconds < 7*24*60*60 ? "bg-danger" : "bg-success";
-		}
-
-		return $("<li>").addClass("list-group-item").append([
-			$("<span>").addClass(["fs-4", "d-block"]).text(entry.title),
-			$("<span>").addClass(["badge", "fs-6", expire_badge_bg, "float-end"]).text(expire_badge_label),
-			$("<span>").addClass(["fs-6", "d-block"]).append([
-				"von ",
-				$("<strong>").text(entry.owner),
-			])
-		]);
-	}));
+	$("#polls_list").empty().append(data.map((entry) => $("<li>").addClass("list-group-item").append([
+		$("<span>").addClass(["fs-4", "d-block"]).text(entry.title),
+		$("<span>").addClass(["fs-6", "d-block"]).append([
+			"von ",
+			$("<strong>").text(entry.owner),
+		]).append(entry.expire == null ? [] : [
+			$("<strong>").text(" " + entry.expire.label).toggleClass("text-danger", entry.expire.seconds < 7*24*60*60),
+		]),
+		$("<div>").addClass("text-end").css({"marginBottom": "-0.25rem", "marginRight": "-0.25rem"}).append(entry.groups.map((group_item) => $("<span>").addClass(["fs-6", "badge", "me-1", "mb-1"]).css("background-color", group_item.color).text(group_item.label))),
+	])));
 
 	if (data.length == 0) {
 		$("#polls_list").append($("<li>").addClass("list-group-item").append([

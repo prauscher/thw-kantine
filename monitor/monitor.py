@@ -100,6 +100,8 @@ def build_polls():
     if not polls_url:
         return []
 
+    _cat_color = _generate_color_selector()
+
     polls = []
     for poll in query_polls(polls_url):
         if poll["status"]["isArchived"]:
@@ -122,13 +124,15 @@ def build_polls():
 
         # nextcloud gives empty list, but entries are dicts?!
         groups = list(dict(poll["currentUserStatus"]["groupInvitations"]).values())
-        if "Ortsverband" not in groups:
+        if not groups:
             continue
 
         polls.append({
             "title": poll["configuration"]["title"],
             "created": poll["status"]["created"],
             "owner": poll["owner"]["displayName"],
+            "groups": [{"label": group, "color": _cat_color(group)}
+                       for group in groups],
             "expire": expire,
         })
 
