@@ -17,6 +17,7 @@
 
 - Genauen Zeitraum bei mehrtägigen Terminen irgendwo anzeigen
 - Infotext je Ressource (0,5to Anhänger)
+- Vorabfrage Verfügbarkeit in Unterweisung?
 
 ## Hermine Anbindung
 - Ankündigung in Kantine
