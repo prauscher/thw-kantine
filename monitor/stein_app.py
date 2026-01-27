@@ -131,8 +131,6 @@ def view_webhook(request):
     update_bu_ids = set()
 
     for item in data["items"]:
-        bu_id = None
-
         if item["type"] == "bu" and item["action"] == "update":
             update_bu_ids.add(item["id"])
 
