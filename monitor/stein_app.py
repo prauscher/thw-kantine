@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from collections import defaultdict
 from datetime import timedelta
 
@@ -137,6 +138,9 @@ def view_webhook(request):
 
         if item["type"] == "asset" and item["action"] == "update":
             update_bu_ids.add(_query_stein(item["url"])["buId"])
+
+        # avoid rate limit by stein api
+        time.sleep(1.0)
 
     for bu_id in update_bu_ids:
         query_stein_assets(bu_id, force_update=True)
