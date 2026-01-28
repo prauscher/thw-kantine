@@ -121,24 +121,28 @@ def update_stein_assets(args, kwargs, old_data, new_data):
 
 
 @csrf_exempt
-def view_webhook(request):
+def view_webhook(request, bu_id=None):
     if request.headers.get("X-Secret", "") != os.environ.get("STEIN_WEBHOOK_SECRET", ""):
         raise Http404
 
     data = json.load(request)
-    print("rcvd stein webhook", data, flush=True)
+    print("rcvd stein webhook", bu_id, data, flush=True)
 
     update_bu_ids = set()
 
-    for item in data["items"]:
-        if item["type"] == "bu" and item["action"] == "update":
-            update_bu_ids.add(item["id"])
+    # avoid fetching of bu_ids if it is not necessary
+    if bu_id is not None:
+        update_bu_ids.add(bu_id)
+    else:
+        for item in data["items"]:
+            if item["type"] == "bu" and item["action"] == "update":
+                update_bu_ids.add(item["id"])
 
-        if item["type"] == "asset" and item["action"] == "update":
-            update_bu_ids.add(_query_stein(item["url"])["buId"])
+            if item["type"] == "asset" and item["action"] == "update":
+                update_bu_ids.add(_query_stein(item["url"])["buId"])
 
-        # avoid rate limit by stein api
-        time.sleep(1.0)
+            # avoid rate limit by stein api
+            time.sleep(1.0)
 
     for bu_id in update_bu_ids:
         query_stein_assets(bu_id, force_update=True)

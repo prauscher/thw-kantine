@@ -9,6 +9,8 @@ urlpatterns = [
     path("data/<uuid:monitor_uuid>",
          views.infomonitor_data,
          name="data"),
+    path("hook/stein.app/<int:bu_id>",
+         stein_app.view_webhook),
     path("hook/stein.app",
          stein_app.view_webhook),
 ]
