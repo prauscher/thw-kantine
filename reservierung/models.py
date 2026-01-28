@@ -25,7 +25,7 @@ from .templatetags.timerange import timerange_filter
 # - usage_link: Full URL to reach resourceusage_detail (not useful for MESSAGE_DELETED)
 MESSAGE_INFORM = "Hallo {firstname}, für {resource_label} wurde durch {termin_owner} eine neue Buchung für {termin_label} ({timerange}) erstellt: {usage_link}"
 MESSAGE_VOTE = "Hallo {firstname}, {termin_owner} hat {resource_label} für {termin_label} ({timerange}) angefragt. Du kannst unter {usage_link} zustimmen."
-MESSAGE_CONFIRM = "Hallo {firstname}, die Buchung von {resource_label} für {termin_label} ({timerange}) durch {termin_owner} wurde bestätigt: {usage_link}"
+MESSAGE_CONFIRM = "Hallo {firstname}, die Buchung von {resource_label} für {termin_label} ({timerange}, angefragt von {termin_owner}) wurde bestätigt: {usage_link}"
 MESSAGE_UNCONFIRM = "Hallo {firstname}, die Bestätigung der Buchung von {resource_label} für {termin_label} ({timerange}) wurde zurückgezogen: {usage_link}"
 MESSAGE_REJECTED = "Hallo {firstname}, die Buchung von {resource_label} für {termin_label} ({timerange}) wurde storniert: {usage_link}"
 MESSAGE_UNREJECTED = "Hallo {firstname}, die Stornierung der Buchung von {resource_label} für {termin_label} ({timerange}) wurde zurückgezogen: {usage_link}"
