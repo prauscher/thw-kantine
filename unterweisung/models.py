@@ -187,6 +187,10 @@ class FuehrerscheinDatenSeite(Seite):
 
         for einschliessend, einschluss in [("CE", "C1E"), ("CE", "C"),
                                            ("C1E", "BE"), ("C", "B"), ("BE", "B")]:
+            # Fuehrerscheinstelle Darmstadt...
+            if request.jwt_user_id == "krollm" and einschliessend == "C1E" and einschluss == "BE":
+                continue
+
             if einschliessend in klassen and einschluss not in klassen:
                 raise ValidationError(f"Klasse {einschliessend} schließt {einschluss} mit ein, bitte gib alle abgefragten Führerscheindaten ein.")
 
