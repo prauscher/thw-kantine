@@ -42,9 +42,9 @@ def format_time_relative(relative: datetime, target: datetime) -> str:
 TIMEDELTA_FORMATS = [
     (lambda delta: delta.days // 7, timedelta(days=14), "Woche,Wochen"),
     (lambda delta: delta.days, timedelta(hours=36), "Tag,Tage"),
-    (lambda delta: delta.seconds // 3600, timedelta(hours=2), "Stunde,Stunden"),
-    (lambda delta: delta.seconds // 60, timedelta(minutes=2), "Minute,Minuten"),
-    (lambda delta: delta.seconds, timedelta(seconds=10), "Sekunde,Sekunden"),
+    (lambda delta: delta.total_seconds() // 3600, timedelta(hours=2), "Stunde,Stunden"),
+    (lambda delta: delta.total_seconds() // 60, timedelta(minutes=2), "Minute,Minuten"),
+    (lambda delta: delta.total_seconds(), timedelta(seconds=10), "Sekunde,Sekunden"),
 ]
 
 @register.filter
