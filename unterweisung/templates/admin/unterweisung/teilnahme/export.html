@@ -281,24 +281,24 @@ $("#container").empty().append(svg.node());
    {{ teilnehmer }}
   </th>
   {% for teilnahme in data.teilnahmen %}
-  <td>
    {% if teilnahme.0 is False %}
     {% if "include_stats" in request.GET %}
-     <span class="badge bg-danger">Offen</span>
+     <td><span class="badge bg-danger">Offen</span></td>
     {% else %}
-     ______
+     <td style="vertical-align:bottom; height:4em;">______</td>
     {% endif %}
    {% elif teilnahme.0 is None %}
-    <em>-</em>
+    <td><em>-</em></td>
    {% else %}
-    {{ teilnahme.0|linebreaksbr }}
+    <td>
+     {{ teilnahme.0|linebreaksbr }}
+     {% if quantiles and teilnahme.1 %}
+      <br />
+      {% widthratio teilnahme.1 60 1 as duration_minutes %}
+      <em>{{ duration_minutes }}min</em>
+     {% endif %}
+    </td>
    {% endif %}
-   {% if quantiles and teilnahme.1 %}
-    <br />
-    {% widthratio teilnahme.1 60 1 as duration_minutes %}
-    <em>{{ duration_minutes }}min</em>
-   {% endif %}
-  </td>
   {% endfor %}
   {% if "include_stats" not in request.GET %}
   <td>&nbsp;</td>
