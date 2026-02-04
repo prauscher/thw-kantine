@@ -283,7 +283,11 @@ $("#container").empty().append(svg.node());
   {% for teilnahme in data.teilnahmen %}
   <td>
    {% if teilnahme.0 is False %}
-    <span class="badge bg-danger">Offen</span>
+    {% if "include_stats" in request.GET %}
+     <span class="badge bg-danger">Offen</span>
+    {% else %}
+     ______
+    {% endif %}
    {% elif teilnahme.0 is None %}
     <em>-</em>
    {% else %}
