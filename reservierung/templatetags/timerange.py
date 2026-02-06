@@ -53,6 +53,6 @@ def timedelta_until(end: datetime) -> str:
 
     for formater, threshold, units in TIMEDELTA_FORMATS:
         if delta > threshold:
-            result = formater(delta)
+            result = int(formater(delta))
             return f"noch {result} {pluralize(result, units)}"
     return "bis gleich"
