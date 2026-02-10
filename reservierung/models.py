@@ -451,9 +451,9 @@ class ResourceUsage(models.Model):
             rejected_at__isnull=True,
         )
         if start:
-            related_usages = related_usages.filter(termin__end__gte=start)
+            related_usages = related_usages.filter(termin__end__gt=start)
         if end:
-            related_usages = related_usages.filter(termin__start__lte=end)
+            related_usages = related_usages.filter(termin__start__lt=end)
         return related_usages
 
     def get_voting_groups(self) -> VotingGroups:
