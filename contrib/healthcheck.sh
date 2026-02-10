@@ -5,9 +5,11 @@ curl -H "Host: " -s http://localhost:${PORT}/healthcheck/ > /dev/null || exit 1
 
 # run housekeeping only once a day
 if [ ! -f /tmp/_housekeeping ] || [ $(( $(date +%s) - $(stat -c "%Y" /tmp/_housekeeping) )) -gt 86400 ]; then
-	/housekeeping.sh
 	touch /tmp/_housekeeping
-elif [ ! -f /tmp/_background ]; then
+
+	/housekeeping.sh
+# run only one background job at once
+elif [ ! -f /tmp/_background ] || [ $(( $(date +%s) - $(stat -c "%Y" /tmp/_background) )) -gt 3600 ]; then
 	touch /tmp/_background
 
 	# avoid timeout, so only run housekeeping or these jobs
