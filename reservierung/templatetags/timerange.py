@@ -8,6 +8,8 @@ register = template.Library()
 
 
 def daterange_filter(start: date, end: date) -> str:
+    if start == end:
+        return f"{start:%d.%m.%Y}"
     if (start.month, start.year) == (end.month, end.year):
         return f"{start:%d.} - {end:%d.%m.%Y}"
     if start.year == end.year:

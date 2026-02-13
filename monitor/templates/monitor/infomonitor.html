@@ -87,7 +87,7 @@ function renderTermine(data) {
 	$("#termine_list").empty().append(data.map((entry) => $("<li>").addClass("list-group-item").append([
 		$("<span>").addClass(["fs-4", "d-block"]).text(entry.summary),
 		$("<span>").addClass(["fs-6", "d-block"]).append([
-			"von ",
+			entry.timerange.indexOf(" - ") < 0 ? "am " : "von ",
 			$("<strong>").text(entry.timerange),
 		]).append(entry.location == "" ? [] : [
 			" in ",
