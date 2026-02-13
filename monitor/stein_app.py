@@ -44,10 +44,14 @@ def _query_stein(url, **kwargs):
 # 60 minutes is valid as we have webhooks to invalidate between
 @CacheItem.cache(expiration=timedelta(minutes=60))
 def query_stein_assets(bu_id: int, /):
-    return _query_stein(
-        "https://stein.app/api/api/ext/assets/",
-        params={"buIds": str(bu_id)},
-    )
+    try:
+        return _query_stein(
+            "https://stein.app/api/api/ext/assets/",
+            params={"buIds": str(bu_id)},
+        )
+    # handle errors from stein api by giving no asset, but retry after 3 minutes (instead of 60)
+    except (OSError, ValueError) as error:
+        raise CacheItem.TemporaryFailure(None, timedelta(minutes=3)) from error
 
 
 @query_stein_assets.on_update

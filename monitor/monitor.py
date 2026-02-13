@@ -79,7 +79,18 @@ def build_stein():
     }
 
     assets = []
-    for asset in query_stein_assets(int(buid)):
+    stein_data = query_stein_assets(int(buid))
+
+    if stein_data is None:
+        return [{
+            "label": "API",
+            "category": "stein.app",
+            "status_label": "Fehlerhaft",
+            "status_color": "danger",
+            "comment": "Datenabruf fehlgeschlagen",
+        }]
+
+    for asset in stein_data:
         if asset["status"] not in STEIN_STATES:
             continue
         status_prio, status_label, status_color = STEIN_STATES[asset["status"]]
