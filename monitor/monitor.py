@@ -157,17 +157,21 @@ def build_reservierung():
             next_usage = None
 
         blocked = False
-        until = None
+        until_text = ""
         usage_label = ""
         if next_usage:
             blocked = next_usage.termin.start <= timezone.now()
             until = next_usage.termin.end if blocked else next_usage.termin.start
+            now = timezone.now()
+            until_text = timezone.localtime(until).strftime(
+                "bis %H:%M" if until - now < timedelta(hours=12) or until.date() == now.date() else "bis %d.%m."
+            ),
             usage_label = next_usage.termin.label
 
         usages[resource.pk] = {
             "resource": resource.label,
             "blocked": blocked,
-            "until": timezone.localtime(until).strftime("bis %H:%M") if until else "",
+            "until": until_text,
             "usage_label": usage_label,
         }
 
