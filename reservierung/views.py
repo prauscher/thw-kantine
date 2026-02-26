@@ -446,6 +446,9 @@ class TerminForm(forms.ModelForm):
         if data["start"] < timezone.now() - timedelta(days=1):
             warnings.append(("start", "Der Termin liegt in der Vergangenheit."))
 
+        if data["end"] <= data["start"]:
+            self.add_error("end", "Ende liegt vor angegebener Startzeit.")
+
         if data["end"] - data["start"] > timedelta(days=30):
             warnings.append(("end", "Der Termin dauert länger als 30 Tage an."))
 
@@ -472,12 +475,6 @@ class TerminForm(forms.ModelForm):
                 self.add_error(field, description)
 
         return data
-
-    def clean_end(self):
-        if self.cleaned_data["end"] <= self.cleaned_data["start"]:
-            raise ValidationError("Ende liegt vor angegebener Startzeit.")
-
-        return self.cleaned_data["end"]
 
 
 @method_decorator(require_jwt_login, name="dispatch")
