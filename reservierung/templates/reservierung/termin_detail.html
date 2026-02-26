@@ -41,7 +41,7 @@
 
 {% for comment in comments %}
 <div class="alert alert-success" role="alert">
- <h4 class="alert-heading">Freigabekommentar von <strong>{{ comment.approver }}</strong> for <strong><a href="{{ comment.resource_usage.get_absolute_url }}">{{ comment.resource_usage.resource }}</a></strong></h4>
+ <h4 class="alert-heading">Freigabekommentar von <strong>{{ comment.approver }}</strong> für <strong><a href="{{ comment.resource_usage.get_absolute_url }}">{{ comment.resource_usage.resource }}</a></strong></h4>
  <p>{{ comment.comment|linebreaksbr }}</p>
 </div>
 {% endfor %}
