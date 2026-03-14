@@ -469,6 +469,16 @@ class TerminForm(forms.ModelForm):
             if usages.exists():
                 warnings.append(("resources", f"Die Ressource {resource.label} ist in dem Zeitraum bereits blockiert."))
 
+            # preference of mtw ov before pkw ov
+            if resource_id == "24" and "25" not in data.get("resources"):
+                mtw_usages = models.ResourceUsage.find_related(
+                    data["start"],
+                    data["end"],
+                    [models.Resource.objects.get(pk=25)],
+                )
+                if not mtw_usages.exists():
+                    warnings.append(("resources", "Du hast den PKW OV angefragt, obwohl der MTW OV noch verfügbar ist."))
+
         if warnings and not self.cleaned_data.get("confirm_warnings", False):
             self.fields["confirm_warnings"].widget = forms.CheckboxInput()
             for field, description in warnings:
