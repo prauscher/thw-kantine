@@ -26,6 +26,7 @@ from .templatetags.timerange import timerange_filter
 MESSAGE_INFORM = "Hallo {firstname}, für {resource_label} wurde durch {termin_owner} eine neue Buchung für {termin_label} ({timerange}) erstellt: {usage_link}"
 MESSAGE_VOTE = "Hallo {firstname}, {termin_owner} hat {resource_label} für {termin_label} ({timerange}) angefragt. Du kannst unter {usage_link} zustimmen."
 MESSAGE_CONFIRM = "Hallo {firstname}, die Buchung von {resource_label} für {termin_label} ({timerange}, angefragt von {termin_owner}) wurde bestätigt: {usage_link}"
+MESSAGE_CONFIRM_COMMENT = "Hallo {firstname}, die Buchung von {resource_label} für {termin_label} ({timerange}, angefragt von {termin_owner}) wurde mit einem Kommentar bestätigt: {usage_link}"
 MESSAGE_UNCONFIRM = "Hallo {firstname}, die Bestätigung der Buchung von {resource_label} für {termin_label} ({timerange}) wurde zurückgezogen: {usage_link}"
 MESSAGE_REJECTED = "Hallo {firstname}, die Buchung von {resource_label} für {termin_label} ({timerange}) wurde storniert: {usage_link}"
 MESSAGE_UNREJECTED = "Hallo {firstname}, die Stornierung der Buchung von {resource_label} für {termin_label} ({timerange}) wurde zurückgezogen: {usage_link}"
@@ -673,7 +674,10 @@ class ResourceUsage(models.Model):
         return users
 
     def send_confirm(self):
-        User.send_multiple(self.get_audience(), MESSAGE_CONFIRM,
+        User.send_multiple(self.get_audience(),
+                           MESSAGE_CONFIRM_COMMENT
+                           if self.confirmations.exclude(comment="").exists() else
+                           MESSAGE_CONFIRM,
                            **self._message_kwargs())
 
         # check if this owner should now vote on other usages
