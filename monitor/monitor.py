@@ -154,7 +154,7 @@ def build_polls():
 
 def build_reservierung():
     clusters = [
-        (8, 9, 10),  # hof
+        (8, 9, 10, 39),  # hof und halle 26
         (17, 16, 12, 14, 13),  # unterrichtsraeume
         (24, 25),  # pkw und mtw ov
     ]
