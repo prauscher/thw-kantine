@@ -134,7 +134,12 @@ def build_polls():
             continue
 
         # nextcloud gives empty list, but entries are dicts?!
-        groups = list(dict(poll["currentUserStatus"]["groupInvitations"]).values())
+        groups = []
+        if isinstance(poll["currentUserStatus"]["groupInvitations"], list):
+            groups = poll["currentUserStatus"]["groupInvitations"]
+        else:
+            groups = list(dict(poll["currentUserStatus"]["groupInvitations"]).values())
+
         if not groups:
             continue
 
