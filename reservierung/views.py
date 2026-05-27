@@ -477,7 +477,7 @@ class TerminForm(forms.ModelForm):
                     [models.Resource.objects.get(pk=25)],
                 )
                 if not mtw_usages.exists():
-                    warnings.append(("resources", "Du hast den PKW OV angefragt, obwohl der MTW OV noch verfügbar ist."))
+                    warnings.append(("resources", "Bitte wähle den PKW OV nur aus, wenn du dieses Fahrzeug zwingend benötigst oder der MTW OV nicht mehr verfügbar ist."))
 
         if warnings and not self.cleaned_data.get("confirm_warnings", False):
             self.fields["confirm_warnings"].widget = forms.CheckboxInput()
