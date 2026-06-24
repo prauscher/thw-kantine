@@ -126,7 +126,7 @@ function renderPolls(data) {
 			"von ",
 			$("<strong>").text(entry.owner),
 		]).append(entry.expire == null ? [] : [
-			$("<strong>").text(" " + entry.expire.label).toggleClass("text-danger", entry.expire.seconds < 7*24*60*60),
+			$("<strong>").text(" " + entry.expire.label).toggleClass("text-danger", entry.expire.seconds < 10*24*60*60),
 		]),
 		$("<div>").addClass("text-end").css({"marginBottom": "-0.25rem", "marginRight": "-0.25rem"}).append(entry.groups.map((group_item) => $("<span>").addClass(["fs-6", "badge", "me-1", "mb-1"]).css("background-color", group_item.color).text(group_item.label))),
 	])));
