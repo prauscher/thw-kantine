@@ -103,16 +103,14 @@ $(function () {
 	var start_field = $("#id_start");
 	var end_field = $("#id_end");
 
-	function _check() {
+	function _check_availability() {
 		updater.update(start_field.val(), end_field.val());
 	}
 
-	_check();
-	start_field.change(_check);
-	end_field.change(_check);
-});
+	_check_availability();
+	start_field.change(_check_availability);
+	end_field.change(_check_availability);
 
-$(function () {
 	// Default end to start + 2 hours
 	$("#id_start").change(function () {
 		var value = $(this).val();
@@ -127,6 +125,8 @@ $(function () {
 				date.getHours().toString().padStart(2, "0") + ":" +
 				date.getMinutes().toString().padStart(2, "0")
 			);
+			// .val() does not trigger .change()
+			_check_availability();
 		}
 	});
 });
