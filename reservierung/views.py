@@ -595,11 +595,17 @@ class TerminDeleteView(DeleteView):
 
     def form_valid(self, form):
         # check if conflicting usages may now be resolved
+        conflicts = []
         for usage in self.object.usages.all():
-            for conflict, _, _ in usage.get_conflicts()[0]:
-                conflict.update_state()
+            conflicts.extend(conflict for conflict, _, _ in usage.get_conflicts()[0])
 
-        return super().form_valid(form)
+        result = super().form_valid(form)
+
+        # must check conflicts after actual removal, otherwise own termin will still be present
+        for conflict in conflicts:
+            conflict.update_state()
+
+        return result
 
 
 @method_decorator(require_jwt_login, name="dispatch")
