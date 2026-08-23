@@ -448,6 +448,8 @@ class TerminForm(forms.ModelForm):
 
         if data["end"] <= data["start"]:
             self.add_error("end", "Ende liegt vor angegebener Startzeit.")
+            # note that add_error may remove end from data
+            return
 
         if data["end"] - data["start"] > timedelta(days=30):
             warnings.append(("end", "Der Termin dauert länger als 30 Tage an."))
