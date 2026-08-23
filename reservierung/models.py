@@ -549,9 +549,9 @@ class ResourceUsage(models.Model):
         if missing_voting_groups:
             self.send_inform(inform_users - vote_users)
             self.send_vote(vote_users)
-        else:
-            # update_state will inform users
-            self.update_state()
+
+        # update_state will inform users
+        self.update_state()
 
     def update_state(self):
         all_voting_groups = set()
