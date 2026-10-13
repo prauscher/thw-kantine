@@ -472,7 +472,7 @@ class TerminForm(forms.ModelForm):
                 warnings.append(("resources", f"Die Ressource {resource.label} ist in dem Zeitraum bereits blockiert."))
 
             # preference of mtw ov before pkw ov
-            if resource_id == "24" and "25" not in data.get("resources"):
+            if False and resource_id == "24" and "25" not in data.get("resources"):
                 mtw_usages = models.ResourceUsage.find_related(
                     data["start"],
                     data["end"],
