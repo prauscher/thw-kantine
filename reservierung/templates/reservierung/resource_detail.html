@@ -43,7 +43,7 @@
 <tr>
  <th scope="row"><a href="{{ usage.resource.get_absolute_url }}">{{ usage.resource }}</a></th>
  <td><a href="{{ usage.termin.get_absolute_url }}">{{ usage.termin.label }}</a></td>
- <td><a href="{{ usage.get_absolute_url }}">{{ usage.termin.start|timerange:usage.termin.end }}</a></td>
+ <td><a href="{{ usage.get_absolute_url }}">{{ usage.termin.start|timerange_short:usage.termin.end }}</a></td>
  <td>
   {% include "reservierung/_resourceusage_state_badge.html" with state=usage.state %}
  </td>

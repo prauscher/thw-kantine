@@ -17,8 +17,8 @@ def daterange_filter(start: date, end: date) -> str:
     return f"{start:%d.%m.%Y} - {end:%d.%m.%Y}"
 
 
-@register.filter("timerange")
-def timerange_filter(start: datetime, end: datetime) -> str:
+@register.filter("timerange_short")
+def timerange_short_filter(start: datetime, end: datetime) -> str:
     start = timezone.localtime(start)
     end = timezone.localtime(end)
 
@@ -29,6 +29,16 @@ def timerange_filter(start: datetime, end: datetime) -> str:
     if start.year == end.year:
         return f"{start:%d.%m.} - {end:%d.%m.%Y}"
     return f"{start:%d.%m.%Y} - {end:%d.%m.%Y}"
+
+
+@register.filter("timerange")
+def timerange_filter(start: datetime, end: datetime) -> str:
+    start = timezone.localtime(start)
+    end = timezone.localtime(end)
+
+    if end - start < timedelta(hours=12) or start.date() == end.date():
+        return f"{start:%d.%m.%Y %H:%M} - {end:%H:%M}"
+    return f"{start:%d.%m.%Y %H:%M} - {end:%d.%m.%Y %H:%M}"
 
 
 @register.simple_tag

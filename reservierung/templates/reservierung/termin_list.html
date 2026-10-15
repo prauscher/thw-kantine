@@ -33,7 +33,7 @@
 
 {% block item %}
  <th scope="row"><a href="{{ object.termin.get_absolute_url }}">{{ object.termin.label|highlighter:search_words }}</a></td>
- <td class="d-none d-sm-table-cell">{{ object.termin.start|timerange:object.termin.end }}</td>
+ <td class="d-none d-sm-table-cell">{{ object.termin.start|timerange_short:object.termin.end }}</td>
  <td class="d-none d-md-table-cell">{{ object.termin.owner|highlighter:search_words }}</td>
  <td class="d-none d-lg-table-cell">
   {% for usage in object.usages %}

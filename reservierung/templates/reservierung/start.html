@@ -104,7 +104,7 @@ $(function () {
     {% for usage in missing_approval %}
     <li class="list-group-item">
      <a href="{{ usage.get_absolute_url }}">{{ usage.resource.label }}</a>
-     von <strong>{{ usage.termin.start|timerange:usage.termin.end }}</strong>
+     von <strong>{{ usage.termin.start|timerange_short:usage.termin.end }}</strong>
      für <strong>{{ usage.termin.label }}</strong>
      von <strong>{{ usage.termin.owner }}</strong>
     </li>
@@ -121,7 +121,7 @@ $(function () {
     {% for usage in admin_missing_approval %}
     <li class="list-group-item">
      <a href="{{ usage.get_absolute_url }}">{{ usage.resource.label }}</a>
-     von <strong>{{ usage.termin.start|timerange:usage.termin.end }}</strong>
+     von <strong>{{ usage.termin.start|timerange_short:usage.termin.end }}</strong>
      für <strong>{{ usage.termin.label }}</strong>
      von <strong>{{ usage.termin.owner }}</strong>
     </li>
@@ -139,7 +139,7 @@ $(function () {
     <li class="list-group-item">
      <a href="{{ termin.get_absolute_url }}">{{ termin.label }}</a>
      {% include "reservierung/_resourceusage_state_badge.html" with state=state %}<br />
-     von <strong>{{ termin.start|timerange:termin.end }}</strong>
+     von <strong>{{ termin.start|timerange_short:termin.end }}</strong>
     </li>
     {% endfor %}
    </ul>
@@ -157,7 +157,7 @@ $(function () {
     {% for usage in next_managed_resource_termine %}
     <li class="list-group-item">
      <a href="{{ usage.get_absolute_url }}">{{ usage.resource.label }}</a>
-     von <strong>{{ usage.termin.start|timerange:usage.termin.end }}</strong>
+     von <strong>{{ usage.termin.start|timerange_short:usage.termin.end }}</strong>
      für <strong>{{ usage.termin.label }}</strong>
      von <strong>{{ usage.termin.owner }}</strong>
     </li>

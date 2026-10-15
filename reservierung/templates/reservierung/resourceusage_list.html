@@ -23,7 +23,7 @@
 
 {% block item %}
  <th scope="row"><a href="{{ object.get_absolute_url }}">{{ object.termin.label }}</a></td>
- <td>{{ object.termin.start|timerange:object.termin.end }}</td>
+ <td>{{ object.termin.start|timerange_short:object.termin.end }}</td>
  <td>{{ object.resource.label|highlight:search_words }}</td>
  <td>{{ object.state }}</td>
 {% endblock %}
