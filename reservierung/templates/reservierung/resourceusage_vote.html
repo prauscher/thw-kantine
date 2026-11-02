@@ -39,6 +39,10 @@
 </div>
 {% endif %}
 
+<div class="alert alert-warning" role="alert">
+ <p><strong>Achtung:</strong> Deine Zustimmung wurde noch nicht gespeichert. Bitte bestätige dieses Formular (und hinterlege ggf. eine Anmerkung), um deine Zustimmung abzuspeichern.</p>
+</div>
+
 <form method="post">
  {% csrf_token %}
  {{ form|crispy }}
