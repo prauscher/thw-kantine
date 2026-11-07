@@ -75,7 +75,7 @@ class Config(models.Model):
 
 
 class DispenseButton(models.Model):
-    """Ein Button zum Abstreichen, z.B. „Getränk“ für 1,10 €."""
+    """Ein Button zum Abbuchen, z.B. „Getränk“ für 1,10 €."""
     label = models.CharField(max_length=30, verbose_name="Bezeichnung")
     cents = models.PositiveIntegerField(verbose_name="Preis (Cent)")
     position = models.PositiveIntegerField(default=0, verbose_name="Reihenfolge")

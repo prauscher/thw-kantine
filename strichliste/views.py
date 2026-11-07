@@ -73,8 +73,8 @@ def _account_page(request, pk, own=False):
         except (ValidationError, ValueError) as error:
             messages.error(request, error.messages[0] if isinstance(error, ValidationError) else "Ungültiger Betrag.")
         else:
-            verb = "abgestrichen" if tx.amount < 0 else "eingezahlt"
-            messages.success(request, f"{booking.format_cents(abs(tx.amount))} bei {account.name} {verb}.")
+            verb = "abgebucht" if tx.amount < 0 else "eingezahlt"
+            messages.success(request, f"{booking.format_cents(abs(tx.amount))} {verb}.")
         if own and not actor.is_tablet:
             return redirect("strichliste:start")
         return _sl_redirect(request, "konto", account.pk)
