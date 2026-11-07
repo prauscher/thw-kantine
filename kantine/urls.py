@@ -28,6 +28,7 @@ urlpatterns = [
     path('unterweisung/', include('unterweisung.urls')),
     path('reservierung/', include('reservierung.urls')),
     path('monitor/', include('monitor.urls')),
+    path('strichliste/', include('strichliste.urls')),
     path('admin/', admin.site.urls),
     path('markdownx/', include('markdownx.urls')),
 ]

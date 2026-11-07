@@ -1,0 +1,97 @@
+.strichliste {
+  --sl-thw: #003399;
+  --sl-ext: #b45309;
+  --sl-ext-soft: #fdf0dc;
+  --sl-debt: #b42318;
+  background: #f3f5f9;
+}
+
+.sl-navbar { background: var(--sl-thw); }
+.sl-navbar .container { flex-wrap: wrap; }
+.sl-navbar .nav-link { white-space: nowrap; }
+
+.sl-testmode {
+  background: repeating-linear-gradient(-45deg, #ffe08a, #ffe08a 14px, #ffd25c 14px, #ffd25c 28px);
+  color: #3d2c00;
+  padding: .5rem 0;
+  font-size: .95rem;
+}
+
+.sl-chip-ext {
+  background: var(--sl-ext-soft);
+  color: var(--sl-ext);
+  border: 1px solid rgba(180, 83, 9, .35);
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+
+/* Kachelraster wie im alten System */
+.sl-grid {
+  display: grid;
+  /* feste Kachelgröße, damit lange Namen das Raster nicht verziehen */
+  grid-template-columns: repeat(auto-fill, 9.5rem);
+  grid-auto-rows: 7rem;
+  gap: 1rem;
+}
+.sl-tile {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  padding: .6rem .75rem;
+  background: #fff;
+  border: 1px solid #d5dbe6;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(16, 30, 70, .08);
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+  overflow: hidden;
+}
+.sl-tile:hover { box-shadow: 0 3px 8px rgba(16, 30, 70, .18); color: inherit; }
+.sl-tile-name { flex: none; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.sl-tile-ext { flex: none; font-size: .8rem; font-weight: 600; color: var(--sl-ext); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sl-tile-balance { font-weight: 700; font-size: 1.2rem; margin-top: auto; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; flex: none; }
+.sl-tile.is-ext { border: 2px dashed rgba(180, 83, 9, .6); background: #fffaf2; }
+.sl-tile.is-debt { box-shadow: inset 0 -6px 0 var(--sl-debt), 0 1px 3px rgba(16, 30, 70, .08); }
+.sl-tile.sl-add { border: 2px dashed #c3cad8; background: none; box-shadow: none; align-items: center; justify-content: center; color: var(--sl-ext); font-weight: 700; text-align: center; }
+
+/* Kontoseite */
+.sl-balance { font-size: 3rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.sl-tap { font-size: 1.35rem; font-weight: 700; padding: .9rem .25rem; font-variant-numeric: tabular-nums; }
+.sl-tap-label { display: block; font-size: 1.1rem; line-height: 1.2; overflow-wrap: anywhere; }
+.sl-tap-price { display: block; font-size: .9rem; font-weight: 600; opacity: .8; }
+.sl-tap-sm { font-size: 1rem; padding: .6rem .25rem; }
+.sl-label { text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; font-weight: 700; color: #5b6579; }
+.sl-meter { height: 8px; border-radius: 4px; background: #e9edf5; overflow: hidden; }
+.sl-meter > div { height: 100%; background: #8a93a6; }
+.sl-meter > div.near { background: #e8890c; }
+.sl-meter > div.over { background: var(--sl-debt); }
+
+.sl-debt {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--sl-debt);
+  color: #fff;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+.sl-debt-icon { font-size: 2rem; line-height: 1; }
+.sl-debt strong { font-size: 1.3rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .sl-debt { animation: sl-pulse 2.4s ease-in-out 2; }
+  @keyframes sl-pulse { 50% { box-shadow: 0 0 0 6px rgba(180, 35, 24, .25); } }
+}
+
+.sl-history .reverted .sl-history-label,
+.sl-history .reverted .sl-history-amount { text-decoration: line-through; color: #8a93a6 !important; }
+.sl-history-amount { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Tablet: zurück zur Übersicht */
+.sl-idle-bar { height: 4px; background: #e9edf5; border-radius: 2px; overflow: hidden; }
+.sl-idle-bar > div { height: 100%; width: 100%; background: var(--sl-thw); transition: width 1s linear; }
+.is-tablet { user-select: none; -webkit-user-select: none; }
+.is-tablet input, .is-tablet textarea { user-select: text; -webkit-user-select: text; }
+
+.sl-qr svg { width: 100%; max-width: 280px; height: auto; }

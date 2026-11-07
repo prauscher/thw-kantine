@@ -1,0 +1,15 @@
+{% extends "strichliste/_base.html" %}
+{% load crispy_forms_tags %}
+{% load strichliste %}
+
+{% block title %}Geld überweisen{% endblock %}
+
+{% block content %}
+<h1 class="h2">Geld überweisen</h1>
+<p class="text-muted">Von <strong>{{ account.name }}</strong> an eine andere Person, z.B. wenn jemand für dich bezahlt hat.</p>
+<form method="post" style="max-width: 32rem">{% csrf_token %}
+ {{ form|crispy }}
+ <button type="submit" class="btn btn-primary">Überweisen</button>
+ <a class="btn btn-link" href="{% sl_url 'konto' account.pk %}">Abbrechen</a>
+</form>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% load django_bootstrap5 %}
+{% load static %}
+{% load strichliste %}
+
+<!doctype html>
+<html lang="de">
+ <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  {% bootstrap_css %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" crossorigin="anonymous" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" />
+  <link rel="stylesheet" href="{% static 'strichliste/strichliste.css' %}" />
+  <title>{% block title %}{% endblock %} · Strichliste</title>
+ </head>
+ <body class="strichliste{% if is_tablet %} is-tablet{% endif %}">
+  <nav class="navbar navbar-expand navbar-dark sl-navbar">
+   <div class="container">
+    <a class="navbar-brand fw-bold" href="{% sl_url 'konten' %}"><i class="bi bi-list-check"></i> Strichliste</a>
+    {% if actor %}
+    <ul class="navbar-nav me-auto flex-wrap">
+     {% if not is_tablet %}
+     <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'start' %} active{% endif %}" href="{% url 'strichliste:start' %}">Meine Strichliste</a></li>
+     {% endif %}
+     <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'konten' or request.resolver_match.url_name == 'tablet_konten' %} active{% endif %}" href="{% sl_url 'konten' %}">{% if is_tablet %}Alle Konten{% else %}Theke &amp; Externe{% endif %}</a></li>
+     {% if actor.is_admin %}
+     <li class="nav-item"><a class="nav-link{% if tab %} active{% endif %}" href="{% url 'strichliste:admin_konten' %}">Verwaltung</a></li>
+     {% endif %}
+    </ul>
+    <span class="navbar-text small text-white-50 d-none d-sm-inline">
+     {% if is_tablet %}<i class="bi bi-tablet"></i> {{ actor.name }}{% else %}<i class="bi bi-person-circle"></i> {{ actor.name }}{% endif %}
+    </span>
+    {% endif %}
+   </div>
+  </nav>
+
+  {% if config.test_mode %}
+  <div class="sl-testmode">
+   <div class="container">
+    <i class="bi bi-cone-striped"></i>
+    <strong>Testbetrieb:</strong> Hier sind nur Spieldaten. Buchungen zählen nicht, die echte Strichliste läuft weiter wie bisher.
+    Vor dem Start werden alle Daten gelöscht und die bestehende Strichliste übernommen.
+   </div>
+  </div>
+  {% endif %}
+
+  <main role="main" class="container my-3">
+   {% for message in messages %}
+   <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+   </div>
+   {% endfor %}
+   {% block content %}{% endblock %}
+  </main>
+
+  <!-- extra margin to work on firefox android -->
+  <p>&nbsp;</p>
+
+  {% bootstrap_javascript %}
+  {% block script %}{% endblock %}
+ </body>
+</html>

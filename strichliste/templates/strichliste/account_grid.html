@@ -1,0 +1,79 @@
+{% extends "strichliste/_base.html" %}
+{% load strichliste %}
+
+{% block title %}{% if is_tablet %}Alle Konten{% else %}Theke &amp; Externe{% endif %}{% endblock %}
+
+{% block content %}
+{% if not is_tablet %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+ <div>
+  <h1 class="h2 mb-1">Theke &amp; Externe</h1>
+  <p class="text-muted mb-0">Hier buchst du für Gäste ohne Nextcloud-Konto. Persönliche Konten anderer siehst du nur mit Saldo.</p>
+ </div>
+ <a class="btn btn-outline-warning" href="{% sl_url 'extern_neu' %}"><i class="bi bi-person-plus"></i> Externe Person anlegen</a>
+</div>
+{% endif %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+ <div class="btn-group flex-wrap mw-100" role="group" aria-label="Konten filtern" id="sl-tabs">
+  <button type="button" class="btn btn-outline-primary active" data-tab="aktiv">Aktiv <span class="badge text-bg-light">{{ counts.aktiv }}</span></button>
+  <button type="button" class="btn btn-outline-primary" data-tab="inaktiv">Inaktiv <span class="badge text-bg-light">{{ counts.inaktiv }}</span></button>
+  <button type="button" class="btn btn-outline-primary" data-tab="extern">Nur Externe <span class="badge text-bg-light">{{ counts.extern }}</span></button>
+  <button type="button" class="btn btn-outline-primary" data-tab="ausgleichen">Ausgleichen <span class="badge text-bg-light">{{ counts.ausgleichen }}</span></button>
+ </div>
+ <input type="search" class="form-control" style="max-width: 16rem" id="sl-search" placeholder="Name suchen …" aria-label="Name suchen">
+</div>
+<p class="small text-muted mb-3">
+ Gestrichelter Rahmen: externe Person ohne Nextcloud-Konto · Roter Streifen: unter {{ config.warn_below|euro }}{% if is_tablet %} · Tippe auf deinen Namen.{% endif %}
+</p>
+
+<div class="sl-grid" id="sl-grid">
+ {% for account in accounts %}
+ <a class="sl-tile{% if account.is_extern %} is-ext{% endif %}{% if account.debt %} is-debt{% endif %}"
+    href="{% sl_url 'konto' account.pk %}"
+    data-name="{{ account.name|lower }} {% for tag in account.tags.all %}{{ tag.label|lower }} {% endfor %}"
+    data-stale="{{ account.stale|yesno:'1,0' }}" data-ext="{{ account.is_extern|yesno:'1,0' }}" data-debt="{{ account.debt|yesno:'1,0' }}">
+  <span class="sl-tile-name" title="{{ account.name }}">{{ account.name }}{% if account.pk == actor.account.pk %} (du){% endif %}</span>
+  {% if account.is_extern %}<span class="sl-tile-ext">extern{% for tag in account.tags.all|slice:":1" %} · {{ tag.label }}{% endfor %}</span>{% endif %}
+  <span class="sl-tile-balance {{ account.balance|balance_class }}">{{ account.balance|euro }}</span>
+ </a>
+ {% endfor %}
+ <a class="sl-tile sl-add" href="{% sl_url 'extern_neu' %}" data-always="1"><span class="fs-3">+</span>Externe Person</a>
+</div>
+<p class="text-muted mt-3 d-none" id="sl-empty">Niemand gefunden.</p>
+{% endblock %}
+
+{% block script %}
+<script>
+(() => {
+  const tiles = [...document.querySelectorAll("#sl-grid .sl-tile:not([data-always])")];
+  const search = document.getElementById("sl-search");
+  let tab = "aktiv";
+  const match = {
+    aktiv: t => t.dataset.stale === "0",
+    inaktiv: t => t.dataset.stale === "1",
+    extern: t => t.dataset.ext === "1",
+    ausgleichen: t => t.dataset.debt === "1",
+  };
+  function apply() {
+    const q = search.value.trim().toLowerCase();
+    let shown = 0;
+    for (const tile of tiles) {
+      const visible = match[tab](tile) && (!q || tile.dataset.name.includes(q));
+      tile.hidden = !visible;
+      shown += visible;
+    }
+    document.getElementById("sl-empty").classList.toggle("d-none", shown > 0);
+  }
+  document.getElementById("sl-tabs").addEventListener("click", event => {
+    const button = event.target.closest("[data-tab]");
+    if (!button) return;
+    tab = button.dataset.tab;
+    for (const other of document.querySelectorAll("#sl-tabs [data-tab]")) other.classList.toggle("active", other === button);
+    apply();
+  });
+  search.addEventListener("input", apply);
+  apply();
+})();
+</script>
+{% endblock %}

@@ -46,6 +46,7 @@ COPY ./abfrage /opt/app/abfrage
 COPY ./unterweisung /opt/app/unterweisung
 COPY ./reservierung /opt/app/reservierung
 COPY ./monitor /opt/app/monitor
+COPY ./strichliste /opt/app/strichliste
 
 RUN find "." -exec chown root:root '{}' +  && \
     find "." -type d -exec chmod 755 '{}' +  && \

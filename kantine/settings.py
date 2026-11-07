@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'login_hermine',
     'reservierung',
     'monitor',
+    'strichliste',
     'polymorphic',
     'mathfilters',
     'markdownx',

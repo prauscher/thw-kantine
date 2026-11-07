@@ -1,0 +1,47 @@
+{% extends "strichliste/_admin_base.html" %}
+{% load strichliste %}
+
+{% block admin_content %}
+<p class="text-muted" style="max-width: 48rem">
+ Diese Buttons erscheinen auf jeder Kontoseite unter „Ausgabe abstreichen“, sortiert nach Reihenfolge.
+ Preisänderungen gelten nur für neue Buchungen, bisherige Buchungen behalten ihren Betrag.
+</p>
+
+<div class="card mb-4">
+ <div class="table-responsive">
+  <table class="table align-middle mb-0">
+   <thead><tr><th colspan="4" class="p-0">
+    <div class="d-flex gap-2 px-2 py-2">
+     <span style="width: 14rem">Bezeichnung</span><span class="text-end" style="width: 7rem">Preis in €</span><span class="text-nowrap" style="width: 5rem">Reihenfolge</span>
+    </div>
+   </th></tr></thead>
+   <tbody>
+    {% for button in buttons %}
+    <tr>
+     <td colspan="4" class="p-0">
+      <form method="post" class="d-flex flex-wrap gap-2 align-items-center p-2 m-0">{% csrf_token %}
+       <input type="hidden" name="pk" value="{{ button.pk }}">
+       <input type="text" name="label" value="{{ button.label }}" maxlength="30" required class="form-control form-control-sm" style="width: 14rem" aria-label="Bezeichnung">
+       <input type="text" name="price" value="{{ button.cents|euro|cut:' €' }}" inputmode="decimal" required class="form-control form-control-sm text-end" style="width: 7rem" aria-label="Preis in €">
+       <input type="number" name="position" value="{{ button.position }}" min="0" required class="form-control form-control-sm" style="width: 5rem" aria-label="Reihenfolge">
+       <button type="submit" class="btn btn-sm btn-outline-primary">Speichern</button>
+       <button type="submit" name="delete" value="{{ button.pk }}" class="btn btn-sm btn-link text-danger" formnovalidate>Entfernen</button>
+      </form>
+     </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="text-muted">Noch keine Ausgabe-Buttons. Ohne Buttons kann niemand abstreichen.</td></tr>
+    {% endfor %}
+   </tbody>
+  </table>
+ </div>
+</div>
+
+<h2 class="h5">Neuen Button anlegen</h2>
+<form method="post" class="d-flex flex-wrap gap-2 align-items-end">{% csrf_token %}
+ <div><label class="form-label small mb-1" for="new-label">Bezeichnung</label><input id="new-label" type="text" name="label" maxlength="30" required placeholder="z.B. Getränke" class="form-control" style="width: 14rem"></div>
+ <div><label class="form-label small mb-1" for="new-price">Preis in €</label><input id="new-price" type="text" name="price" inputmode="decimal" required placeholder="1,10" class="form-control text-end" style="width: 7rem"></div>
+ <div><label class="form-label small mb-1" for="new-position">Reihenfolge</label><input id="new-position" type="number" name="position" value="{{ next_position }}" min="0" required class="form-control" style="width: 5rem"></div>
+ <button type="submit" class="btn btn-primary">Anlegen</button>
+</form>
+{% endblock %}
