@@ -21,9 +21,6 @@
      <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'start' %} active{% endif %}" href="{% url 'strichliste:start' %}">Meine Strichliste</a></li>
      {% endif %}
      <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'konten' or request.resolver_match.url_name == 'tablet_konten' %} active{% endif %}" href="{% sl_url 'konten' %}">{% if is_tablet %}Alle Konten{% else %}Theke &amp; Externe{% endif %}</a></li>
-     {% if actor.is_admin %}
-     <li class="nav-item"><a class="nav-link{% if tab %} active{% endif %}" href="{% url 'strichliste:admin_konten' %}">Verwaltung</a></li>
-     {% endif %}
     </ul>
     <span class="navbar-text small text-white-50 d-none d-sm-inline">
      {% if is_tablet %}<i class="bi bi-tablet"></i> {{ actor.name }}{% else %}<i class="bi bi-person-circle"></i> {{ actor.name }}{% endif %}
@@ -31,16 +28,6 @@
     {% endif %}
    </div>
   </nav>
-
-  {% if config.test_mode %}
-  <div class="sl-testmode">
-   <div class="container">
-    <i class="bi bi-cone-striped"></i>
-    <strong>Testbetrieb:</strong> Hier sind nur Spieldaten. Buchungen zählen nicht, die echte Strichliste läuft weiter wie bisher.
-    Vor dem Start werden alle Daten gelöscht und die bestehende Strichliste übernommen.
-   </div>
-  </div>
-  {% endif %}
 
   <main role="main" class="container my-3">
    {% for message in messages %}

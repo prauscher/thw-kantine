@@ -8,15 +8,13 @@ from django.db import transaction
 from django.utils import timezone
 
 from strichliste.booking import format_cents
-from strichliste.models import Account, Config, Transaction
+from strichliste.models import Account, Transaction
 
 FETCH_LIMIT = 5000
 
 
 class Command(BaseCommand):
-    help = ("Übernimmt die Konten der bisherigen Strichliste (strichliste.org) und beendet den Testbetrieb. "
-            "Dabei werden ALLE Konten und Buchungen gelöscht, die während des Tests angelegt wurden. "
-            "Tags, Ausgabe-Buttons, Tablets und Einstellungen bleiben erhalten.")
+    help = "Übernimmt die Konten der bisherigen Strichliste (strichliste.org) in die leere Datenbank."
 
     def add_arguments(self, parser):
         parser.add_argument("--url", default="https://strichliste.thw-darmstadt.de",
@@ -26,14 +24,10 @@ class Command(BaseCommand):
                                  "(oder Umgebungsvariable STRICHLISTE_IMPORT_AUTH)")
         parser.add_argument("--file", help="Statt der URL eine gespeicherte Antwort von /api/user lesen")
         parser.add_argument("--dry-run", action="store_true", help="Nur anzeigen, was passieren würde")
-        parser.add_argument("--force", action="store_true",
-                            help="Auch importieren, wenn der Testbetrieb schon beendet ist (löscht echte Daten!)")
 
-    def handle(self, *args, url, auth, file, dry_run, force, **options):
-        config = Config.get()
-        if not config.test_mode and not force:
-            raise CommandError("Der Testbetrieb ist bereits beendet. Ein erneuter Import würde echte Buchungen löschen. "
-                               "Falls das wirklich gewollt ist: --force")
+    def handle(self, *args, url, auth, file, dry_run, **options):
+        if Account.objects.exists():
+            raise CommandError("Es gibt schon Konten. Der Import geht nur in eine leere Datenbank.")
 
         users = self._load(url, auth, file)
         if len(users) >= FETCH_LIMIT:
@@ -43,12 +37,8 @@ class Command(BaseCommand):
 
         total = sum(int(user["balance"]) for user in users)
         self.stdout.write(f"{len(users)} Konten mit einem Gesamtsaldo von {format_cents(total)} gefunden.")
-        self.stdout.write(f"Werden gelöscht: {Account.objects.count()} Konten und {Transaction.objects.count()} Buchungen aus dem Testbetrieb.")
 
         with transaction.atomic():
-            Transaction.objects.all().delete()
-            Account.objects.all().delete()
-
             now = timezone.now()
             for user in users:
                 balance = int(user["balance"])
@@ -66,9 +56,6 @@ class Command(BaseCommand):
                         label="Übertrag aus der alten Strichliste", booked_by_name="Import",
                     )
 
-            config.test_mode = False
-            config.save(update_fields=["test_mode"])
-
             imported = sum(Account.objects.values_list("balance", flat=True))
             if imported != total:
                 raise CommandError(f"Gesamtsaldo stimmt nicht: {format_cents(imported)} statt {format_cents(total)}")
@@ -79,8 +66,8 @@ class Command(BaseCommand):
                 return
 
         self.stdout.write(self.style.SUCCESS(
-            f"{len(users)} Konten übernommen, Testbetrieb beendet. Die Konten werden beim ersten Nextcloud-Login "
-            f"mit gleichem Namen automatisch verknüpft, den Rest unter Verwaltung zuordnen."))
+            f"{len(users)} Konten übernommen. Die Konten werden beim ersten Nextcloud-Login "
+            f"mit gleichem Namen automatisch verknüpft, den Rest im Django-Admin zuordnen."))
 
     def _load(self, url, auth, file):
         if file:

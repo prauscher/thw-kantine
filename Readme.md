@@ -7,26 +7,26 @@
 # Strichliste
 Erreichbar unter `/strichliste/`. Das Konto hängt am Nextcloud-Login und wird beim ersten Aufruf angelegt.
 Externe Personen ohne Nextcloud-Konto legt jeder unter „Theke & Externe“ an, sie sind überall als EXTERN gekennzeichnet.
+Ausgabe-Buttons, Tags und Konten werden im Django-Admin gepflegt.
 
-- `STRICHLISTE_ADMINS`: kommagetrennte Nextcloud-Benutzernamen mit Zugriff auf die Verwaltung (Konten, Tags, Tablets, Einstellungen)
-- Theken-Tablet: in der Verwaltung unter „Theken-Tablets“ einen Zugang mit PIN anlegen und die Adresse einmal auf dem Tablet öffnen.
-  Nach der PIN bleibt das Gerät dauerhaft angemeldet. Sperren oder „Alle Geräte abmelden“ macht den Zugang ungültig.
-- Ausgabe-Buttons (z.B. „Getränke“ für 1,10 €) werden in der Verwaltung angelegt, benannt und sortiert.
-- Überweisungen zwischen Konten sind standardmäßig aus und lassen sich unter Einstellungen einschalten.
-- PayPal: unter Einstellungen den Link für den QR-Code eintragen. Gutschriften bucht ein separates Skript.
+Einstellungen per Umgebungsvariable:
+- `STRICHLISTE_TABLET_PIN`: Theken-Tablet unter `/strichliste/tablet/<PIN>/`, ohne Wert gibt es keinen Tablet-Zugang
+- `STRICHLISTE_TRANSFERS`: Überweisungen zwischen Konten erlauben (Standard: aus)
+- `STRICHLISTE_PAYPAL_LINK`: Ziel des QR-Codes unter „Mit PayPal aufladen“, Gutschriften bucht ein separates Skript
+- `STRICHLISTE_WARN_BELOW` (−4000), `STRICHLISTE_HARD_LIMIT` (−20000): Warnschwelle und Untergrenze in Cent
+- `STRICHLISTE_UNDO_MINUTES` (5), `STRICHLISTE_TABLET_IDLE_SECONDS` (30), `STRICHLISTE_STALE_DAYS` (100)
+- `STRICHLISTE_DEPOSIT_STEPS` (`10,50,100,200,500,1000`): Einzahlungs-Buttons in Cent
 
-## Testbetrieb und Übernahme der alten Strichliste
-Nach der Installation enthält die Strichliste Spieldaten (Benutzernamen `spiel-…`), auf allen Seiten steht ein Hinweis auf den Testbetrieb.
-Nach dem Testen wird die bestehende Strichliste in einem Schritt übernommen:
+## Übernahme der alten Strichliste
+Einmalig in die leere Datenbank, bevor sich jemand anmeldet:
 
 ```
 STRICHLISTE_IMPORT_AUTH=benutzer:passwort ./manage.py strichliste_import --dry-run
 STRICHLISTE_IMPORT_AUTH=benutzer:passwort ./manage.py strichliste_import
 ```
 
-Dabei werden alle Konten und Buchungen aus dem Testbetrieb gelöscht (Tags, Ausgabe-Buttons, Tablets und Einstellungen bleiben), die Konten mit ihrem Saldo übernommen
-und der Testbetrieb beendet. Übernommene Konten werden beim ersten Nextcloud-Login mit exakt gleichem Namen automatisch verknüpft,
-der Rest wird in der Verwaltung zugeordnet oder als extern geführt. Die alte Strichliste sollte ab dem Import nicht mehr benutzt werden.
+Übernommene Konten werden beim ersten Nextcloud-Login mit exakt gleichem Namen automatisch verknüpft,
+der Rest wird im Django-Admin zugeordnet (Art und Benutzername setzen) oder als extern geführt.
 
 # Offene Aufgaben / TODOs
 - Stornierungsmöglichkeit -> Auf null setzen geht doch?

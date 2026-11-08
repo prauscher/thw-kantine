@@ -10,13 +10,6 @@
 .sl-navbar .container { flex-wrap: wrap; }
 .sl-navbar .nav-link { white-space: nowrap; }
 
-.sl-testmode {
-  background: repeating-linear-gradient(-45deg, #ffe08a, #ffe08a 14px, #ffd25c 14px, #ffd25c 28px);
-  color: #3d2c00;
-  padding: .5rem 0;
-  font-size: .95rem;
-}
-
 .sl-chip-ext {
   background: var(--sl-ext-soft);
   color: var(--sl-ext);

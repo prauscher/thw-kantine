@@ -24,7 +24,7 @@ def balance_class(cents):
 @register.simple_tag(takes_context=True)
 def sl_url(context, name, *args):
     """Wie {% url %}, zeigt auf dem Theken-Tablet aber auf die Tablet-Variante der Seite."""
-    token = getattr(context["request"], "tablet_token", None)
-    if token:
-        return reverse(f"strichliste:tablet_{name}", args=[token, *args])
+    pin = getattr(context["request"], "tablet_pin", None)
+    if pin:
+        return reverse(f"strichliste:tablet_{name}", args=[pin, *args])
     return reverse(f"strichliste:{name}", args=args)

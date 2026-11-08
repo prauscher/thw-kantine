@@ -14,18 +14,12 @@ class AccountAdmin(admin.ModelAdmin):
 @admin.register(models.Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ("created_at", "account", "amount", "label", "booked_by_name", "reverted_at")
-    list_filter = ("kind", "tablet")
+    list_filter = ("kind", "via_tablet")
     search_fields = ("account__name", "label", "booked_by_name")
 
     def has_change_permission(self, request, obj=None):
         return False
 
 
-@admin.register(models.Tablet)
-class TabletAdmin(admin.ModelAdmin):
-    list_display = ("label", "active", "last_seen_at")
-
-
 admin.site.register(models.DispenseButton)
 admin.site.register(models.Tag)
-admin.site.register(models.Config)
