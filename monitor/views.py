@@ -1,3 +1,4 @@
+import os
 from django.http import Http404, JsonResponse
 from django.urls import reverse
 from django.views.generic import TemplateView
@@ -5,9 +6,10 @@ from django.views.generic import TemplateView
 from .monitor import query_infomonitor
 
 
-MONITORS = {
-    "e1d2c073-1833-4cd0-9c72-0222b122bac9": ("monitor/infomonitor.html", query_infomonitor),
-}
+MONITORS = {}
+
+if (monitor_uuid := os.environ.get("MONITOR_INFOMONITOR_UUID")):
+    MONITORS[monitor_uuid] = ("monitor/infomonitor.html", query_infomonitor)
 
 
 class InfoMonitorView(TemplateView):
