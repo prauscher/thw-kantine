@@ -12,16 +12,6 @@
 </form>
 
 {% if unassigned %}
-<h2 class="h4">Konten aus der alten Strichliste</h2>
-<ul class="list-group" style="max-width: 32rem">
- {% for account in unassigned %}
- <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
-  <span>{{ account.name }} <span class="small {{ account.balance|balance_class }}">{{ account.balance|euro }}</span></span>
-  <form method="post" action="{% url 'strichliste:assign_user' account.pk %}" class="m-0">{% csrf_token %}
-   <button type="submit" class="btn btn-sm btn-outline-primary">Das bin ich</button>
-  </form>
- </li>
- {% endfor %}
-</ul>
+<a href="{% url 'strichliste:assign_user' %}" class="btn btn-primary">Account zuordnen</a>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,15 @@
+{% extends "abfrage/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Vorhandenen Benutzer zuordnen{% endblock %}
+
+{% block content %}
+<p class="text-muted">
+ Ordne deinen NextCloud-Account einem Strichlisten-Account zu. <strong>Diese Handlung kannst du nicht selbstständig rückgängig machen.</strong>
+</p>
+<form method="post">{% csrf_token %}
+ {{ form|crispy }}
+ <button type="submit" class="btn btn-primary">Verknüpfen</button>
+ <a class="btn btn-link" href="{% url 'strichliste:start' %}">Abbrechen</a>
+</form>
+{% endblock %}

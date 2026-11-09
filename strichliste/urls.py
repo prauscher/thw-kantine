@@ -12,7 +12,7 @@ urlpatterns = [
     path("",
          views.StartView.as_view(),
          name="start"),
-    path("zuordnen/<int:pk>",
+    path("assign",
          views.AssignUserView.as_view(),
          name="assign_user"),
     path("anlegen",

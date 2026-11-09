@@ -6,6 +6,10 @@ from django.core.exceptions import ValidationError
 from . import models, settings as app_settings
 
 
+class AssignAccountForm(forms.Form):
+    account = forms.ModelChoiceField(queryset=models.Account.objects.filter(username__isnull=True, disabled=False))
+
+
 class ExternForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

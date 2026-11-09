@@ -13,7 +13,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic import FormView, ListView, TemplateView, View
 
@@ -202,7 +202,6 @@ class StartView(OwnAccountMixin, AccountView):
 
 class UnassignedOnlyMixin:
     """Nur für Nextcloud-Benutzer, die noch kein Konto haben."""
-    http_method_names = ["post"]
 
     @method_decorator(require_jwt_login)
     def dispatch(self, request, *args, **kwargs):
@@ -211,17 +210,23 @@ class UnassignedOnlyMixin:
         return super().dispatch(request, *args, **kwargs)
 
 
-class AssignUserView(UnassignedOnlyMixin, View):
-    def post(self, request, pk):
-        account = get_object_or_404(models.Account, pk=pk, username__isnull=True, disabled=False)
-        account.username = request.jwt_user_id
-        account.name = request.jwt_user_display
+class AssignUserView(UnassignedOnlyMixin, FormView):
+    form_class = forms.AssignAccountForm
+    template_name = "strichliste/assign_user_form.html"
+    success_url = reverse_lazy("strichliste:start")
+
+    def form_valid(self, form):
+        account = form.cleaned_data["account"]
+        account.username = self.request.jwt_user_id
+        account.name = self.request.jwt_user_display
         account.save(update_fields=["username", "name"])
-        messages.success(request, "Das Konto ist jetzt mit deinem Nextcloud-Zugang verknüpft.")
-        return redirect("strichliste:start")
+        messages.success(self.request, "Das Konto ist jetzt mit deinem Nextcloud-Zugang verknüpft.")
+        return super().form_valid(form)
 
 
 class CreateUserView(UnassignedOnlyMixin, View):
+    http_method_names = ["post"]
+
     def post(self, request):
         models.Account.objects.create(username=request.jwt_user_id,
                                       name=request.jwt_user_display)
