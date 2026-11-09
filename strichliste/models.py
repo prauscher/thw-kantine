@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
+from . import settings as app_settings
+
 
 class DispenseButton(models.Model):
     """Ein Button zum Abbuchen, z.B. „Getränk“ für 1,10 €."""
@@ -66,10 +68,10 @@ class Account(models.Model):
     def is_extern(self) -> bool:
         return self.kind == self.KIND_EXTERN
 
-    def is_stale(self, stale_days: int) -> bool:
+    def is_stale(self) -> bool:
         if self.last_booking_at is None:
             return False
-        return self.last_booking_at < timezone.now() - timezone.timedelta(days=stale_days)
+        return self.last_booking_at < timezone.now() - timezone.timedelta(days=app_settings.STALE_DAYS)
 
 
 class Transaction(models.Model):

@@ -252,8 +252,8 @@ class TabletAccountListView(TabletMixin, ListView):
         for account in accounts:
             account.debt = account.balance <= app_settings.WARN_BELOW
         return super().get_context_data(
-            active=[account for account in accounts if not account.is_stale(app_settings.STALE_DAYS)],
-            stale=[account for account in accounts if account.is_stale(app_settings.STALE_DAYS)],
+            active=[account for account in accounts if not account.is_stale()],
+            stale=[account for account in accounts if account.is_stale()],
             app_settings=app_settings,
             **kwargs,
         )
