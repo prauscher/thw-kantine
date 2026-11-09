@@ -34,7 +34,7 @@ class Account(models.Model):
         max_length=50, null=True, blank=True, unique=True,
         verbose_name="Benutzername", help_text="Benutzername in NextCloud, nur bei Nextcloud-Konten.",
     )
-    name = models.CharField(max_length=100, verbose_name="Name")
+    name = models.CharField(max_length=100, verbose_name="Name", unique=True)
     tags = models.ManyToManyField(Tag, blank=True, verbose_name="Tags")
     contact = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="+",
