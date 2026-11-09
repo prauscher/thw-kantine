@@ -19,16 +19,15 @@
 {% bootstrap_messages %}
 
 <p class="text-muted">
- {% if account.kind == "nc" %}
+ {% if account.username %}
   <span class="badge text-bg-primary">NEXTCLOUD</span> {{ account.username }}
- {% elif account.is_extern %}
-  <span class="badge text-bg-warning">EXTERN</span>
-  {% for tag in account.tags.all %}<span class="badge text-bg-light">{{ tag.label }}</span>{% endfor %}
-  {% if account.contact %}betreut von {{ account.contact.name }}{% endif %}
-  {% if account.note %}· {{ account.note }}{% endif %}
  {% else %}
-  <span class="badge text-bg-secondary">ALTES SYSTEM</span> noch nicht mit Nextcloud verknüpft
+  noch nicht mit Nextcloud verknüpft
  {% endif %}
+
+ {% for tag in account.tags.all %}<span class="badge text-bg-light">{{ tag.label }}</span>{% endfor %}
+ {% if account.contact %}betreut von {{ account.contact.name }}{% endif %}
+ {% if account.note %}· {{ account.note }}{% endif %}
 </p>
 
 {% if account.balance <= app_settings.WARN_BELOW %}

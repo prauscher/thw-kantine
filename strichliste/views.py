@@ -195,7 +195,7 @@ class StartView(OwnAccountMixin, AccountView):
     def get(self, request, *args, **kwargs):
         if self.account is None:
             return render(request, "strichliste/start_unassigned.html", {
-                "unassigned": models.Account.objects.filter(kind=models.Account.KIND_LEGACY, disabled=False),
+                "unassigned": models.Account.objects.filter(username__isnull=True, disabled=False),
             })
         return super().get(request, *args, **kwargs)
 
@@ -213,18 +213,17 @@ class UnassignedOnlyMixin:
 
 class AssignUserView(UnassignedOnlyMixin, View):
     def post(self, request, pk):
-        account = get_object_or_404(models.Account, pk=pk, kind=models.Account.KIND_LEGACY, disabled=False)
-        account.kind = models.Account.KIND_NEXTCLOUD
+        account = get_object_or_404(models.Account, pk=pk, username__isnull=True, disabled=False)
         account.username = request.jwt_user_id
         account.name = request.jwt_user_display
-        account.save(update_fields=["kind", "username", "name"])
+        account.save(update_fields=["username", "name"])
         messages.success(request, "Das Konto ist jetzt mit deinem Nextcloud-Zugang verknüpft.")
         return redirect("strichliste:start")
 
 
 class CreateUserView(UnassignedOnlyMixin, View):
     def post(self, request):
-        models.Account.objects.create(kind=models.Account.KIND_NEXTCLOUD, username=request.jwt_user_id,
+        models.Account.objects.create(username=request.jwt_user_id,
                                       name=request.jwt_user_display)
         return redirect("strichliste:start")
 
@@ -264,7 +263,6 @@ class TabletCreateExternView(TabletMixin, FormView):
     template_name = "strichliste/extern_form.html"
 
     def form_valid(self, form):
-        form.instance.kind = models.Account.KIND_EXTERN
         account = form.save()
         messages.success(self.request, f"{account.name} wurde als externe Person angelegt.")
         return redirect("strichliste:tablet_account", self.kwargs["pin"], account.pk)

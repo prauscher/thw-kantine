@@ -10,7 +10,7 @@ class ExternForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["contact"].required = True
-        self.fields["contact"].queryset = models.Account.objects.filter(kind=models.Account.KIND_NEXTCLOUD, disabled=False)
+        self.fields["contact"].queryset = models.Account.objects.filter(disabled=False)
         self.fields["name"].widget.attrs["placeholder"] = "Vor- und Nachname"
         self.fields["note"].widget.attrs["placeholder"] = "z.B. FF Arheilgen"
 

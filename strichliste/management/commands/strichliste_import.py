@@ -43,7 +43,6 @@ class Command(BaseCommand):
             for user in users:
                 balance = int(user["balance"])
                 account = Account.objects.create(
-                    kind=Account.KIND_LEGACY,
                     name=user["name"].strip(),
                     legacy_id=user["id"],
                     disabled=bool(user.get("isDisabled")),

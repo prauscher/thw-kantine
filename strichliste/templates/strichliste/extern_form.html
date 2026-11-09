@@ -6,7 +6,6 @@
 {% block content %}
 <p class="text-muted">
  Für Leute ohne Nextcloud-Konto, z.B. Gäste, Feuerwehr bei gemeinsamen Übungen oder Ehemalige.
- Das Konto wird überall mit <span class="badge text-bg-warning">EXTERN</span> gekennzeichnet.
 </p>
 <form method="post" style="max-width: 32rem">{% csrf_token %}
  {{ form|crispy }}

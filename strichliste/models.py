@@ -30,16 +30,6 @@ class Tag(models.Model):
 
 
 class Account(models.Model):
-    KIND_NEXTCLOUD = "nc"
-    KIND_EXTERN = "ext"
-    KIND_LEGACY = "alt"
-    KINDS = [
-        (KIND_NEXTCLOUD, "Nextcloud"),
-        (KIND_EXTERN, "Extern"),
-        (KIND_LEGACY, "Altes System, noch nicht verknüpft"),
-    ]
-
-    kind = models.CharField(max_length=3, choices=KINDS, verbose_name="Art")
     username = models.CharField(
         max_length=50, null=True, blank=True, unique=True,
         verbose_name="Benutzername", help_text="Benutzername in NextCloud, nur bei Nextcloud-Konten.",
@@ -48,7 +38,7 @@ class Account(models.Model):
     tags = models.ManyToManyField(Tag, blank=True, verbose_name="Tags")
     contact = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="+",
-        limit_choices_to={"kind": KIND_NEXTCLOUD},
+        limit_choices_to={"username__isnull": False},
         verbose_name="Betreut von", help_text="Ansprechperson im OV für externe Personen.",
     )
     note = models.CharField(max_length=200, blank=True, verbose_name="Notiz")
@@ -63,10 +53,6 @@ class Account(models.Model):
 
     def __str__(self):
         return self.name
-
-    @property
-    def is_extern(self) -> bool:
-        return self.kind == self.KIND_EXTERN
 
     def is_stale(self) -> bool:
         if self.last_booking_at is None:

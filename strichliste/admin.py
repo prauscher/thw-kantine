@@ -4,8 +4,8 @@ from . import models
 
 @admin.register(models.Account)
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ("name", "kind", "username", "balance", "last_booking_at", "disabled")
-    list_filter = ("kind", "disabled", "tags")
+    list_display = ("name", "username", "balance", "last_booking_at", "disabled")
+    list_filter = ("disabled", "tags")
     search_fields = ("name", "username")
     # Saldo nur über Buchungen ändern, sonst stimmt er nicht mehr mit den Transaktionen überein
     readonly_fields = ("balance", "last_booking_at", "legacy_id")

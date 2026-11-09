@@ -12,8 +12,7 @@
 {% bootstrap_messages %}
 
 <p class="text-muted">
- Tippe auf deinen Namen. <span class="badge text-bg-warning">EXTERN</span>: Person ohne Nextcloud-Konto ·
- roter Rahmen: unter {{ app_settings.WARN_BELOW|euro }}
+ Tippe auf deinen Namen. Roter Rahmen: unter {{ app_settings.WARN_BELOW|euro }}
 </p>
 
 {% include "strichliste/_account_tiles.html" with accounts=active %}

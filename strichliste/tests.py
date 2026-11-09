@@ -31,8 +31,8 @@ class OwnAccountTests(StrichlisteTestCase):
         DispenseButton.objects.create(label="Getränk klein", cents=60)
         DispenseButton.objects.create(label="Getränke", cents=110)
         DispenseButton.objects.create(label="Essen", cents=450)
-        self.account = Account.objects.create(kind=Account.KIND_NEXTCLOUD, username="mmuster", name="Max Muster")
-        self.other = Account.objects.create(kind=Account.KIND_NEXTCLOUD, username="other", name="Erika Beispiel")
+        self.account = Account.objects.create(username="mmuster", name="Max Muster")
+        self.other = Account.objects.create(username="other", name="Erika Beispiel")
 
     def test_spend(self):
         self.spend(reverse("strichliste:spend"), 110)
@@ -109,7 +109,7 @@ class OwnAccountTests(StrichlisteTestCase):
 class UnassignedTests(StrichlisteTestCase):
     def setUp(self):
         self.login()
-        self.legacy = Account.objects.create(kind=Account.KIND_LEGACY, name="Maxi", balance=-1250)
+        self.legacy = Account.objects.create(name="Maxi", balance=-1250)
 
     def test_start_lists_unassigned(self):
         self.assertContains(self.client.get(reverse("strichliste:start")), "Maxi")
@@ -117,8 +117,8 @@ class UnassignedTests(StrichlisteTestCase):
     def test_assign_user(self):
         self.client.post(reverse("strichliste:assign_user", args=[self.legacy.pk]))
         self.legacy.refresh_from_db()
-        self.assertEqual((self.legacy.kind, self.legacy.username, self.legacy.balance),
-                         (Account.KIND_NEXTCLOUD, "mmuster", -1250))
+        self.assertEqual((self.legacy.username, self.legacy.balance),
+                         ("mmuster", -1250))
 
     def test_create_user(self):
         self.client.post(reverse("strichliste:create_user"))
@@ -129,8 +129,7 @@ class UnassignedTests(StrichlisteTestCase):
         self.client.post(reverse("strichliste:assign_user", args=[self.legacy.pk]))
         self.client.post(reverse("strichliste:create_user"))
         self.legacy.refresh_from_db()
-        self.assertEqual((self.legacy.kind, Account.objects.filter(username="mmuster").count()),
-                         (Account.KIND_LEGACY, 1))
+        self.assertEqual(Account.objects.filter(username="mmuster").count(), 1)
 
 
 class PaypalTests(StrichlisteTestCase):
@@ -144,7 +143,7 @@ class PaypalTests(StrichlisteTestCase):
 class TabletTests(StrichlisteTestCase):
     def setUp(self):
         DispenseButton.objects.create(label="Getränke", cents=110)
-        self.member = Account.objects.create(kind=Account.KIND_NEXTCLOUD, username="member", name="Mitglied")
+        self.member = Account.objects.create(username="member", name="Mitglied")
 
     def url(self, name, *args, pin="2468"):
         return reverse(f"strichliste:tablet_{name}", args=[pin, *args])
@@ -177,7 +176,7 @@ class TabletTests(StrichlisteTestCase):
 
     def test_create_extern(self):
         self.client.post(self.url("create_extern"), {"name": "Gast", "contact": self.member.pk, "note": ""})
-        self.assertEqual(Account.objects.get(name="Gast").kind, Account.KIND_EXTERN)
+        self.assertEqual(Account.objects.filter(name="Gast").count(), 1)
 
 
 class ImportTests(StrichlisteTestCase):
