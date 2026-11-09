@@ -2,21 +2,52 @@ from django.urls import path
 
 from . import views
 
-# Diese Seiten gibt es für Nextcloud-Benutzer und als Tablet-Variante unter tablet/<pin>/
-SHARED = [
-    ("konten", views.accounts, "konten"),
-    ("konto/<int:pk>", views.account_detail, "konto"),
-    ("konto/<int:pk>/ueberweisen", views.transfer, "ueberweisen"),
-    ("buchung/<int:pk>/storno", views.revert, "storno"),
-    ("extern/neu", views.extern_form, "extern_neu"),
-    ("extern/<int:pk>", views.extern_form, "extern_bearbeiten"),
-]
-
 app_name = "strichliste"
 urlpatterns = [
-    path("", views.start, name="start"),
-    path("paypal", views.paypal, name="paypal"),
-    path("tablet/<str:pin>/", views.start, name="tablet_start"),
-    *(path(route, view, name=name) for route, view, name in SHARED),
-    *(path(f"tablet/<str:pin>/{route}", view, name=f"tablet_{name}") for route, view, name in SHARED),
+    path("paypal",
+         views.PaypalView.as_view(),
+         name="paypal"),
+
+    # Nextcloud-Login, gebucht wird immer auf das eigene Konto
+    path("",
+         views.StartView.as_view(),
+         name="start"),
+    path("zuordnen/<int:pk>",
+         views.AssignUserView.as_view(),
+         name="assign_user"),
+    path("anlegen",
+         views.CreateUserView.as_view(),
+         name="create_user"),
+    path("ausgabe",
+         views.OwnSpendView.as_view(),
+         name="spend"),
+    path("ueberweisen",
+         views.OwnTransferView.as_view(),
+         name="transfer"),
+    path("buchung/<int:tx>/storno",
+         views.OwnRevertView.as_view(),
+         name="revert"),
+
+    # Theken-Tablet
+    path("tablet/<str:pin>/",
+         views.TabletAccountListView.as_view(),
+         name="tablet_accounts"),
+    path("tablet/<str:pin>/extern",
+         views.TabletCreateExternView.as_view(),
+         name="tablet_create_extern"),
+    path("tablet/<str:pin>/konto/<int:pk>",
+         views.TabletAccountView.as_view(),
+         name="tablet_account"),
+    path("tablet/<str:pin>/konto/<int:pk>/einzahlen",
+         views.TabletCreditView.as_view(),
+         name="tablet_credit"),
+    path("tablet/<str:pin>/konto/<int:pk>/ausgabe",
+         views.TabletSpendView.as_view(),
+         name="tablet_spend"),
+    path("tablet/<str:pin>/konto/<int:pk>/ueberweisen",
+         views.TabletTransferView.as_view(),
+         name="tablet_transfer"),
+    path("tablet/<str:pin>/konto/<int:pk>/buchung/<int:tx>/storno",
+         views.TabletRevertView.as_view(),
+         name="tablet_revert"),
 ]

@@ -1,0 +1,27 @@
+{% extends "abfrage/base.html" %}
+{% load strichliste %}
+
+{% block title %}Meine Strichliste{% endblock %}
+
+{% block content %}
+<p>Du hast noch kein Konto in der Strichliste. Wenn du schon in der alten Strichliste eingetragen warst,
+ wähle dein Konto aus, damit dein Saldo übernommen wird. Sonst lege ein neues Konto an.</p>
+
+<form method="post" action="{% url 'strichliste:create_user' %}" class="mb-4">{% csrf_token %}
+ <button type="submit" class="btn btn-primary"><i class="bi bi-person-plus"></i> Neues Konto anlegen</button>
+</form>
+
+{% if unassigned %}
+<h2 class="h4">Konten aus der alten Strichliste</h2>
+<ul class="list-group" style="max-width: 32rem">
+ {% for account in unassigned %}
+ <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+  <span>{{ account.name }} <span class="small {{ account.balance|balance_class }}">{{ account.balance|euro }}</span></span>
+  <form method="post" action="{% url 'strichliste:assign_user' account.pk %}" class="m-0">{% csrf_token %}
+   <button type="submit" class="btn btn-sm btn-outline-primary">Das bin ich</button>
+  </form>
+ </li>
+ {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

@@ -19,9 +19,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--url", default="https://strichliste.thw-darmstadt.de",
                             help="Adresse der alten Strichliste")
-        parser.add_argument("--auth", default=os.environ.get("STRICHLISTE_IMPORT_AUTH", ""),
+        parser.add_argument("--auth", default=os.environ.get("STRILI_IMPORT_AUTH", ""),
                             help="Zugangsdaten für den Verzeichnisschutz als benutzer:passwort "
-                                 "(oder Umgebungsvariable STRICHLISTE_IMPORT_AUTH)")
+                                 "(oder Umgebungsvariable STRILI_IMPORT_AUTH)")
         parser.add_argument("--file", help="Statt der URL eine gespeicherte Antwort von /api/user lesen")
         parser.add_argument("--dry-run", action="store_true", help="Nur anzeigen, was passieren würde")
 
@@ -66,8 +66,7 @@ class Command(BaseCommand):
                 return
 
         self.stdout.write(self.style.SUCCESS(
-            f"{len(users)} Konten übernommen. Die Konten werden beim ersten Nextcloud-Login "
-            f"mit gleichem Namen automatisch verknüpft, den Rest im Django-Admin zuordnen."))
+            f"{len(users)} Konten übernommen. Beim ersten Nextcloud-Login wählt jede Person ihr altes Konto aus."))
 
     def _load(self, url, auth, file):
         if file:

@@ -1,5 +1,4 @@
 from django.db import models
-from django.urls import reverse
 from django.utils import timezone
 
 
@@ -62,9 +61,6 @@ class Account(models.Model):
 
     def __str__(self):
         return self.name
-
-    def get_absolute_url(self):
-        return reverse("strichliste:konto", kwargs={"pk": self.pk})
 
     @property
     def is_extern(self) -> bool:

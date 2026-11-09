@@ -1,4 +1,11 @@
-from io import BytesIO
+"""Views der Strichliste.
+
+Jeder View ist fest einem Zugang zugeordnet: öffentlich, Nextcloud-Login
+(JWT, bucht immer auf das eigene Konto) oder Theken-Tablet (URL enthält die
+PIN, bucht auf ein beliebiges Konto). Ausgabe, Überweisung und Storno gibt es
+für beide, die Mixins legen fest, um welches Konto es geht.
+"""
+import secrets
 
 import segno
 from django.contrib import messages
@@ -6,165 +13,283 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils.safestring import mark_safe
-from django.views.decorators.http import require_POST
+from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.generic import FormView, ListView, TemplateView, View
 
-from . import booking, config as conf, forms, models
-from .auth import require_actor
+from kantine.decorators import require_jwt_login
+
+from . import booking, forms, models, settings as app_settings
 
 HISTORY_PAGE_SIZE = 10
 
 
-def _sl_redirect(request, name, *args):
-    if request.tablet_pin:
-        return redirect(f"strichliste:tablet_{name}", request.tablet_pin, *args)
-    return redirect(f"strichliste:{name}", *args)
+class OwnAccountMixin:
+    """Konto des angemeldeten Nextcloud-Benutzers."""
+
+    @method_decorator(require_jwt_login)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_account(self):
+        return get_object_or_404(models.Account, username=self.request.jwt_user_id, disabled=False)
+
+    def get_booked_by(self):
+        return {"booked_by_uid": self.request.jwt_user_id, "booked_by_name": self.request.jwt_user_display,
+                "via_tablet": False}
+
+    def account_url(self, name, *args):
+        return reverse(f"strichliste:{name}", args=args)
+
+    def get_success_url(self):
+        return reverse("strichliste:start")
 
 
-def _context(request, **kwargs):
-    return {"config": conf.get(), "actor": request.actor, "is_tablet": request.actor.is_tablet, **kwargs}
+class TabletMixin:
+    """Prüft die PIN des Theken-Tablets aus der URL."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not app_settings.TABLET_PIN or not secrets.compare_digest(kwargs["pin"], app_settings.TABLET_PIN):
+            raise Http404
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        kwargs["pin"] = self.kwargs["pin"]
+        return super().get_context_data(**kwargs)
 
 
-@require_actor
-def start(request):
-    if request.actor.is_tablet:
-        return _sl_redirect(request, "konten")
-    return _account_page(request, request.actor.account.pk, own=True)
+class TabletAccountMixin(TabletMixin):
+    """Konto aus der URL, gebucht vom Theken-Tablet."""
+
+    def get_account(self):
+        return get_object_or_404(models.Account, pk=self.kwargs["pk"], disabled=False)
+
+    def get_booked_by(self):
+        return {"booked_by_uid": "", "booked_by_name": "Theken-Tablet", "via_tablet": True}
+
+    def account_url(self, name, *args):
+        return reverse(f"strichliste:tablet_{name}", args=[self.kwargs["pin"], self.account.pk, *args])
+
+    def get_success_url(self):
+        return self.account_url("account")
 
 
-@require_actor
-def accounts(request):
-    config = conf.get()
-    accounts = list(models.Account.objects.filter(disabled=False).prefetch_related("tags"))
-    for account in accounts:
-        account.stale = account.is_stale(config.stale_days)
-        account.debt = account.balance <= config.warn_below
-    return render(request, "strichliste/account_grid.html", _context(
-        request,
-        accounts=accounts,
-        counts={
-            "aktiv": sum(not a.stale for a in accounts),
-            "inaktiv": sum(a.stale for a in accounts),
-            "extern": sum(a.is_extern for a in accounts),
-            "ausgleichen": sum(a.debt for a in accounts),
-        },
-    ))
+class AccountMixin:
+    """Lädt self.account über get_account() aus OwnAccountMixin oder TabletAccountMixin."""
+
+    def dispatch(self, request, *args, **kwargs):
+        self.account = self.get_account()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(account=self.account, **kwargs)
 
 
-@require_actor
-def account_detail(request, pk):
-    return _account_page(request, pk)
+class BookingFormView(AccountMixin, FormView):
+    """Formular aus Buttons auf der Kontoseite, Fehler landen als Meldung dort."""
+    http_method_names = ["post"]
 
+    def form_invalid(self, form):
+        messages.error(self.request, "Dieser Betrag ist nicht vorgesehen.")
+        return redirect(self.get_success_url())
 
-def _account_page(request, pk, own=False):
-    account = get_object_or_404(models.Account, pk=pk, disabled=False)
-    actor = request.actor
-    config = conf.get()
-    own = own or (actor.account is not None and actor.account.pk == account.pk)
-    can_book = actor.can_book(account)
-
-    if request.method == "POST":
-        if not can_book:
-            raise PermissionDenied
+    def book(self, amount, kind, label):
         try:
-            tx = booking.book_step(account, request.POST.get("action", ""), int(request.POST.get("value", 0)), actor)
-        except (ValidationError, ValueError) as error:
-            messages.error(request, error.messages[0] if isinstance(error, ValidationError) else "Ungültiger Betrag.")
+            tx = booking.book(self.account, amount, kind, label, self.get_booked_by())
+        except ValidationError as error:
+            messages.error(self.request, error.messages[0])
         else:
             verb = "abgebucht" if tx.amount < 0 else "eingezahlt"
-            messages.success(request, f"{booking.format_cents(abs(tx.amount))} {verb}.")
-        if own and not actor.is_tablet:
-            return redirect("strichliste:start")
-        return _sl_redirect(request, "konto", account.pk)
+            messages.success(self.request, f"{booking.format_cents(abs(tx.amount))} {verb}.")
+        return redirect(self.get_success_url())
 
-    page = None
-    if can_book:
-        page = Paginator(account.transactions.all(), HISTORY_PAGE_SIZE).get_page(request.GET.get("seite"))
+
+class AccountView(AccountMixin, TemplateView):
+    template_name = "strichliste/account_detail.html"
+
+    def get_context_data(self, **kwargs):
+        page = Paginator(self.account.transactions.all(), HISTORY_PAGE_SIZE).get_page(self.request.GET.get("seite"))
         for tx in page:
-            tx.can_revert = actor.can_revert(tx, config)
-            tx.by_me = tx.via_tablet if actor.is_tablet else (not tx.via_tablet and tx.booked_by_uid == actor.uid)
+            if booking.can_revert(tx):
+                tx.revert_url = self.account_url("revert", tx.pk)
 
-    warn_progress = None
-    if account.balance < 0:
-        warn_progress = min(100, round(account.balance / config.warn_below * 100))
+        warn_progress = None
+        if self.account.balance < 0:
+            warn_progress = min(100, round(self.account.balance / app_settings.WARN_BELOW * 100))
 
-    return render(request, "strichliste/account_detail.html", _context(
-        request,
-        account=account,
-        own=own,
-        can_book=can_book,
-        page=page,
-        warn_progress=warn_progress,
-        warn_remaining=account.balance - config.warn_below,
-        dispense_buttons=models.DispenseButton.objects.all(),
-        can_edit=account.is_extern and actor.account is not None and account.contact_id == actor.account.pk,
-    ))
-
-
-@require_POST
-@require_actor
-def revert(request, pk):
-    tx = get_object_or_404(models.Transaction, pk=pk)
-    try:
-        booking.revert(tx, request.actor)
-    except PermissionDenied:
-        messages.error(request, "Diese Buchung kann nicht mehr storniert werden.")
-    else:
-        messages.success(request, f"Buchung „{tx.label}“ storniert.")
-    if request.actor.account is not None and tx.account_id == request.actor.account.pk:
-        return redirect("strichliste:start")
-    return _sl_redirect(request, "konto", tx.account_id)
+        return super().get_context_data(
+            page=page,
+            warn_progress=warn_progress,
+            warn_remaining=self.account.balance - app_settings.WARN_BELOW,
+            dispense_buttons=models.DispenseButton.objects.all(),
+            spend_url=self.account_url("spend"),
+            transfer_url=self.account_url("transfer") if app_settings.TRANSFERS_ENABLED else None,
+            app_settings=app_settings,
+            **kwargs,
+        )
 
 
-@require_actor
-def transfer(request, pk):
-    if not conf.get().transfers_enabled:
-        raise Http404
-    source = get_object_or_404(models.Account, pk=pk, disabled=False)
-    if not request.actor.can_book(source):
-        raise PermissionDenied
+class SpendView(BookingFormView):
+    form_class = forms.SpendForm
 
-    form = forms.TransferForm(request.POST or None, source=source, initial={"target": request.GET.get("an")})
-    if request.method == "POST" and form.is_valid():
+    def form_valid(self, form):
+        button = form.cleaned_data["button"]
+        return self.book(-button.cents, models.Transaction.KIND_DISPENSE,
+                         f"{button.label} ({booking.format_cents(button.cents)})")
+
+
+class TransferView(AccountMixin, FormView):
+    form_class = forms.TransferForm
+    template_name = "strichliste/transfer_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not app_settings.TRANSFERS_ENABLED:
+            raise Http404
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        return {"source": self.account, **super().get_form_kwargs()}
+
+    def form_valid(self, form):
         try:
-            booking.transfer(source, form.cleaned_data["target"], form.cleaned_data["amount"],
-                             form.cleaned_data["comment"], request.actor)
+            booking.transfer(self.account, form.cleaned_data["target"], form.cleaned_data["amount"],
+                             form.cleaned_data["comment"], self.get_booked_by())
         except ValidationError as error:
             form.add_error(None, error)
+            return self.form_invalid(form)
+        messages.success(self.request, f"{booking.format_cents(form.cleaned_data['amount'])} an "
+                                       f"{form.cleaned_data['target'].name} überwiesen.")
+        return super().form_valid(form)
+
+
+class RevertView(AccountMixin, View):
+    def post(self, request, *args, tx, **kwargs):
+        tx = get_object_or_404(models.Transaction, pk=tx, account=self.account)
+        try:
+            booking.revert(tx, self.get_booked_by()["booked_by_name"])
+        except PermissionDenied:
+            messages.error(request, "Diese Buchung kann nicht mehr storniert werden.")
         else:
-            messages.success(request, f"{booking.format_cents(form.cleaned_data['amount'])} an {form.cleaned_data['target'].name} überwiesen.")
-            return _sl_redirect(request, "konto", source.pk)
-
-    return render(request, "strichliste/transfer_form.html", _context(request, account=source, form=form))
+            messages.success(request, f"Buchung „{tx.label}“ storniert.")
+        return redirect(self.get_success_url())
 
 
-@require_actor
-def extern_form(request, pk=None):
-    account = None
-    if pk is not None:
-        account = get_object_or_404(models.Account, pk=pk, kind=models.Account.KIND_EXTERN)
-        actor = request.actor
-        if actor.account is None or account.contact_id != actor.account.pk:
-            raise PermissionDenied
+class PaypalView(TemplateView):
+    template_name = "strichliste/paypal.html"
 
-    initial = {}
-    if account is None and request.actor.account is not None:
-        initial["contact"] = request.actor.account
-    form = forms.ExternForm(request.POST or None, instance=account, initial=initial)
-    if request.method == "POST" and form.is_valid():
+    def get_context_data(self, **kwargs):
+        if not app_settings.PAYPAL_LINK:
+            raise Http404
+        qr_code = segno.make(app_settings.PAYPAL_LINK, error="m").svg_data_uri(scale=6, border=2)
+        return super().get_context_data(qr_code=qr_code, **kwargs)
+
+
+# Nextcloud-Login
+
+class StartView(OwnAccountMixin, AccountView):
+    """Eigenes Konto, ohne Konto die Auswahl der noch nicht zugeordneten Konten."""
+
+    def get_account(self):
+        return models.Account.objects.filter(username=self.request.jwt_user_id, disabled=False).first()
+
+    def get(self, request, *args, **kwargs):
+        if self.account is None:
+            return render(request, "strichliste/start_unassigned.html", {
+                "unassigned": models.Account.objects.filter(kind=models.Account.KIND_LEGACY, disabled=False),
+            })
+        return super().get(request, *args, **kwargs)
+
+
+class UnassignedOnlyMixin:
+    """Nur für Nextcloud-Benutzer, die noch kein Konto haben."""
+    http_method_names = ["post"]
+
+    @method_decorator(require_jwt_login)
+    def dispatch(self, request, *args, **kwargs):
+        if models.Account.objects.filter(username=request.jwt_user_id).exists():
+            return redirect("strichliste:start")
+        return super().dispatch(request, *args, **kwargs)
+
+
+class AssignUserView(UnassignedOnlyMixin, View):
+    def post(self, request, pk):
+        account = get_object_or_404(models.Account, pk=pk, kind=models.Account.KIND_LEGACY, disabled=False)
+        account.kind = models.Account.KIND_NEXTCLOUD
+        account.username = request.jwt_user_id
+        account.name = request.jwt_user_display
+        account.save(update_fields=["kind", "username", "name"])
+        messages.success(request, "Das Konto ist jetzt mit deinem Nextcloud-Zugang verknüpft.")
+        return redirect("strichliste:start")
+
+
+class CreateUserView(UnassignedOnlyMixin, View):
+    def post(self, request):
+        models.Account.objects.create(kind=models.Account.KIND_NEXTCLOUD, username=request.jwt_user_id,
+                                      name=request.jwt_user_display)
+        return redirect("strichliste:start")
+
+
+class OwnSpendView(OwnAccountMixin, SpendView):
+    pass
+
+
+class OwnTransferView(OwnAccountMixin, TransferView):
+    pass
+
+
+class OwnRevertView(OwnAccountMixin, RevertView):
+    pass
+
+
+# Theken-Tablet
+
+class TabletAccountListView(TabletMixin, ListView):
+    template_name = "strichliste/account_list.html"
+    queryset = models.Account.objects.filter(disabled=False).prefetch_related("tags")
+
+    def get_context_data(self, **kwargs):
+        accounts = list(self.object_list)
+        for account in accounts:
+            account.debt = account.balance <= app_settings.WARN_BELOW
+        return super().get_context_data(
+            active=[account for account in accounts if not account.is_stale(app_settings.STALE_DAYS)],
+            stale=[account for account in accounts if account.is_stale(app_settings.STALE_DAYS)],
+            app_settings=app_settings,
+            **kwargs,
+        )
+
+
+class TabletCreateExternView(TabletMixin, FormView):
+    form_class = forms.ExternForm
+    template_name = "strichliste/extern_form.html"
+
+    def form_valid(self, form):
         form.instance.kind = models.Account.KIND_EXTERN
         account = form.save()
-        messages.success(request, f"{account.name} wurde gespeichert." if pk else f"{account.name} wurde als externe Person angelegt.")
-        return _sl_redirect(request, "konto", account.pk)
-
-    return render(request, "strichliste/extern_form.html", _context(request, account=account, form=form))
+        messages.success(self.request, f"{account.name} wurde als externe Person angelegt.")
+        return redirect("strichliste:tablet_account", self.kwargs["pin"], account.pk)
 
 
-@require_actor
-def paypal(request):
-    config = conf.get()
-    if request.actor.is_tablet or not config.paypal_link:
-        raise Http404
-    buffer = BytesIO()
-    segno.make(config.paypal_link, error="m").save(buffer, kind="svg", scale=6, border=2, xmldecl=False, svgns=True)
-    return render(request, "strichliste/paypal.html", _context(request, qr_svg=mark_safe(buffer.getvalue().decode())))
+class TabletAccountView(TabletAccountMixin, AccountView):
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(credit_url=self.account_url("credit"), **kwargs)
+
+
+class TabletCreditView(TabletAccountMixin, BookingFormView):
+    form_class = forms.CreditForm
+
+    def form_valid(self, form):
+        cents = form.cleaned_data["amount"]
+        return self.book(cents, models.Transaction.KIND_DEPOSIT, f"Einzahlung bar {booking.format_cents(cents)}")
+
+
+class TabletSpendView(TabletAccountMixin, SpendView):
+    pass
+
+
+class TabletTransferView(TabletAccountMixin, TransferView):
+    pass
+
+
+class TabletRevertView(TabletAccountMixin, RevertView):
+    pass

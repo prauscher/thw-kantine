@@ -1,15 +1,13 @@
-{% extends "strichliste/_base.html" %}
+{% extends "abfrage/base.html" %}
 
 {% block title %}Mit PayPal aufladen{% endblock %}
 
 {% block content %}
-<h1 class="h2">Mit PayPal aufladen</h1>
 <div class="card" style="max-width: 24rem">
  <div class="card-body text-center d-flex flex-column gap-3 align-items-center">
   <p class="mb-0">Scanne den Code mit dem Handy und zahle per PayPal.</p>
-  <div class="sl-qr bg-white p-2 rounded border w-100" role="img" aria-label="QR-Code zu PayPal">{{ qr_svg }}</div>
+  <img class="img-fluid border rounded" src="{{ qr_code }}" alt="QR-Code zu PayPal">
   <p class="small text-muted mb-0">Die Gutschrift auf deinem Konto erscheint, sobald die Zahlung verarbeitet wurde. Das passiert automatisch und kann etwas dauern.</p>
-  <a class="btn btn-outline-secondary" href="{% url 'strichliste:start' %}">Zurück</a>
  </div>
 </div>
 {% endblock %}

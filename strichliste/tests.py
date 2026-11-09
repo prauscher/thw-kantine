@@ -9,6 +9,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from . import settings as app_settings
 from .models import Account, DispenseButton, Transaction
 
 
@@ -20,117 +21,126 @@ class StrichlisteTestCase(TestCase):
         session["jwt_userdata"] = {"uid": uid, "displayName": name}
         session.save()
 
-    def own(self, uid="mmuster"):
-        return Account.objects.get(username=uid)
-
-    def book(self, url, cents, action="dispense"):
-        value = DispenseButton.objects.get(cents=cents).pk if action == "dispense" else cents
-        return self.client.post(url, {"action": action, "value": value})
+    def spend(self, url, cents):
+        return self.client.post(url, {"button": DispenseButton.objects.get(cents=cents).pk})
 
 
-class BookingTests(StrichlisteTestCase):
+class OwnAccountTests(StrichlisteTestCase):
     def setUp(self):
         self.login()
         DispenseButton.objects.create(label="Getränk klein", cents=60)
         DispenseButton.objects.create(label="Getränke", cents=110)
         DispenseButton.objects.create(label="Essen", cents=450)
-        self.extern = Account.objects.create(kind=Account.KIND_EXTERN, name="Gast")
+        self.account = Account.objects.create(kind=Account.KIND_NEXTCLOUD, username="mmuster", name="Max Muster")
         self.other = Account.objects.create(kind=Account.KIND_NEXTCLOUD, username="other", name="Erika Beispiel")
 
-    def test_own_account_created_on_first_visit(self):
-        self.assertEqual(self.client.get(reverse("strichliste:start")).status_code, 200)
-        self.assertEqual(self.own().name, "Max Muster")
+    def test_spend(self):
+        self.spend(reverse("strichliste:spend"), 110)
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.balance, -110)
+        tx = self.account.transactions.get()
+        self.assertEqual((tx.label, tx.booked_by_uid, tx.via_tablet), ("Getränke (1,10 €)", "mmuster", False))
 
-    def test_book_own_account(self):
-        self.book(reverse("strichliste:start"), 110)
-        self.book(reverse("strichliste:start"), 500, action="deposit")
-        account = self.own()
-        self.assertEqual(account.balance, 390)
-        self.assertEqual(account.transactions.count(), 2)
-        self.assertEqual(account.transactions.first().booked_by_uid, "mmuster")
+    def test_unknown_button(self):
+        self.client.post(reverse("strichliste:spend"), {"button": 999999})
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.balance, 0)
 
-    def test_only_configured_steps(self):
-        self.client.post(reverse("strichliste:start"), {"action": "dispense", "value": 999999})
-        self.book(reverse("strichliste:start"), 1234, action="deposit")
-        self.assertEqual(self.own().balance, 0)
-
-    def test_named_buttons(self):
-        self.book(reverse("strichliste:start"), 110)
-        tx = self.own().transactions.get()
-        self.assertEqual((tx.amount, tx.label), (-110, "Getränke (1,10 €)"))
-
-    def test_book_extern_but_not_other_member(self):
-        self.client.get(reverse("strichliste:start"))
-        self.book(reverse("strichliste:konto", args=[self.extern.pk]), 110)
-        self.extern.refresh_from_db()
-        self.assertEqual(self.extern.balance, -110)
-
-        response = self.book(reverse("strichliste:konto", args=[self.other.pk]), 110)
-        self.assertEqual(response.status_code, 403)
-        self.other.refresh_from_db()
-        self.assertEqual(self.other.balance, 0)
+    def test_no_cash_deposit_without_tablet(self):
+        self.assertEqual(self.client.post(reverse("strichliste:start"), {"amount": 500}).status_code, 405)
 
     def test_hard_limit(self):
-        with mock.patch.dict(os.environ, {"STRICHLISTE_HARD_LIMIT": "-200"}):
-            self.book(reverse("strichliste:start"), 110)
-            self.book(reverse("strichliste:start"), 110)
-        self.assertEqual(self.own().balance, -110)
+        with mock.patch.object(app_settings, "HARD_LIMIT", -200):
+            self.spend(reverse("strichliste:spend"), 110)
+            self.spend(reverse("strichliste:spend"), 110)
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.balance, -110)
 
     def test_revert_within_window_only(self):
-        self.book(reverse("strichliste:start"), 450)
-        tx = self.own().transactions.get()
-        self.client.post(reverse("strichliste:storno", args=[tx.pk]))
-        self.assertEqual(self.own().balance, 0)
-        tx.refresh_from_db()
-        self.assertIsNotNone(tx.reverted_at)
+        self.spend(reverse("strichliste:spend"), 450)
+        tx = self.account.transactions.get()
+        self.client.post(reverse("strichliste:revert", args=[tx.pk]))
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.balance, 0)
 
-        self.book(reverse("strichliste:start"), 450)
-        old = self.own().transactions.filter(reverted_at__isnull=True).get()
+        self.spend(reverse("strichliste:spend"), 450)
+        old = self.account.transactions.filter(reverted_at__isnull=True).get()
         Transaction.objects.filter(pk=old.pk).update(created_at=timezone.now() - timezone.timedelta(minutes=10))
-        self.client.post(reverse("strichliste:storno", args=[old.pk]))
-        self.assertEqual(self.own().balance, -450)
+        self.client.post(reverse("strichliste:revert", args=[old.pk]))
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.balance, -450)
 
     def test_cannot_revert_foreign_booking(self):
-        self.book(reverse("strichliste:konto", args=[self.extern.pk]), 110)
-        tx = self.extern.transactions.get()
-        self.login("someone", "Jemand Anderes")
-        self.client.post(reverse("strichliste:storno", args=[tx.pk]))
-        self.extern.refresh_from_db()
-        self.assertEqual(self.extern.balance, -110)
+        self.login("other", "Erika Beispiel")
+        self.spend(reverse("strichliste:spend"), 110)
+        tx = self.other.transactions.get()
+        self.login()
+        self.assertEqual(self.client.post(reverse("strichliste:revert", args=[tx.pk])).status_code, 404)
 
-    def test_transfer_disabled_by_default(self):
-        own = self.client.get(reverse("strichliste:start")) and self.own()
-        url = reverse("strichliste:ueberweisen", args=[own.pk])
+    def test_transfer(self):
+        url = reverse("strichliste:transfer")
         self.assertEqual(self.client.get(url).status_code, 404)
 
-        with mock.patch.dict(os.environ, {"STRICHLISTE_TRANSFERS": "1"}):
+        with mock.patch.object(app_settings, "TRANSFERS_ENABLED", True):
             self.client.post(url, {"target": self.other.pk, "amount": "2,50", "comment": ""})
+        self.account.refresh_from_db()
         self.other.refresh_from_db()
-        self.assertEqual(self.own().balance, -250)
-        self.assertEqual(self.other.balance, 250)
+        self.assertEqual((self.account.balance, self.other.balance), (-250, 250))
 
-        outgoing = own.transactions.get()
-        self.client.post(reverse("strichliste:storno", args=[outgoing.pk]))
+        self.client.post(reverse("strichliste:revert", args=[self.account.transactions.get().pk]))
+        self.account.refresh_from_db()
         self.other.refresh_from_db()
-        self.assertEqual((self.own().balance, self.other.balance), (0, 0))
+        self.assertEqual((self.account.balance, self.other.balance), (0, 0))
 
     def test_warning_below_threshold(self):
-        self.client.get(reverse("strichliste:start"))
-        Account.objects.filter(username="mmuster").update(balance=-4000)
-        response = self.client.get(reverse("strichliste:start"))
-        self.assertContains(response, "sl-debt")
-        Account.objects.filter(username="mmuster").update(balance=-3990)
-        self.assertNotContains(self.client.get(reverse("strichliste:start")), 'class="sl-debt')
+        Account.objects.filter(pk=self.account.pk).update(balance=-4000)
+        self.assertContains(self.client.get(reverse("strichliste:start")), "bitte ausgleichen")
+        Account.objects.filter(pk=self.account.pk).update(balance=-3990)
+        self.assertNotContains(self.client.get(reverse("strichliste:start")), "bitte ausgleichen")
 
     def test_history_paginated(self):
         for _ in range(12):
-            self.book(reverse("strichliste:start"), 60)
+            self.spend(reverse("strichliste:spend"), 60)
         response = self.client.get(reverse("strichliste:start"))
         self.assertEqual(len(response.context["page"]), 10)
         self.assertContains(response, "Seite 1 von 2")
 
 
-@mock.patch.dict(os.environ, {"STRICHLISTE_TABLET_PIN": "2468"})
+class UnassignedTests(StrichlisteTestCase):
+    def setUp(self):
+        self.login()
+        self.legacy = Account.objects.create(kind=Account.KIND_LEGACY, name="Maxi", balance=-1250)
+
+    def test_start_lists_unassigned(self):
+        self.assertContains(self.client.get(reverse("strichliste:start")), "Maxi")
+
+    def test_assign_user(self):
+        self.client.post(reverse("strichliste:assign_user", args=[self.legacy.pk]))
+        self.legacy.refresh_from_db()
+        self.assertEqual((self.legacy.kind, self.legacy.username, self.legacy.balance),
+                         (Account.KIND_NEXTCLOUD, "mmuster", -1250))
+
+    def test_create_user(self):
+        self.client.post(reverse("strichliste:create_user"))
+        self.assertEqual(Account.objects.get(username="mmuster").name, "Max Muster")
+
+    def test_only_one_account(self):
+        self.client.post(reverse("strichliste:create_user"))
+        self.client.post(reverse("strichliste:assign_user", args=[self.legacy.pk]))
+        self.client.post(reverse("strichliste:create_user"))
+        self.legacy.refresh_from_db()
+        self.assertEqual((self.legacy.kind, Account.objects.filter(username="mmuster").count()),
+                         (Account.KIND_LEGACY, 1))
+
+
+class PaypalTests(StrichlisteTestCase):
+    def test_public(self):
+        self.assertEqual(self.client.get(reverse("strichliste:paypal")).status_code, 404)
+        with mock.patch.object(app_settings, "PAYPAL_LINK", "https://paypal.me/example"):
+            self.assertContains(self.client.get(reverse("strichliste:paypal")), "data:image/svg+xml")
+
+
+@mock.patch.object(app_settings, "TABLET_PIN", "2468")
 class TabletTests(StrichlisteTestCase):
     def setUp(self):
         DispenseButton.objects.create(label="Getränke", cents=110)
@@ -140,22 +150,34 @@ class TabletTests(StrichlisteTestCase):
         return reverse(f"strichliste:tablet_{name}", args=[pin, *args])
 
     def test_wrong_pin(self):
-        self.assertEqual(self.client.get(self.url("konten", pin="0000")).status_code, 404)
+        self.assertEqual(self.client.get(self.url("accounts", pin="0000")).status_code, 404)
 
     def test_no_pin_configured(self):
-        with mock.patch.dict(os.environ, {"STRICHLISTE_TABLET_PIN": ""}):
-            self.assertEqual(self.client.get(self.url("konten")).status_code, 404)
+        with mock.patch.object(app_settings, "TABLET_PIN", ""):
+            self.assertEqual(self.client.get(self.url("accounts")).status_code, 404)
 
     def test_books_any_account(self):
-        self.assertEqual(self.client.get(self.url("konten")).status_code, 200)
-        self.book(self.url("konto", self.member.pk), 110)
+        self.assertContains(self.client.get(self.url("accounts")), "Mitglied")
+        self.assertContains(self.client.get(self.url("account", self.member.pk)), "Bar eingezahlt")
+        self.spend(self.url("spend", self.member.pk), 110)
+        self.client.post(self.url("credit", self.member.pk), {"amount": 500})
         self.member.refresh_from_db()
-        self.assertEqual(self.member.balance, -110)
-        tx = self.member.transactions.get()
+        self.assertEqual(self.member.balance, 390)
+
+        tx = self.member.transactions.last()
         self.assertEqual((tx.via_tablet, tx.booked_by_name), (True, "Theken-Tablet"))
-        self.client.post(self.url("storno", tx.pk))
+        self.client.post(self.url("revert", self.member.pk, tx.pk))
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.balance, 500)
+
+    def test_only_configured_deposit_steps(self):
+        self.client.post(self.url("credit", self.member.pk), {"amount": 1234})
         self.member.refresh_from_db()
         self.assertEqual(self.member.balance, 0)
+
+    def test_create_extern(self):
+        self.client.post(self.url("create_extern"), {"name": "Gast", "contact": self.member.pk, "note": ""})
+        self.assertEqual(Account.objects.get(name="Gast").kind, Account.KIND_EXTERN)
 
 
 class ImportTests(StrichlisteTestCase):
@@ -185,10 +207,3 @@ class ImportTests(StrichlisteTestCase):
     def test_dry_run_changes_nothing(self):
         self.run_import("--dry-run")
         self.assertFalse(Account.objects.exists())
-
-    def test_login_links_legacy_account_by_name(self):
-        self.run_import()
-        self.login("mmuster", "Max Muster")
-        self.client.get(reverse("strichliste:start"))
-        account = self.own()
-        self.assertEqual((account.legacy_id, account.balance, account.kind), (1, -1250, Account.KIND_NEXTCLOUD))

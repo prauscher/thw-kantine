@@ -3,7 +3,7 @@ from decimal import Decimal, InvalidOperation
 from django import forms
 from django.core.exceptions import ValidationError
 
-from . import models
+from . import models, settings as app_settings
 
 
 class ExternForm(forms.ModelForm):
@@ -18,6 +18,14 @@ class ExternForm(forms.ModelForm):
         model = models.Account
         fields = ["name", "tags", "contact", "note"]
         widgets = {"tags": forms.CheckboxSelectMultiple}
+
+
+class SpendForm(forms.Form):
+    button = forms.ModelChoiceField(queryset=models.DispenseButton.objects.all())
+
+
+class CreditForm(forms.Form):
+    amount = forms.TypedChoiceField(coerce=int, choices=[(cents, cents) for cents in app_settings.DEPOSIT_STEPS])
 
 
 def parse_euro(value: str) -> int:
