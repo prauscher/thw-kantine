@@ -34,7 +34,7 @@
  <i class="bi bi-exclamation-octagon-fill fs-2" aria-hidden="true"></i>
  <div class="flex-grow-1">
   <strong class="fs-5">{% if pin %}Dieses Konto{% else %}Dein Konto{% endif %} steht bei {{ account.balance|euro }}</strong><br>
-  Ab {{ app_settings.WARN_BELOW|euro }} bitte ausgleichen: bar in die Kasse einzahlen{% if not pin and app_settings.PAYPAL_LINK %} oder per PayPal aufladen{% endif %}.
+  Ab {{ app_settings.WARN_BELOW|euro }} bitte ausgleichen: bar in die Kasse einzahlen{% if app_settings.PAYPAL_LINK %} oder per PayPal aufladen{% endif %}.
  </div>
 </div>
 {% endif %}
@@ -81,7 +81,9 @@
    {% endif %}
    <div class="d-flex flex-wrap gap-2">
     {% if transfer_url %}<a class="btn btn-outline-secondary" href="{{ transfer_url }}"><i class="bi bi-arrow-left-right"></i> Überweisen</a>{% endif %}
-    {% if not pin and app_settings.PAYPAL_LINK %}<a class="btn btn-outline-secondary" href="{% url 'strichliste:paypal' %}"><i class="bi bi-qr-code"></i> Mit PayPal aufladen</a>{% endif %}
+    {% if app_settings.PAYPAL_LINK %}
+     <a class="btn btn-outline-secondary" href="{% if pin %}{% url 'strichliste:paypal' %}{% else %}{{ app_settings.PAYPAL_LINK }}{% endif %}" {% if not pin %}target="_blank" rel="noreferrer"{% endif %}><i class="bi bi-qr-code"></i> Mit PayPal aufladen</a>
+    {% endif %}
    </div>
   </div></div>
  </div>
