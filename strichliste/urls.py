@@ -16,7 +16,7 @@ urlpatterns = [
          views.AssignUserView.as_view(),
          name="assign_user"),
     path("anlegen",
-         views.CreateUserView.as_view(),
+         views.create_user_unassigned,
          name="create_user"),
     path("ausgabe",
          views.OwnSpendView.as_view(),

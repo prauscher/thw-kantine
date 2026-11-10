@@ -15,6 +15,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_POST
 from django.views.generic import FormView, ListView, TemplateView, View
 
 from kantine.decorators import require_jwt_login
@@ -200,20 +201,21 @@ class StartView(OwnAccountMixin, AccountView):
         return super().get(request, *args, **kwargs)
 
 
-class UnassignedOnlyMixin:
-    """Nur für Nextcloud-Benutzer, die noch kein Konto haben."""
-
-    @method_decorator(require_jwt_login)
-    def dispatch(self, request, *args, **kwargs):
-        if models.Account.objects.filter(username=request.jwt_user_id).exists():
-            return redirect("strichliste:start")
-        return super().dispatch(request, *args, **kwargs)
+def is_unassigned(request):
+    return not models.Account.objects.filter(username=request.jwt_user_id).exists()
 
 
-class AssignUserView(UnassignedOnlyMixin, FormView):
+class AssignUserView(FormView):
     form_class = forms.AssignAccountForm
     template_name = "strichliste/assign_user_form.html"
     success_url = reverse_lazy("strichliste:start")
+
+    # only allow this view for unassigned nextcloud-users
+    @method_decorator(require_jwt_login)
+    def dispatch(self, request, *args, **kwargs):
+        if not is_unassigned(request):
+            return redirect("strichliste:start")
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         account = form.cleaned_data["account"]
@@ -224,13 +226,13 @@ class AssignUserView(UnassignedOnlyMixin, FormView):
         return super().form_valid(form)
 
 
-class CreateUserView(UnassignedOnlyMixin, View):
-    http_method_names = ["post"]
-
-    def post(self, request):
-        models.Account.objects.create(username=request.jwt_user_id,
-                                      name=request.jwt_user_display)
-        return redirect("strichliste:start")
+@require_jwt_login
+@require_POST
+def create_user_unassigned(request):
+     models.Account.objects.create(username=request.jwt_user_id,
+                                   name=request.jwt_user_display)
+     messages.success(self.request, "Für dich wurde ein neues Konto eingerichtet.")
+     return redirect("strichliste:start")
 
 
 class OwnSpendView(OwnAccountMixin, SpendView):
