@@ -1,0 +1,13 @@
+{% extends "abfrage/base.html" %}
+
+{% block title %}Mit PayPal aufladen{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 24rem">
+ <div class="card-body text-center d-flex flex-column gap-3 align-items-center">
+  <p class="mb-0">Scanne den Code mit dem Handy und zahle per PayPal.</p>
+  <img class="img-fluid border rounded" src="{{ qr_code }}" alt="QR-Code zu PayPal">
+  <p class="small text-muted mb-0">Die Gutschrift auf deinem Konto erscheint, sobald die Zahlung verarbeitet wurde. Das passiert automatisch und kann etwas dauern.</p>
+ </div>
+</div>
+{% endblock %}

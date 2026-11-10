@@ -1,0 +1,145 @@
+{% extends "abfrage/base.html" %}
+{% load django_bootstrap5 %}
+{% load strichliste %}
+
+{% block title %}{% if pin %}{{ account.name }}{% else %}Meine Strichliste{% endif %}{% endblock %}
+
+{% block buttons %}
+{% if pin %}<a class="btn btn-outline-secondary" href="{% url 'strichliste:tablet_accounts' pin %}"><i class="bi bi-arrow-left"></i> Zur Übersicht</a>{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if pin %}
+<div class="d-flex align-items-center gap-3 small text-muted mb-3">
+ <span id="idle-text">Zurück zur Übersicht in {{ app_settings.TABLET_IDLE_SECONDS }} s</span>
+ <div class="progress flex-grow-1" style="height: 4px"><div class="progress-bar" id="idle-bar" style="width: 100%"></div></div>
+</div>
+{% endif %}
+
+{% bootstrap_messages %}
+
+<p class="text-muted">
+ {% if account.username %}
+  <span class="badge text-bg-primary">NEXTCLOUD</span> {{ account.username }}
+ {% else %}
+  noch nicht mit Nextcloud verknüpft
+ {% endif %}
+
+ {% if account.contact %}betreut von {{ account.contact.name }}{% endif %}
+ {% if account.note %}· {{ account.note }}{% endif %}
+</p>
+
+{% if account.balance <= app_settings.WARN_BELOW %}
+<div class="alert alert-danger d-flex flex-wrap align-items-center gap-3" role="alert">
+ <i class="bi bi-exclamation-octagon-fill fs-2" aria-hidden="true"></i>
+ <div class="flex-grow-1">
+  <strong class="fs-5">{% if pin %}Dieses Konto{% else %}Dein Konto{% endif %} steht bei {{ account.balance|euro }}</strong><br>
+  Ab {{ app_settings.WARN_BELOW|euro }} bitte ausgleichen: bar in die Kasse einzahlen{% if app_settings.PAYPAL_LINK %} oder per PayPal aufladen{% endif %}.
+ </div>
+</div>
+{% endif %}
+
+<div class="row g-3">
+ <div class="col-lg-5 d-flex flex-column gap-3">
+  <div class="card"><div class="card-body">
+   <div class="small text-uppercase fw-bold text-muted">Aktueller Saldo</div>
+   <div class="display-4 fw-bold {{ account.balance|balance_class }}">{{ account.balance|euro }}</div>
+   <div class="small text-muted">{% if account.last_booking_at %}Letzte Buchung vor {{ account.last_booking_at|timesince }}{% else %}Noch keine Buchungen{% endif %}</div>
+   {% if warn_progress is not None %}
+   <div class="progress mt-2" style="height: 8px" title="Warnschwelle {{ app_settings.WARN_BELOW|euro }}">
+    <div class="progress-bar {% if warn_progress >= 100 %}bg-danger{% elif warn_progress >= 75 %}bg-warning{% else %}bg-secondary{% endif %}" style="width: {{ warn_progress }}%"></div>
+   </div>
+   <div class="small mt-1 {% if warn_progress >= 100 %}text-danger{% else %}text-muted{% endif %}">
+    {% if warn_progress >= 100 %}Warnschwelle {{ app_settings.WARN_BELOW|euro }} erreicht{% else %}Noch {{ warn_remaining|euro }} bis zur Warnschwelle {{ app_settings.WARN_BELOW|euro }}{% endif %}
+   </div>
+   {% endif %}
+  </div></div>
+
+  <div class="card"><div class="card-body d-flex flex-column gap-3">
+   <form method="post" action="{{ spend_url }}" class="m-0">{% csrf_token %}
+    <div class="small text-uppercase fw-bold text-muted mb-2">Ausgabe</div>
+    <div class="row g-2">
+     {% for button in dispense_buttons %}
+     <div class="col-6 col-sm-4"><button type="submit" name="button" value="{{ button.pk }}" class="btn btn-outline-danger btn-lg w-100 py-3">
+      <span class="d-block fw-bold">{{ button.label }}</span>
+      <span class="d-block small">{{ button.cents|euro }}</span>
+     </button></div>
+     {% empty %}
+     <div class="col-12 small text-muted">Noch keine Ausgabe-Buttons angelegt.</div>
+     {% endfor %}
+    </div>
+   </form>
+   {% if credit_url %}
+   <form method="post" action="{{ credit_url }}" class="m-0">{% csrf_token %}
+    <div class="small text-uppercase fw-bold text-muted mb-2">Bar eingezahlt</div>
+    <div class="row g-2">
+     {% for cents in app_settings.DEPOSIT_STEPS %}
+     <div class="col-4"><button type="submit" name="amount" value="{{ cents }}" class="btn btn-outline-success w-100 py-2 fw-bold">+{{ cents|euro }}</button></div>
+     {% endfor %}
+    </div>
+   </form>
+   {% endif %}
+   <div class="d-flex flex-wrap gap-2">
+    {% if transfer_url %}<a class="btn btn-outline-secondary" href="{{ transfer_url }}"><i class="bi bi-arrow-left-right"></i> Überweisen</a>{% endif %}
+    {% if app_settings.PAYPAL_LINK %}
+     <a class="btn btn-outline-secondary" href="{% if pin %}{% url 'strichliste:paypal' %}{% else %}{{ app_settings.PAYPAL_LINK }}{% endif %}" {% if not pin %}target="_blank" rel="noreferrer"{% endif %}><i class="bi bi-qr-code"></i> Mit PayPal aufladen</a>
+    {% endif %}
+   </div>
+  </div></div>
+ </div>
+
+ <div class="col-lg-7">
+  <div class="card">
+   <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <h2 class="h5 mb-0">Buchungen</h2>
+    <span class="small text-muted">Rückgängig bis {{ app_settings.UNDO_MINUTES }} Min. nach dem Buchen</span>
+   </div>
+   <ul class="list-group list-group-flush">
+    {% for tx in page %}
+    <li class="list-group-item d-flex justify-content-between align-items-center gap-3{% if tx.reverted_at %} text-decoration-line-through text-muted{% endif %}">
+     <div>
+      <div class="fw-semibold">{{ tx.label }}</div>
+      <div class="small text-muted">{{ tx.created_at|date:"d.m.Y H:i" }} · gebucht von {{ tx.booked_by_name }}{% if tx.reverted_at %} · storniert{% endif %}</div>
+     </div>
+     <div class="d-flex align-items-center gap-2 text-nowrap">
+      <span class="fw-bold{% if not tx.reverted_at %} {{ tx.amount|balance_class }}{% endif %}">{{ tx.amount|euro_signed }}</span>
+      {% if tx.revert_url %}
+      <form method="post" action="{{ tx.revert_url }}" class="m-0">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-secondary">Rückgängig</button></form>
+      {% endif %}
+     </div>
+    </li>
+    {% empty %}
+    <li class="list-group-item text-muted text-center">Noch keine Buchungen auf diesem Konto.</li>
+    {% endfor %}
+   </ul>
+   {% if page.paginator.num_pages > 1 %}
+   <div class="card-footer d-flex justify-content-between align-items-center gap-2 flex-wrap">
+    <a class="btn btn-sm btn-outline-secondary{% if not page.has_previous %} disabled{% endif %}" href="{% if page.has_previous %}?seite={{ page.previous_page_number }}{% endif %}">← Neuere</a>
+    <span class="small text-muted">Seite {{ page.number }} von {{ page.paginator.num_pages }} · {{ page.paginator.count }} Buchungen</span>
+    <a class="btn btn-sm btn-outline-secondary{% if not page.has_next %} disabled{% endif %}" href="{% if page.has_next %}?seite={{ page.next_page_number }}{% endif %}">Ältere →</a>
+   </div>
+   {% endif %}
+  </div>
+ </div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% if pin %}
+<script>
+(() => {
+  const total = {{ app_settings.TABLET_IDLE_SECONDS }};
+  let left = total;
+  const text = document.getElementById("idle-text");
+  const bar = document.getElementById("idle-bar");
+  for (const name of ["pointerdown", "keydown", "scroll"]) document.addEventListener(name, () => { left = total; }, { passive: true });
+  setInterval(() => {
+    left -= 1;
+    if (left <= 0) { window.location.href = "{% url 'strichliste:tablet_accounts' pin %}"; return; }
+    text.textContent = `Zurück zur Übersicht in ${left} s`;
+    bar.style.width = `${left / total * 100}%`;
+  }, 1000);
+})();
+</script>
+{% endif %}
+{% endblock %}

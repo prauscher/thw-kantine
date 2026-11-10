@@ -1,0 +1,15 @@
+{% extends "abfrage/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Externe Person anlegen{% endblock %}
+
+{% block content %}
+<p class="text-muted">
+ Für Leute ohne Nextcloud-Konto, z.B. Gäste, Feuerwehr bei gemeinsamen Übungen oder Ehemalige.
+</p>
+<form method="post" style="max-width: 32rem">{% csrf_token %}
+ {{ form|crispy }}
+ <button type="submit" class="btn btn-primary">Anlegen</button>
+ <a class="btn btn-link" href="{% url 'strichliste:tablet_accounts' pin %}">Abbrechen</a>
+</form>
+{% endblock %}

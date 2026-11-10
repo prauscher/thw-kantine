@@ -1,0 +1,28 @@
+{% extends "abfrage/base.html" %}
+{% load django_bootstrap5 %}
+{% load strichliste %}
+
+{% block title %}Strichliste{% endblock %}
+
+{% block buttons %}
+<a class="btn btn-outline-warning" href="{% url 'strichliste:tablet_create_extern' pin %}"><i class="bi bi-person-plus"></i> Externe Person anlegen</a>
+{% endblock %}
+
+{% block content %}
+{% bootstrap_messages %}
+
+<p class="text-muted">
+ Tippe auf deinen Namen. Roter Rahmen: unter {{ app_settings.WARN_BELOW|euro }}
+</p>
+
+{% include "strichliste/_account_tiles.html" with accounts=active %}
+
+{% if stale %}
+<button class="btn btn-outline-secondary mt-4" type="button" data-bs-toggle="collapse" data-bs-target="#stale">
+ Inaktiv <span class="badge text-bg-light">{{ stale|length }}</span>
+</button>
+<div class="collapse mt-3" id="stale">
+ {% include "strichliste/_account_tiles.html" with accounts=stale %}
+</div>
+{% endif %}
+{% endblock %}
