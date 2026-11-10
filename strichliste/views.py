@@ -249,7 +249,7 @@ class OwnRevertView(OwnAccountMixin, RevertView):
 
 class TabletAccountListView(TabletMixin, ListView):
     template_name = "strichliste/account_list.html"
-    queryset = models.Account.objects.filter(disabled=False).prefetch_related("tags")
+    queryset = models.Account.objects.filter(disabled=False)
 
     def get_context_data(self, **kwargs):
         accounts = list(self.object_list)

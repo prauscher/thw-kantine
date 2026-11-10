@@ -19,23 +19,12 @@ class DispenseButton(models.Model):
         return f"{self.label} ({self.cents / 100:.2f} €)"
 
 
-class Tag(models.Model):
-    label = models.CharField(max_length=40, unique=True, verbose_name="Bezeichnung")
-
-    class Meta:
-        ordering = ["label"]
-
-    def __str__(self):
-        return self.label
-
-
 class Account(models.Model):
     username = models.CharField(
         max_length=50, null=True, blank=True, unique=True,
         verbose_name="Benutzername", help_text="Benutzername in NextCloud, nur bei Nextcloud-Konten.",
     )
     name = models.CharField(max_length=100, verbose_name="Name", unique=True)
-    tags = models.ManyToManyField(Tag, blank=True, verbose_name="Tags")
     contact = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="+",
         limit_choices_to={"username__isnull": False},

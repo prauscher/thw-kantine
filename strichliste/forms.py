@@ -20,8 +20,7 @@ class ExternForm(forms.ModelForm):
 
     class Meta:
         model = models.Account
-        fields = ["name", "tags", "contact", "note"]
-        widgets = {"tags": forms.CheckboxSelectMultiple}
+        fields = ["name", "contact", "note"]
 
 
 class SpendForm(forms.Form):

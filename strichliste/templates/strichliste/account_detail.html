@@ -25,7 +25,6 @@
   noch nicht mit Nextcloud verknüpft
  {% endif %}
 
- {% for tag in account.tags.all %}<span class="badge text-bg-light">{{ tag.label }}</span>{% endfor %}
  {% if account.contact %}betreut von {{ account.contact.name }}{% endif %}
  {% if account.note %}· {{ account.note }}{% endif %}
 </p>
