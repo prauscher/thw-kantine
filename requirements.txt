@@ -13,6 +13,6 @@ django-markdownx==4.0.11
 django-object-actions==5.1.2
 caldav==3.7.0
 icalendar==7.3.0
-granian==2.8.7
+granian==2.8.8
 # required for django-polymorphic
 setuptools==84.2.1
