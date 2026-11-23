@@ -94,7 +94,7 @@ function renderTermine(data) {
 			$("<strong>").text(entry.location),
 		]),
 		$("<span>").text(entry.comment),
-		$("<div>").addClass("text-end").append(entry.categories.map((category_item) => $("<span>").addClass(["fs-6", "badge"]).css("background-color", category_item.color).text(category_item.label))),
+		$("<div>").addClass("text-end").append(entry.categories.map((category_item) => $("<span>").addClass(["fs-6", "badge", "ms-1"]).css("background-color", category_item.color).text(category_item.label))),
 	])));
 
 	if (data.length == 0) {
